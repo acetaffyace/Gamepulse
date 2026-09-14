@@ -15,3 +15,8 @@ data/raw/20*/
 
 # 时间序列与快照是项目的真实产出，必须入库（作品集需要真实采集天数）。
 # 不要在这里忽略 data/series/ 或 data/snapshot_*.json。
+
+# 计划任务日志：机器本地产物，不入版本库
+data/logs/
+dashboard/shots/_*.png
+node_modules/

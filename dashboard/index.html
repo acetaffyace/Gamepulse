@@ -168,6 +168,61 @@
 
   .hidden { display: none !important; }
   .loading { padding: 80px; text-align: center; color: var(--text-muted); }
+
+  /* ---------- 轨道自定义面板 ---------- */
+  .scrim { position: fixed; inset: 0; background: rgba(11,11,11,0.18);
+           z-index: 40; opacity: 0; pointer-events: none; transition: opacity .16s; }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+
+  .panel {
+    position: fixed; top: 0; right: 0; height: 100vh; width: 372px; z-index: 50;
+    background: var(--surface-1); border-left: 1px solid var(--border);
+    box-shadow: -10px 0 40px rgba(11,11,11,0.10);
+    padding: 22px 22px 40px; overflow-y: auto;
+    transform: translateX(100%); transition: transform .18s ease;
+  }
+  .panel.open { transform: none; }
+  .panel h3 { font-size: 15px; font-weight: 600; margin: 0 0 4px; }
+  .panel .hint { color: var(--text-muted); font-size: 11.5px; line-height: 1.5;
+                 margin: 0 0 16px; }
+  .panel-sec { font-size: 11.5px; color: var(--text-muted); margin: 18px 0 8px;
+               text-transform: none; letter-spacing: .02em; }
+
+  .lane-row { display: flex; align-items: center; gap: 9px; padding: 9px 10px;
+              border: 1px solid var(--border); border-radius: 9px;
+              margin-bottom: 7px; background: var(--page); }
+  .lane-row[data-off="true"] { opacity: .5; }
+  .lane-row .swatch { width: 9px; height: 9px; border-radius: 2px; flex: none; }
+  .lane-row .lane-name { font-size: 12.5px; flex: 1; min-width: 0; }
+  .lane-row .lane-name span { display: block; color: var(--text-muted);
+                              font-size: 11px; white-space: nowrap;
+                              overflow: hidden; text-overflow: ellipsis; }
+  .icon-btn { border: 1px solid var(--border); background: var(--surface-1);
+              color: var(--text-secondary); border-radius: 6px; cursor: pointer;
+              width: 24px; height: 24px; font-size: 12px; line-height: 1;
+              padding: 0; flex: none; }
+  .icon-btn:hover:not(:disabled) { background: rgba(11,11,11,0.05); }
+  .icon-btn:disabled { opacity: .3; cursor: default; }
+
+  .height-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+  .height-row input[type=range] { flex: 1; accent-color: var(--text-primary); }
+  .height-row .val { font-size: 11px; color: var(--text-muted); min-width: 34px;
+                     text-align: right; font-variant-numeric: tabular-nums; }
+
+  .panel-actions { display: flex; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
+
+  .menu-wrap { position: relative; }
+  .menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30;
+          background: var(--surface-1); border: 1px solid var(--border);
+          border-radius: 9px; padding: 5px; min-width: 210px;
+          box-shadow: 0 8px 26px rgba(11,11,11,0.12); }
+  .menu button { display: block; width: 100%; text-align: left; border: 0;
+                 background: transparent; font: inherit; font-size: 12.5px;
+                 padding: 7px 10px; border-radius: 6px; cursor: pointer;
+                 color: var(--text-primary); }
+  .menu button:hover { background: rgba(11,11,11,0.05); }
+  .menu .menu-note { color: var(--text-muted); font-size: 11px;
+                     padding: 4px 10px 7px; line-height: 1.45; }
 </style>
 </head>
 <body class="viz-root">
@@ -176,7 +231,7 @@
   <header>
     <div>
       <h1>GamePulse · 游戏长线运营情报雷达</h1>
-      <p class="sub">基于 Steam 与 B 站公开数据的版本趋势观测 · 仅公开信号，不含内部 DAU / 收入 / 留存</p>
+      <p class="sub">基于 Steam / B 站 / YouTube 公开数据的长线运营观测 · 仅公开信号，不含内部 DAU / 收入 / 留存</p>
     </div>
     <div class="meta">
       <div id="metaBadges" style="margin-bottom:6px"></div>
@@ -212,9 +267,42 @@
         <button data-days="0">全部</button>
       </div>
     </div>
+    <div class="filter-group" id="presetGroup">
+      <span class="filter-label">预设</span>
+      <select id="presetSelect"></select>
+    </div>
     <div class="spacer"></div>
+    <button class="linkish" id="openPanel">自定义轨道</button>
+    <div class="menu-wrap">
+      <button class="linkish" id="openExport">导出</button>
+      <div class="menu hidden" id="exportMenu">
+        <button data-export="csv">当前范围 CSV（按日期）</button>
+        <button data-export="videos">视频明细 CSV</button>
+        <button data-export="png">综合图 PNG</button>
+        <button data-export="link">复制当前视图链接</button>
+        <div class="menu-note">导出内容仅含公开数据，不含密钥、Cookie 或本机路径。</div>
+      </div>
+    </div>
     <button class="linkish" id="toggleTable">显示数据表</button>
   </div>
+
+  <!-- ============ 轨道自定义面板 ============ -->
+  <div class="scrim" id="panelScrim"></div>
+  <aside class="panel" id="lanePanel">
+    <h3>自定义轨道</h3>
+    <p class="hint">
+      勾选决定显示哪些轨道，箭头调整顺序，滑块调整高度。
+      轨道来自 <code>config/dashboard.yml</code>，加一个指标只需在那里加一条，
+      不需要改图表代码。设置会自动保存在本浏览器，也可以通过「导出 → 复制当前视图链接」分享。
+    </p>
+    <div id="laneList"></div>
+    <div class="panel-actions">
+      <button class="linkish" id="resetLanes">恢复默认</button>
+      <button class="linkish" id="closePanel">完成</button>
+    </div>
+    <div class="panel-sec">未启用的轨道</div>
+    <div id="laneListOff"></div>
+  </aside>
 
   <!-- ============ 三方对比视图 ============ -->
   <div id="compareApp" class="hidden">
@@ -268,7 +356,7 @@
       <div class="card-head">
         <div>
           <h2 class="card-title">Operations Pulse</h2>
-          <p class="card-note" id="pulseNote">四条轨道共享同一日期轴；版本更新日为贯穿竖线。各轨道单位不同，分别独立计量，不共用纵轴。</p>
+          <p class="card-note" id="pulseNote">轨道共享同一日期轴；版本更新日为贯穿竖线。各轨道单位不同，分别独立计量，不共用纵轴。轨道由 config/dashboard.yml 定义，可在右上角「自定义轨道」中增删、排序与调整高度。</p>
         </div>
       </div>
       <div class="legend" id="legend"></div>
@@ -280,7 +368,7 @@
         <div class="card-head">
           <h2 class="card-title">版本更新前后 7 天对比</h2>
         </div>
-        <p class="card-note" style="margin-bottom:12px">以评测口径衡量版本声量与口碑变化。仅比较有完整前后窗口的版本。</p>
+        <p class="card-note" style="margin-bottom:12px">以评测口径衡量版本的声量、口碑与玩家结构变化。仅比较有完整前后窗口的版本。</p>
         <table id="versionTable"><thead><tr>
           <th>版本</th><th>更新日</th>
           <th class="num">日均新增评测</th>
@@ -295,9 +383,10 @@
         <div class="card-head">
           <h2 class="card-title">评测语言分布</h2>
         </div>
-        <p class="card-note" style="margin-bottom:12px">回填期内全部评测的语言构成，反映 Steam 版本的实际玩家来源。</p>
+        <p class="card-note" style="margin-bottom:12px">回填期内全部评测的语言构成，反映 Steam 版本的实际玩家来源。末列为首个 7 天桶与最后一个 7 天桶的占比差，用于看来源结构是否在变。</p>
         <table id="langTable"><thead><tr>
-          <th>语言</th><th class="num">评测数</th><th style="width:44%">占比</th>
+          <th>语言</th><th class="num">评测数</th><th style="width:40%">占比</th>
+          <th class="num">首尾桶变化</th>
         </tr></thead><tbody></tbody></table>
       </section>
     </div>

@@ -1,5 +1,5 @@
 {
-  "snapshot_date": "2026-09-14",
+  "snapshot_date": "2026-09-15",
   "freshness_status": "live",
   "is_demo": false,
   "game": {
@@ -19,16 +19,16 @@
   "online_series": [
     {
       "date_local": "2026-09-14",
-      "value": 4480,
+      "value": 4321,
       "status": "observed"
     }
   ],
   "online_daily": [
     {
       "date_local": "2026-09-14",
-      "peak": 4504,
-      "trough": 4504,
-      "mean": 4504,
+      "peak": 4321,
+      "trough": 4321,
+      "mean": 4321,
       "peak_hour": 23,
       "trough_hour": 23,
       "peak_trough_ratio": 1.0,
@@ -40,10 +40,10 @@
     {
       "date_local": "2026-09-14",
       "hour_local": 23,
-      "sampled_at": "2026-09-14T15:28:17+00:00",
+      "sampled_at": "2026-09-14T15:59:22+00:00",
       "game_id": "neverness_to_everness",
       "steam_app_id": 4508340,
-      "players": 4504,
+      "players": 4321,
       "status": "observed",
       "note": ""
     }
@@ -51,8 +51,8 @@
   "review_series": [
     {
       "date_local": "2026-09-14",
-      "value": 83.08,
-      "total_reviews": 6389,
+      "value": 83.07,
+      "total_reviews": 6390,
       "status": "derived"
     }
   ],
@@ -3766,6 +3766,7 @@
         {
           "start": "2026-07-07",
           "end": "2026-07-13",
+          "days_with_reviews": 7,
           "reviews": 2383,
           "shares": {
             "english": 48.38,
@@ -3793,6 +3794,7 @@
         {
           "start": "2026-07-14",
           "end": "2026-07-20",
+          "days_with_reviews": 7,
           "reviews": 816,
           "shares": {
             "english": 43.26,
@@ -3820,6 +3822,7 @@
         {
           "start": "2026-07-21",
           "end": "2026-07-27",
+          "days_with_reviews": 7,
           "reviews": 485,
           "shares": {
             "english": 40.62,
@@ -3847,6 +3850,7 @@
         {
           "start": "2026-07-28",
           "end": "2026-08-03",
+          "days_with_reviews": 7,
           "reviews": 460,
           "shares": {
             "english": 38.48,
@@ -3874,6 +3878,7 @@
         {
           "start": "2026-08-04",
           "end": "2026-08-10",
+          "days_with_reviews": 7,
           "reviews": 350,
           "shares": {
             "english": 45.71,
@@ -3901,6 +3906,7 @@
         {
           "start": "2026-08-11",
           "end": "2026-08-17",
+          "days_with_reviews": 7,
           "reviews": 328,
           "shares": {
             "english": 42.68,
@@ -3928,6 +3934,7 @@
         {
           "start": "2026-08-18",
           "end": "2026-08-24",
+          "days_with_reviews": 7,
           "reviews": 590,
           "shares": {
             "english": 39.15,
@@ -3955,6 +3962,7 @@
         {
           "start": "2026-08-25",
           "end": "2026-08-31",
+          "days_with_reviews": 7,
           "reviews": 404,
           "shares": {
             "english": 37.38,
@@ -3982,6 +3990,7 @@
         {
           "start": "2026-09-01",
           "end": "2026-09-07",
+          "days_with_reviews": 7,
           "reviews": 293,
           "shares": {
             "english": 45.73,
@@ -4009,6 +4018,7 @@
         {
           "start": "2026-09-08",
           "end": "2026-09-14",
+          "days_with_reviews": 7,
           "reviews": 279,
           "shares": {
             "english": 42.65,
@@ -4164,6 +4174,17 @@
   "build_series": [
     {
       "date_local": "2026-09-14",
+      "game_id": "neverness_to_everness",
+      "steam_app_id": 4508340,
+      "buildid": "25196072",
+      "build_updated_at": "2026-09-09T06:13:38",
+      "build_updated_date": "2026-09-09",
+      "build_name": "NTE: Neverness to Everness",
+      "build_status": "third_party",
+      "build_note": ""
+    },
+    {
+      "date_local": "2026-09-15",
       "game_id": "neverness_to_everness",
       "steam_app_id": 4508340,
       "buildid": "25196072",
@@ -4514,31 +4535,65 @@
             "favorite": 0.3056,
             "share": 0.1077
           }
+        },
+        {
+          "date_local": "2026-09-15",
+          "days_since_pub": 13,
+          "stats": {
+            "view": 2435669,
+            "danmaku": 1375,
+            "reply": 6688,
+            "like": 58861,
+            "coin": 7185,
+            "favorite": 7444,
+            "share": 2623
+          },
+          "status": "observed",
+          "deltas": {
+            "view": 108,
+            "danmaku": 0,
+            "reply": 0,
+            "like": 2,
+            "coin": 0,
+            "favorite": 1,
+            "share": 0
+          },
+          "span_days": 1,
+          "delta_status": "derived",
+          "rates": {
+            "engagement": 3.0172,
+            "danmaku": 0.0565,
+            "reply": 0.2746,
+            "like": 2.4166,
+            "coin": 0.295,
+            "favorite": 0.3056,
+            "share": 0.1077
+          }
         }
       ],
       "latest": {
-        "date_local": "2026-09-14",
-        "days_since_pub": 12,
+        "date_local": "2026-09-15",
+        "days_since_pub": 13,
         "stats": {
-          "view": 2435561,
+          "view": 2435669,
           "danmaku": 1375,
           "reply": 6688,
-          "like": 58859,
+          "like": 58861,
           "coin": 7185,
-          "favorite": 7443,
+          "favorite": 7444,
           "share": 2623
         },
         "rates": {
-          "engagement": 3.0173,
+          "engagement": 3.0172,
           "danmaku": 0.0565,
           "reply": 0.2746,
-          "like": 2.4167,
+          "like": 2.4166,
           "coin": 0.295,
           "favorite": 0.3056,
           "share": 0.1077
         }
       },
-      "latest_view": 2435561,
+      "latest_view": 2435669,
       "ramp": {
         "available": false,
         "first_capture_days_since_pub": 12,
@@ -4591,31 +4646,65 @@
             "favorite": 0.7837,
             "share": 0.1298
           }
+        },
+        {
+          "date_local": "2026-09-15",
+          "days_since_pub": 12,
+          "stats": {
+            "view": 561249,
+            "danmaku": 351,
+            "reply": 3172,
+            "like": 19543,
+            "coin": 3919,
+            "favorite": 4398,
+            "share": 729
+          },
+          "status": "observed",
+          "deltas": {
+            "view": 173,
+            "danmaku": 0,
+            "reply": 6,
+            "like": 9,
+            "coin": 0,
+            "favorite": 1,
+            "share": 1
+          },
+          "span_days": 1,
+          "delta_status": "derived",
+          "rates": {
+            "engagement": 4.9639,
+            "danmaku": 0.0625,
+            "reply": 0.5652,
+            "like": 3.4821,
+            "coin": 0.6983,
+            "favorite": 0.7836,
+            "share": 0.1299
+          }
         }
       ],
       "latest": {
-        "date_local": "2026-09-14",
-        "days_since_pub": 11,
+        "date_local": "2026-09-15",
+        "days_since_pub": 12,
         "stats": {
-          "view": 561076,
+          "view": 561249,
           "danmaku": 351,
-          "reply": 3166,
-          "like": 19534,
+          "reply": 3172,
+          "like": 19543,
           "coin": 3919,
-          "favorite": 4397,
-          "share": 728
+          "favorite": 4398,
+          "share": 729
         },
         "rates": {
-          "engagement": 4.9637,
-          "danmaku": 0.0626,
-          "reply": 0.5643,
-          "like": 3.4815,
-          "coin": 0.6985,
-          "favorite": 0.7837,
-          "share": 0.1298
+          "engagement": 4.9639,
+          "danmaku": 0.0625,
+          "reply": 0.5652,
+          "like": 3.4821,
+          "coin": 0.6983,
+          "favorite": 0.7836,
+          "share": 0.1299
         }
       },
-      "latest_view": 561076,
+      "latest_view": 561249,
       "ramp": {
         "available": false,
         "first_capture_days_since_pub": 11,
@@ -4668,16 +4757,50 @@
             "favorite": 0.4004,
             "share": 0.2361
           }
+        },
+        {
+          "date_local": "2026-09-15",
+          "days_since_pub": 16,
+          "stats": {
+            "view": 697650,
+            "danmaku": 842,
+            "reply": 8876,
+            "like": 25854,
+            "coin": 3412,
+            "favorite": 2793,
+            "share": 1647
+          },
+          "status": "observed",
+          "deltas": {
+            "view": 39,
+            "danmaku": 0,
+            "reply": 0,
+            "like": 2,
+            "coin": 0,
+            "favorite": 0,
+            "share": 0
+          },
+          "span_days": 1,
+          "delta_status": "derived",
+          "rates": {
+            "engagement": 4.5953,
+            "danmaku": 0.1207,
+            "reply": 1.2723,
+            "like": 3.7059,
+            "coin": 0.4891,
+            "favorite": 0.4003,
+            "share": 0.2361
+          }
         }
       ],
       "latest": {
-        "date_local": "2026-09-14",
-        "days_since_pub": 15,
+        "date_local": "2026-09-15",
+        "days_since_pub": 16,
         "stats": {
-          "view": 697611,
+          "view": 697650,
           "danmaku": 842,
           "reply": 8876,
-          "like": 25852,
+          "like": 25854,
           "coin": 3412,
           "favorite": 2793,
           "share": 1647
@@ -4686,13 +4809,13 @@
           "engagement": 4.5953,
           "danmaku": 0.1207,
           "reply": 1.2723,
-          "like": 3.7058,
+          "like": 3.7059,
           "coin": 0.4891,
-          "favorite": 0.4004,
+          "favorite": 0.4003,
           "share": 0.2361
         }
       },
-      "latest_view": 697611,
+      "latest_view": 697650,
       "ramp": {
         "available": false,
         "first_capture_days_since_pub": 15,
@@ -4745,31 +4868,65 @@
             "favorite": 0.4089,
             "share": 0.1544
           }
+        },
+        {
+          "date_local": "2026-09-15",
+          "days_since_pub": 34,
+          "stats": {
+            "view": 3692834,
+            "danmaku": 3375,
+            "reply": 19870,
+            "like": 81131,
+            "coin": 10361,
+            "favorite": 15101,
+            "share": 5703
+          },
+          "status": "observed",
+          "deltas": {
+            "view": 334,
+            "danmaku": 0,
+            "reply": 1,
+            "like": 1,
+            "coin": 0,
+            "favorite": 1,
+            "share": 1
+          },
+          "span_days": 1,
+          "delta_status": "derived",
+          "rates": {
+            "engagement": 2.8865,
+            "danmaku": 0.0914,
+            "reply": 0.5381,
+            "like": 2.197,
+            "coin": 0.2806,
+            "favorite": 0.4089,
+            "share": 0.1544
+          }
         }
       ],
       "latest": {
-        "date_local": "2026-09-14",
-        "days_since_pub": 33,
+        "date_local": "2026-09-15",
+        "days_since_pub": 34,
         "stats": {
-          "view": 3692500,
+          "view": 3692834,
           "danmaku": 3375,
-          "reply": 19869,
-          "like": 81130,
+          "reply": 19870,
+          "like": 81131,
           "coin": 10361,
-          "favorite": 15100,
-          "share": 5702
+          "favorite": 15101,
+          "share": 5703
         },
         "rates": {
-          "engagement": 2.8867,
+          "engagement": 2.8865,
           "danmaku": 0.0914,
           "reply": 0.5381,
-          "like": 2.1972,
+          "like": 2.197,
           "coin": 0.2806,
           "favorite": 0.4089,
           "share": 0.1544
         }
       },
-      "latest_view": 3692500,
+      "latest_view": 3692834,
       "ramp": {
         "available": false,
         "first_capture_days_since_pub": 33,
@@ -4822,31 +4979,65 @@
             "favorite": 0.6584,
             "share": 0.1309
           }
+        },
+        {
+          "date_local": "2026-09-15",
+          "days_since_pub": 33,
+          "stats": {
+            "view": 939881,
+            "danmaku": 854,
+            "reply": 11203,
+            "like": 27757,
+            "coin": 4703,
+            "favorite": 6188,
+            "share": 1230
+          },
+          "status": "observed",
+          "deltas": {
+            "view": 81,
+            "danmaku": 0,
+            "reply": 0,
+            "like": 2,
+            "coin": 0,
+            "favorite": 0,
+            "share": 0
+          },
+          "span_days": 1,
+          "delta_status": "derived",
+          "rates": {
+            "engagement": 4.112,
+            "danmaku": 0.0909,
+            "reply": 1.192,
+            "like": 2.9532,
+            "coin": 0.5004,
+            "favorite": 0.6584,
+            "share": 0.1309
+          }
         }
       ],
       "latest": {
-        "date_local": "2026-09-14",
-        "days_since_pub": 32,
+        "date_local": "2026-09-15",
+        "days_since_pub": 33,
         "stats": {
-          "view": 939800,
+          "view": 939881,
           "danmaku": 854,
           "reply": 11203,
-          "like": 27755,
+          "like": 27757,
           "coin": 4703,
           "favorite": 6188,
           "share": 1230
         },
         "rates": {
-          "engagement": 4.1122,
+          "engagement": 4.112,
           "danmaku": 0.0909,
-          "reply": 1.1921,
-          "like": 2.9533,
+          "reply": 1.192,
+          "like": 2.9532,
           "coin": 0.5004,
           "favorite": 0.6584,
           "share": 0.1309
         }
       },
-      "latest_view": 939800,
+      "latest_view": 939881,
       "ramp": {
         "available": false,
         "first_capture_days_since_pub": 32,
@@ -4899,13 +5090,47 @@
             "favorite": 0.3683,
             "share": 0.3985
           }
+        },
+        {
+          "date_local": "2026-09-15",
+          "days_since_pub": 38,
+          "stats": {
+            "view": 2783283,
+            "danmaku": 3721,
+            "reply": 12221,
+            "like": 68693,
+            "coin": 11045,
+            "favorite": 10252,
+            "share": 11090
+          },
+          "status": "observed",
+          "deltas": {
+            "view": 11,
+            "danmaku": 0,
+            "reply": 0,
+            "like": 0,
+            "coin": 0,
+            "favorite": 0,
+            "share": 0
+          },
+          "span_days": 1,
+          "delta_status": "derived",
+          "rates": {
+            "engagement": 3.2332,
+            "danmaku": 0.1337,
+            "reply": 0.4391,
+            "like": 2.4681,
+            "coin": 0.3968,
+            "favorite": 0.3683,
+            "share": 0.3985
+          }
         }
       ],
       "latest": {
-        "date_local": "2026-09-14",
-        "days_since_pub": 37,
+        "date_local": "2026-09-15",
+        "days_since_pub": 38,
         "stats": {
-          "view": 2783272,
+          "view": 2783283,
           "danmaku": 3721,
           "reply": 12221,
           "like": 68693,
@@ -4923,7 +5148,7 @@
           "share": 0.3985
         }
       },
-      "latest_view": 2783272,
+      "latest_view": 2783283,
       "ramp": {
         "available": false,
         "first_capture_days_since_pub": 37,
@@ -4976,13 +5201,47 @@
             "favorite": 0.5538,
             "share": 0.6919
           }
+        },
+        {
+          "date_local": "2026-09-15",
+          "days_since_pub": 36,
+          "stats": {
+            "view": 728017,
+            "danmaku": 1355,
+            "reply": 6721,
+            "like": 29994,
+            "coin": 4255,
+            "favorite": 4032,
+            "share": 5037
+          },
+          "status": "observed",
+          "deltas": {
+            "view": 22,
+            "danmaku": 0,
+            "reply": 0,
+            "like": 0,
+            "coin": 0,
+            "favorite": 0,
+            "share": 0
+          },
+          "span_days": 1,
+          "delta_status": "derived",
+          "rates": {
+            "engagement": 5.2583,
+            "danmaku": 0.1861,
+            "reply": 0.9232,
+            "like": 4.12,
+            "coin": 0.5845,
+            "favorite": 0.5538,
+            "share": 0.6919
+          }
         }
       ],
       "latest": {
-        "date_local": "2026-09-14",
-        "days_since_pub": 35,
+        "date_local": "2026-09-15",
+        "days_since_pub": 36,
         "stats": {
-          "view": 727995,
+          "view": 728017,
           "danmaku": 1355,
           "reply": 6721,
           "like": 29994,
@@ -4991,16 +5250,16 @@
           "share": 5037
         },
         "rates": {
-          "engagement": 5.2584,
+          "engagement": 5.2583,
           "danmaku": 0.1861,
           "reply": 0.9232,
-          "like": 4.1201,
+          "like": 4.12,
           "coin": 0.5845,
           "favorite": 0.5538,
           "share": 0.6919
         }
       },
-      "latest_view": 727995,
+      "latest_view": 728017,
       "ramp": {
         "available": false,
         "first_capture_days_since_pub": 35,
@@ -5053,16 +5312,50 @@
             "favorite": 0.3746,
             "share": 0.0893
           }
+        },
+        {
+          "date_local": "2026-09-15",
+          "days_since_pub": 37,
+          "stats": {
+            "view": 2453535,
+            "danmaku": 1493,
+            "reply": 5013,
+            "like": 70157,
+            "coin": 4781,
+            "favorite": 9191,
+            "share": 2190
+          },
+          "status": "observed",
+          "deltas": {
+            "view": 14,
+            "danmaku": 0,
+            "reply": 0,
+            "like": 1,
+            "coin": 0,
+            "favorite": 0,
+            "share": 0
+          },
+          "span_days": 1,
+          "delta_status": "derived",
+          "rates": {
+            "engagement": 3.4289,
+            "danmaku": 0.0609,
+            "reply": 0.2043,
+            "like": 2.8594,
+            "coin": 0.1949,
+            "favorite": 0.3746,
+            "share": 0.0893
+          }
         }
       ],
       "latest": {
-        "date_local": "2026-09-14",
-        "days_since_pub": 36,
+        "date_local": "2026-09-15",
+        "days_since_pub": 37,
         "stats": {
-          "view": 2453521,
+          "view": 2453535,
           "danmaku": 1493,
           "reply": 5013,
-          "like": 70156,
+          "like": 70157,
           "coin": 4781,
           "favorite": 9191,
           "share": 2190
@@ -5077,7 +5370,7 @@
           "share": 0.0893
         }
       },
-      "latest_view": 2453521,
+      "latest_view": 2453535,
       "ramp": {
         "available": false,
         "first_capture_days_since_pub": 36,
@@ -5130,31 +5423,65 @@
             "favorite": 0.4559,
             "share": 0.1233
           }
+        },
+        {
+          "date_local": "2026-09-15",
+          "days_since_pub": 55,
+          "stats": {
+            "view": 2701366,
+            "danmaku": 2125,
+            "reply": 6378,
+            "like": 71785,
+            "coin": 6777,
+            "favorite": 12314,
+            "share": 3331
+          },
+          "status": "observed",
+          "deltas": {
+            "view": 57,
+            "danmaku": 0,
+            "reply": 0,
+            "like": 0,
+            "coin": 0,
+            "favorite": -1,
+            "share": 0
+          },
+          "span_days": 1,
+          "delta_status": "derived",
+          "rates": {
+            "engagement": 3.3641,
+            "danmaku": 0.0787,
+            "reply": 0.2361,
+            "like": 2.6574,
+            "coin": 0.2509,
+            "favorite": 0.4558,
+            "share": 0.1233
+          }
         }
       ],
       "latest": {
-        "date_local": "2026-09-14",
-        "days_since_pub": 54,
+        "date_local": "2026-09-15",
+        "days_since_pub": 55,
         "stats": {
-          "view": 2701309,
+          "view": 2701366,
           "danmaku": 2125,
           "reply": 6378,
           "like": 71785,
           "coin": 6777,
-          "favorite": 12315,
+          "favorite": 12314,
           "share": 3331
         },
         "rates": {
-          "engagement": 3.3642,
+          "engagement": 3.3641,
           "danmaku": 0.0787,
           "reply": 0.2361,
           "like": 2.6574,
           "coin": 0.2509,
-          "favorite": 0.4559,
+          "favorite": 0.4558,
           "share": 0.1233
         }
       },
-      "latest_view": 2701309,
+      "latest_view": 2701366,
       "ramp": {
         "available": false,
         "first_capture_days_since_pub": 54,
@@ -5207,31 +5534,65 @@
             "favorite": 0.8308,
             "share": 0.1254
           }
+        },
+        {
+          "date_local": "2026-09-15",
+          "days_since_pub": 54,
+          "stats": {
+            "view": 884704,
+            "danmaku": 569,
+            "reply": 4622,
+            "like": 34108,
+            "coin": 5401,
+            "favorite": 7349,
+            "share": 1109
+          },
+          "status": "observed",
+          "deltas": {
+            "view": 15,
+            "danmaku": 0,
+            "reply": 0,
+            "like": 0,
+            "coin": 0,
+            "favorite": -1,
+            "share": 0
+          },
+          "span_days": 1,
+          "delta_status": "derived",
+          "rates": {
+            "engagement": 5.2965,
+            "danmaku": 0.0643,
+            "reply": 0.5224,
+            "like": 3.8553,
+            "coin": 0.6105,
+            "favorite": 0.8307,
+            "share": 0.1254
+          }
         }
       ],
       "latest": {
-        "date_local": "2026-09-14",
-        "days_since_pub": 53,
+        "date_local": "2026-09-15",
+        "days_since_pub": 54,
         "stats": {
-          "view": 884689,
+          "view": 884704,
           "danmaku": 569,
           "reply": 4622,
           "like": 34108,
           "coin": 5401,
-          "favorite": 7350,
+          "favorite": 7349,
           "share": 1109
         },
         "rates": {
-          "engagement": 5.2967,
+          "engagement": 5.2965,
           "danmaku": 0.0643,
           "reply": 0.5224,
-          "like": 3.8554,
+          "like": 3.8553,
           "coin": 0.6105,
-          "favorite": 0.8308,
+          "favorite": 0.8307,
           "share": 0.1254
         }
       },
-      "latest_view": 884689,
+      "latest_view": 884704,
       "ramp": {
         "available": false,
         "first_capture_days_since_pub": 53,
@@ -5284,13 +5645,47 @@
             "favorite": 0.5037,
             "share": 0.3983
           }
+        },
+        {
+          "date_local": "2026-09-15",
+          "days_since_pub": 58,
+          "stats": {
+            "view": 782869,
+            "danmaku": 1145,
+            "reply": 5872,
+            "like": 33908,
+            "coin": 4877,
+            "favorite": 3943,
+            "share": 3118
+          },
+          "status": "observed",
+          "deltas": {
+            "view": 10,
+            "danmaku": 0,
+            "reply": 0,
+            "like": 0,
+            "coin": 0,
+            "favorite": 0,
+            "share": 0
+          },
+          "span_days": 1,
+          "delta_status": "derived",
+          "rates": {
+            "engagement": 5.4579,
+            "danmaku": 0.1463,
+            "reply": 0.7501,
+            "like": 4.3312,
+            "coin": 0.623,
+            "favorite": 0.5037,
+            "share": 0.3983
+          }
         }
       ],
       "latest": {
-        "date_local": "2026-09-14",
-        "days_since_pub": 57,
+        "date_local": "2026-09-15",
+        "days_since_pub": 58,
         "stats": {
-          "view": 782859,
+          "view": 782869,
           "danmaku": 1145,
           "reply": 5872,
           "like": 33908,
@@ -5302,13 +5697,13 @@
           "engagement": 5.4579,
           "danmaku": 0.1463,
           "reply": 0.7501,
-          "like": 4.3313,
+          "like": 4.3312,
           "coin": 0.623,
           "favorite": 0.5037,
           "share": 0.3983
         }
       },
-      "latest_view": 782859,
+      "latest_view": 782869,
       "ramp": {
         "available": false,
         "first_capture_days_since_pub": 57,
@@ -5361,16 +5756,50 @@
             "favorite": 0.4227,
             "share": 0.1742
           }
+        },
+        {
+          "date_local": "2026-09-15",
+          "days_since_pub": 76,
+          "stats": {
+            "view": 2890158,
+            "danmaku": 4637,
+            "reply": 12150,
+            "like": 66500,
+            "coin": 10672,
+            "favorite": 12217,
+            "share": 5034
+          },
+          "status": "observed",
+          "deltas": {
+            "view": 36,
+            "danmaku": 0,
+            "reply": 0,
+            "like": 1,
+            "coin": 0,
+            "favorite": 0,
+            "share": 0
+          },
+          "span_days": 1,
+          "delta_status": "derived",
+          "rates": {
+            "engagement": 3.0929,
+            "danmaku": 0.1604,
+            "reply": 0.4204,
+            "like": 2.3009,
+            "coin": 0.3693,
+            "favorite": 0.4227,
+            "share": 0.1742
+          }
         }
       ],
       "latest": {
-        "date_local": "2026-09-14",
-        "days_since_pub": 75,
+        "date_local": "2026-09-15",
+        "days_since_pub": 76,
         "stats": {
-          "view": 2890122,
+          "view": 2890158,
           "danmaku": 4637,
           "reply": 12150,
-          "like": 66499,
+          "like": 66500,
           "coin": 10672,
           "favorite": 12217,
           "share": 5034
@@ -5385,7 +5814,7 @@
           "share": 0.1742
         }
       },
-      "latest_view": 2890122,
+      "latest_view": 2890158,
       "ramp": {
         "available": false,
         "first_capture_days_since_pub": 75,
@@ -5438,13 +5867,47 @@
             "favorite": 0.5975,
             "share": 0.1081
           }
+        },
+        {
+          "date_local": "2026-09-15",
+          "days_since_pub": 75,
+          "stats": {
+            "view": 1079602,
+            "danmaku": 2077,
+            "reply": 10485,
+            "like": 28238,
+            "coin": 4421,
+            "favorite": 6450,
+            "share": 1167
+          },
+          "status": "observed",
+          "deltas": {
+            "view": 21,
+            "danmaku": 0,
+            "reply": 0,
+            "like": 0,
+            "coin": 0,
+            "favorite": 0,
+            "share": 0
+          },
+          "span_days": 1,
+          "delta_status": "derived",
+          "rates": {
+            "engagement": 3.6225,
+            "danmaku": 0.1924,
+            "reply": 0.9712,
+            "like": 2.6156,
+            "coin": 0.4095,
+            "favorite": 0.5974,
+            "share": 0.1081
+          }
         }
       ],
       "latest": {
-        "date_local": "2026-09-14",
-        "days_since_pub": 74,
+        "date_local": "2026-09-15",
+        "days_since_pub": 75,
         "stats": {
-          "view": 1079581,
+          "view": 1079602,
           "danmaku": 2077,
           "reply": 10485,
           "like": 28238,
@@ -5453,16 +5916,16 @@
           "share": 1167
         },
         "rates": {
-          "engagement": 3.6226,
+          "engagement": 3.6225,
           "danmaku": 0.1924,
           "reply": 0.9712,
           "like": 2.6156,
           "coin": 0.4095,
-          "favorite": 0.5975,
+          "favorite": 0.5974,
           "share": 0.1081
         }
       },
-      "latest_view": 1079581,
+      "latest_view": 1079602,
       "ramp": {
         "available": false,
         "first_capture_days_since_pub": 74,
@@ -5515,18 +5978,52 @@
             "favorite": 0.471,
             "share": 0.1507
           }
+        },
+        {
+          "date_local": "2026-09-15",
+          "days_since_pub": 77,
+          "stats": {
+            "view": 3043596,
+            "danmaku": 1873,
+            "reply": 7080,
+            "like": 74768,
+            "coin": 9222,
+            "favorite": 14333,
+            "share": 4588
+          },
+          "status": "observed",
+          "deltas": {
+            "view": 17,
+            "danmaku": 0,
+            "reply": 0,
+            "like": 0,
+            "coin": 0,
+            "favorite": -1,
+            "share": 0
+          },
+          "span_days": 1,
+          "delta_status": "derived",
+          "rates": {
+            "engagement": 3.2305,
+            "danmaku": 0.0615,
+            "reply": 0.2326,
+            "like": 2.4566,
+            "coin": 0.303,
+            "favorite": 0.4709,
+            "share": 0.1507
+          }
         }
       ],
       "latest": {
-        "date_local": "2026-09-14",
-        "days_since_pub": 76,
+        "date_local": "2026-09-15",
+        "days_since_pub": 77,
         "stats": {
-          "view": 3043579,
+          "view": 3043596,
           "danmaku": 1873,
           "reply": 7080,
           "like": 74768,
           "coin": 9222,
-          "favorite": 14334,
+          "favorite": 14333,
           "share": 4588
         },
         "rates": {
@@ -5535,11 +6032,11 @@
           "reply": 0.2326,
           "like": 2.4566,
           "coin": 0.303,
-          "favorite": 0.471,
+          "favorite": 0.4709,
           "share": 0.1507
         }
       },
-      "latest_view": 3043579,
+      "latest_view": 3043596,
       "ramp": {
         "available": false,
         "first_capture_days_since_pub": 76,
@@ -5592,13 +6089,47 @@
             "favorite": 0.5198,
             "share": 0.3103
           }
+        },
+        {
+          "date_local": "2026-09-15",
+          "days_since_pub": 79,
+          "stats": {
+            "view": 1344536,
+            "danmaku": 1445,
+            "reply": 6137,
+            "like": 48718,
+            "coin": 5664,
+            "favorite": 6989,
+            "share": 4172
+          },
+          "status": "observed",
+          "deltas": {
+            "view": 9,
+            "danmaku": 0,
+            "reply": 0,
+            "like": 0,
+            "coin": 0,
+            "favorite": 0,
+            "share": 0
+          },
+          "span_days": 1,
+          "delta_status": "derived",
+          "rates": {
+            "engagement": 4.5645,
+            "danmaku": 0.1075,
+            "reply": 0.4564,
+            "like": 3.6234,
+            "coin": 0.4213,
+            "favorite": 0.5198,
+            "share": 0.3103
+          }
         }
       ],
       "latest": {
-        "date_local": "2026-09-14",
-        "days_since_pub": 78,
+        "date_local": "2026-09-15",
+        "days_since_pub": 79,
         "stats": {
-          "view": 1344527,
+          "view": 1344536,
           "danmaku": 1445,
           "reply": 6137,
           "like": 48718,
@@ -5616,7 +6147,7 @@
           "share": 0.3103
         }
       },
-      "latest_view": 1344527,
+      "latest_view": 1344536,
       "ramp": {
         "available": false,
         "first_capture_days_since_pub": 78,
@@ -5669,13 +6200,47 @@
             "favorite": 0.2981,
             "share": 0.3086
           }
+        },
+        {
+          "date_local": "2026-09-15",
+          "days_since_pub": 80,
+          "stats": {
+            "view": 3504735,
+            "danmaku": 4221,
+            "reply": 13859,
+            "like": 75953,
+            "coin": 12580,
+            "favorite": 10447,
+            "share": 10815
+          },
+          "status": "observed",
+          "deltas": {
+            "view": 21,
+            "danmaku": 0,
+            "reply": 0,
+            "like": 0,
+            "coin": 0,
+            "favorite": 0,
+            "share": 0
+          },
+          "span_days": 1,
+          "delta_status": "derived",
+          "rates": {
+            "engagement": 2.8242,
+            "danmaku": 0.1204,
+            "reply": 0.3954,
+            "like": 2.1672,
+            "coin": 0.3589,
+            "favorite": 0.2981,
+            "share": 0.3086
+          }
         }
       ],
       "latest": {
-        "date_local": "2026-09-14",
-        "days_since_pub": 79,
+        "date_local": "2026-09-15",
+        "days_since_pub": 80,
         "stats": {
-          "view": 3504714,
+          "view": 3504735,
           "danmaku": 4221,
           "reply": 13859,
           "like": 75953,
@@ -5693,7 +6258,7 @@
           "share": 0.3086
         }
       },
-      "latest_view": 3504714,
+      "latest_view": 3504735,
       "ramp": {
         "available": false,
         "first_capture_days_since_pub": 79,
@@ -5746,13 +6311,47 @@
             "favorite": 0.2967,
             "share": 0.1599
           }
+        },
+        {
+          "date_local": "2026-09-15",
+          "days_since_pub": 90,
+          "stats": {
+            "view": 2177210,
+            "danmaku": 1633,
+            "reply": 5037,
+            "like": 53210,
+            "coin": 4957,
+            "favorite": 6460,
+            "share": 3482
+          },
+          "status": "observed",
+          "deltas": {
+            "view": 14,
+            "danmaku": 0,
+            "reply": 0,
+            "like": 0,
+            "coin": 0,
+            "favorite": 0,
+            "share": 0
+          },
+          "span_days": 1,
+          "delta_status": "derived",
+          "rates": {
+            "engagement": 2.9683,
+            "danmaku": 0.075,
+            "reply": 0.2314,
+            "like": 2.444,
+            "coin": 0.2277,
+            "favorite": 0.2967,
+            "share": 0.1599
+          }
         }
       ],
       "latest": {
-        "date_local": "2026-09-14",
-        "days_since_pub": 89,
+        "date_local": "2026-09-15",
+        "days_since_pub": 90,
         "stats": {
-          "view": 2177196,
+          "view": 2177210,
           "danmaku": 1633,
           "reply": 5037,
           "like": 53210,
@@ -5761,7 +6360,7 @@
           "share": 3482
         },
         "rates": {
-          "engagement": 2.9684,
+          "engagement": 2.9683,
           "danmaku": 0.075,
           "reply": 0.2314,
           "like": 2.444,
@@ -5770,7 +6369,7 @@
           "share": 0.1599
         }
       },
-      "latest_view": 2177196,
+      "latest_view": 2177210,
       "ramp": {
         "available": false,
         "first_capture_days_since_pub": 89,
@@ -5823,13 +6422,47 @@
             "favorite": 0.4571,
             "share": 0.1283
           }
+        },
+        {
+          "date_local": "2026-09-15",
+          "days_since_pub": 89,
+          "stats": {
+            "view": 1278689,
+            "danmaku": 424,
+            "reply": 4332,
+            "like": 31165,
+            "coin": 4054,
+            "favorite": 5845,
+            "share": 1640
+          },
+          "status": "observed",
+          "deltas": {
+            "view": 12,
+            "danmaku": 0,
+            "reply": 0,
+            "like": 0,
+            "coin": 0,
+            "favorite": 0,
+            "share": 0
+          },
+          "span_days": 1,
+          "delta_status": "derived",
+          "rates": {
+            "engagement": 3.2114,
+            "danmaku": 0.0332,
+            "reply": 0.3388,
+            "like": 2.4373,
+            "coin": 0.317,
+            "favorite": 0.4571,
+            "share": 0.1283
+          }
         }
       ],
       "latest": {
-        "date_local": "2026-09-14",
-        "days_since_pub": 88,
+        "date_local": "2026-09-15",
+        "days_since_pub": 89,
         "stats": {
-          "view": 1278677,
+          "view": 1278689,
           "danmaku": 424,
           "reply": 4332,
           "like": 31165,
@@ -5847,7 +6480,7 @@
           "share": 0.1283
         }
       },
-      "latest_view": 1278677,
+      "latest_view": 1278689,
       "ramp": {
         "available": false,
         "first_capture_days_since_pub": 88,
@@ -5900,16 +6533,50 @@
             "favorite": 0.3123,
             "share": 0.5505
           }
+        },
+        {
+          "date_local": "2026-09-15",
+          "days_since_pub": 93,
+          "stats": {
+            "view": 920153,
+            "danmaku": 1358,
+            "reply": 6483,
+            "like": 31814,
+            "coin": 3805,
+            "favorite": 2874,
+            "share": 5065
+          },
+          "status": "observed",
+          "deltas": {
+            "view": 9,
+            "danmaku": 0,
+            "reply": 0,
+            "like": 1,
+            "coin": 0,
+            "favorite": 0,
+            "share": 0
+          },
+          "span_days": 1,
+          "delta_status": "derived",
+          "rates": {
+            "engagement": 4.1833,
+            "danmaku": 0.1476,
+            "reply": 0.7046,
+            "like": 3.4575,
+            "coin": 0.4135,
+            "favorite": 0.3123,
+            "share": 0.5505
+          }
         }
       ],
       "latest": {
-        "date_local": "2026-09-14",
-        "days_since_pub": 92,
+        "date_local": "2026-09-15",
+        "days_since_pub": 93,
         "stats": {
-          "view": 920144,
+          "view": 920153,
           "danmaku": 1358,
           "reply": 6483,
-          "like": 31813,
+          "like": 31814,
           "coin": 3805,
           "favorite": 2874,
           "share": 5065
@@ -5918,13 +6585,13 @@
           "engagement": 4.1833,
           "danmaku": 0.1476,
           "reply": 0.7046,
-          "like": 3.4574,
+          "like": 3.4575,
           "coin": 0.4135,
           "favorite": 0.3123,
           "share": 0.5505
         }
       },
-      "latest_view": 920144,
+      "latest_view": 920153,
       "ramp": {
         "available": false,
         "first_capture_days_since_pub": 92,
@@ -5980,31 +6647,65 @@
               "favorite": 0.3056,
               "share": 0.1077
             }
+          },
+          {
+            "date_local": "2026-09-15",
+            "days_since_pub": 13,
+            "stats": {
+              "view": 2435669,
+              "danmaku": 1375,
+              "reply": 6688,
+              "like": 58861,
+              "coin": 7185,
+              "favorite": 7444,
+              "share": 2623
+            },
+            "status": "observed",
+            "deltas": {
+              "view": 108,
+              "danmaku": 0,
+              "reply": 0,
+              "like": 2,
+              "coin": 0,
+              "favorite": 1,
+              "share": 0
+            },
+            "span_days": 1,
+            "delta_status": "derived",
+            "rates": {
+              "engagement": 3.0172,
+              "danmaku": 0.0565,
+              "reply": 0.2746,
+              "like": 2.4166,
+              "coin": 0.295,
+              "favorite": 0.3056,
+              "share": 0.1077
+            }
           }
         ],
         "latest": {
-          "date_local": "2026-09-14",
-          "days_since_pub": 12,
+          "date_local": "2026-09-15",
+          "days_since_pub": 13,
           "stats": {
-            "view": 2435561,
+            "view": 2435669,
             "danmaku": 1375,
             "reply": 6688,
-            "like": 58859,
+            "like": 58861,
             "coin": 7185,
-            "favorite": 7443,
+            "favorite": 7444,
             "share": 2623
           },
           "rates": {
-            "engagement": 3.0173,
+            "engagement": 3.0172,
             "danmaku": 0.0565,
             "reply": 0.2746,
-            "like": 2.4167,
+            "like": 2.4166,
             "coin": 0.295,
             "favorite": 0.3056,
             "share": 0.1077
           }
         },
-        "latest_view": 2435561,
+        "latest_view": 2435669,
         "ramp": {
           "available": false,
           "first_capture_days_since_pub": 12,
@@ -6057,31 +6758,65 @@
               "favorite": 0.7837,
               "share": 0.1298
             }
+          },
+          {
+            "date_local": "2026-09-15",
+            "days_since_pub": 12,
+            "stats": {
+              "view": 561249,
+              "danmaku": 351,
+              "reply": 3172,
+              "like": 19543,
+              "coin": 3919,
+              "favorite": 4398,
+              "share": 729
+            },
+            "status": "observed",
+            "deltas": {
+              "view": 173,
+              "danmaku": 0,
+              "reply": 6,
+              "like": 9,
+              "coin": 0,
+              "favorite": 1,
+              "share": 1
+            },
+            "span_days": 1,
+            "delta_status": "derived",
+            "rates": {
+              "engagement": 4.9639,
+              "danmaku": 0.0625,
+              "reply": 0.5652,
+              "like": 3.4821,
+              "coin": 0.6983,
+              "favorite": 0.7836,
+              "share": 0.1299
+            }
           }
         ],
         "latest": {
-          "date_local": "2026-09-14",
-          "days_since_pub": 11,
+          "date_local": "2026-09-15",
+          "days_since_pub": 12,
           "stats": {
-            "view": 561076,
+            "view": 561249,
             "danmaku": 351,
-            "reply": 3166,
-            "like": 19534,
+            "reply": 3172,
+            "like": 19543,
             "coin": 3919,
-            "favorite": 4397,
-            "share": 728
+            "favorite": 4398,
+            "share": 729
           },
           "rates": {
-            "engagement": 4.9637,
-            "danmaku": 0.0626,
-            "reply": 0.5643,
-            "like": 3.4815,
-            "coin": 0.6985,
-            "favorite": 0.7837,
-            "share": 0.1298
+            "engagement": 4.9639,
+            "danmaku": 0.0625,
+            "reply": 0.5652,
+            "like": 3.4821,
+            "coin": 0.6983,
+            "favorite": 0.7836,
+            "share": 0.1299
           }
         },
-        "latest_view": 561076,
+        "latest_view": 561249,
         "ramp": {
           "available": false,
           "first_capture_days_since_pub": 11,
@@ -6134,16 +6869,50 @@
               "favorite": 0.4004,
               "share": 0.2361
             }
+          },
+          {
+            "date_local": "2026-09-15",
+            "days_since_pub": 16,
+            "stats": {
+              "view": 697650,
+              "danmaku": 842,
+              "reply": 8876,
+              "like": 25854,
+              "coin": 3412,
+              "favorite": 2793,
+              "share": 1647
+            },
+            "status": "observed",
+            "deltas": {
+              "view": 39,
+              "danmaku": 0,
+              "reply": 0,
+              "like": 2,
+              "coin": 0,
+              "favorite": 0,
+              "share": 0
+            },
+            "span_days": 1,
+            "delta_status": "derived",
+            "rates": {
+              "engagement": 4.5953,
+              "danmaku": 0.1207,
+              "reply": 1.2723,
+              "like": 3.7059,
+              "coin": 0.4891,
+              "favorite": 0.4003,
+              "share": 0.2361
+            }
           }
         ],
         "latest": {
-          "date_local": "2026-09-14",
-          "days_since_pub": 15,
+          "date_local": "2026-09-15",
+          "days_since_pub": 16,
           "stats": {
-            "view": 697611,
+            "view": 697650,
             "danmaku": 842,
             "reply": 8876,
-            "like": 25852,
+            "like": 25854,
             "coin": 3412,
             "favorite": 2793,
             "share": 1647
@@ -6152,13 +6921,13 @@
             "engagement": 4.5953,
             "danmaku": 0.1207,
             "reply": 1.2723,
-            "like": 3.7058,
+            "like": 3.7059,
             "coin": 0.4891,
-            "favorite": 0.4004,
+            "favorite": 0.4003,
             "share": 0.2361
           }
         },
-        "latest_view": 697611,
+        "latest_view": 697650,
         "ramp": {
           "available": false,
           "first_capture_days_since_pub": 15,
@@ -6211,31 +6980,65 @@
               "favorite": 0.4089,
               "share": 0.1544
             }
+          },
+          {
+            "date_local": "2026-09-15",
+            "days_since_pub": 34,
+            "stats": {
+              "view": 3692834,
+              "danmaku": 3375,
+              "reply": 19870,
+              "like": 81131,
+              "coin": 10361,
+              "favorite": 15101,
+              "share": 5703
+            },
+            "status": "observed",
+            "deltas": {
+              "view": 334,
+              "danmaku": 0,
+              "reply": 1,
+              "like": 1,
+              "coin": 0,
+              "favorite": 1,
+              "share": 1
+            },
+            "span_days": 1,
+            "delta_status": "derived",
+            "rates": {
+              "engagement": 2.8865,
+              "danmaku": 0.0914,
+              "reply": 0.5381,
+              "like": 2.197,
+              "coin": 0.2806,
+              "favorite": 0.4089,
+              "share": 0.1544
+            }
           }
         ],
         "latest": {
-          "date_local": "2026-09-14",
-          "days_since_pub": 33,
+          "date_local": "2026-09-15",
+          "days_since_pub": 34,
           "stats": {
-            "view": 3692500,
+            "view": 3692834,
             "danmaku": 3375,
-            "reply": 19869,
-            "like": 81130,
+            "reply": 19870,
+            "like": 81131,
             "coin": 10361,
-            "favorite": 15100,
-            "share": 5702
+            "favorite": 15101,
+            "share": 5703
           },
           "rates": {
-            "engagement": 2.8867,
+            "engagement": 2.8865,
             "danmaku": 0.0914,
             "reply": 0.5381,
-            "like": 2.1972,
+            "like": 2.197,
             "coin": 0.2806,
             "favorite": 0.4089,
             "share": 0.1544
           }
         },
-        "latest_view": 3692500,
+        "latest_view": 3692834,
         "ramp": {
           "available": false,
           "first_capture_days_since_pub": 33,
@@ -6288,31 +7091,65 @@
               "favorite": 0.6584,
               "share": 0.1309
             }
+          },
+          {
+            "date_local": "2026-09-15",
+            "days_since_pub": 33,
+            "stats": {
+              "view": 939881,
+              "danmaku": 854,
+              "reply": 11203,
+              "like": 27757,
+              "coin": 4703,
+              "favorite": 6188,
+              "share": 1230
+            },
+            "status": "observed",
+            "deltas": {
+              "view": 81,
+              "danmaku": 0,
+              "reply": 0,
+              "like": 2,
+              "coin": 0,
+              "favorite": 0,
+              "share": 0
+            },
+            "span_days": 1,
+            "delta_status": "derived",
+            "rates": {
+              "engagement": 4.112,
+              "danmaku": 0.0909,
+              "reply": 1.192,
+              "like": 2.9532,
+              "coin": 0.5004,
+              "favorite": 0.6584,
+              "share": 0.1309
+            }
           }
         ],
         "latest": {
-          "date_local": "2026-09-14",
-          "days_since_pub": 32,
+          "date_local": "2026-09-15",
+          "days_since_pub": 33,
           "stats": {
-            "view": 939800,
+            "view": 939881,
             "danmaku": 854,
             "reply": 11203,
-            "like": 27755,
+            "like": 27757,
             "coin": 4703,
             "favorite": 6188,
             "share": 1230
           },
           "rates": {
-            "engagement": 4.1122,
+            "engagement": 4.112,
             "danmaku": 0.0909,
-            "reply": 1.1921,
-            "like": 2.9533,
+            "reply": 1.192,
+            "like": 2.9532,
             "coin": 0.5004,
             "favorite": 0.6584,
             "share": 0.1309
           }
         },
-        "latest_view": 939800,
+        "latest_view": 939881,
         "ramp": {
           "available": false,
           "first_capture_days_since_pub": 32,
@@ -6365,13 +7202,47 @@
               "favorite": 0.3683,
               "share": 0.3985
             }
+          },
+          {
+            "date_local": "2026-09-15",
+            "days_since_pub": 38,
+            "stats": {
+              "view": 2783283,
+              "danmaku": 3721,
+              "reply": 12221,
+              "like": 68693,
+              "coin": 11045,
+              "favorite": 10252,
+              "share": 11090
+            },
+            "status": "observed",
+            "deltas": {
+              "view": 11,
+              "danmaku": 0,
+              "reply": 0,
+              "like": 0,
+              "coin": 0,
+              "favorite": 0,
+              "share": 0
+            },
+            "span_days": 1,
+            "delta_status": "derived",
+            "rates": {
+              "engagement": 3.2332,
+              "danmaku": 0.1337,
+              "reply": 0.4391,
+              "like": 2.4681,
+              "coin": 0.3968,
+              "favorite": 0.3683,
+              "share": 0.3985
+            }
           }
         ],
         "latest": {
-          "date_local": "2026-09-14",
-          "days_since_pub": 37,
+          "date_local": "2026-09-15",
+          "days_since_pub": 38,
           "stats": {
-            "view": 2783272,
+            "view": 2783283,
             "danmaku": 3721,
             "reply": 12221,
             "like": 68693,
@@ -6389,7 +7260,7 @@
             "share": 0.3985
           }
         },
-        "latest_view": 2783272,
+        "latest_view": 2783283,
         "ramp": {
           "available": false,
           "first_capture_days_since_pub": 37,
@@ -6442,13 +7313,47 @@
               "favorite": 0.5538,
               "share": 0.6919
             }
+          },
+          {
+            "date_local": "2026-09-15",
+            "days_since_pub": 36,
+            "stats": {
+              "view": 728017,
+              "danmaku": 1355,
+              "reply": 6721,
+              "like": 29994,
+              "coin": 4255,
+              "favorite": 4032,
+              "share": 5037
+            },
+            "status": "observed",
+            "deltas": {
+              "view": 22,
+              "danmaku": 0,
+              "reply": 0,
+              "like": 0,
+              "coin": 0,
+              "favorite": 0,
+              "share": 0
+            },
+            "span_days": 1,
+            "delta_status": "derived",
+            "rates": {
+              "engagement": 5.2583,
+              "danmaku": 0.1861,
+              "reply": 0.9232,
+              "like": 4.12,
+              "coin": 0.5845,
+              "favorite": 0.5538,
+              "share": 0.6919
+            }
           }
         ],
         "latest": {
-          "date_local": "2026-09-14",
-          "days_since_pub": 35,
+          "date_local": "2026-09-15",
+          "days_since_pub": 36,
           "stats": {
-            "view": 727995,
+            "view": 728017,
             "danmaku": 1355,
             "reply": 6721,
             "like": 29994,
@@ -6457,16 +7362,16 @@
             "share": 5037
           },
           "rates": {
-            "engagement": 5.2584,
+            "engagement": 5.2583,
             "danmaku": 0.1861,
             "reply": 0.9232,
-            "like": 4.1201,
+            "like": 4.12,
             "coin": 0.5845,
             "favorite": 0.5538,
             "share": 0.6919
           }
         },
-        "latest_view": 727995,
+        "latest_view": 728017,
         "ramp": {
           "available": false,
           "first_capture_days_since_pub": 35,
@@ -6519,16 +7424,50 @@
               "favorite": 0.3746,
               "share": 0.0893
             }
+          },
+          {
+            "date_local": "2026-09-15",
+            "days_since_pub": 37,
+            "stats": {
+              "view": 2453535,
+              "danmaku": 1493,
+              "reply": 5013,
+              "like": 70157,
+              "coin": 4781,
+              "favorite": 9191,
+              "share": 2190
+            },
+            "status": "observed",
+            "deltas": {
+              "view": 14,
+              "danmaku": 0,
+              "reply": 0,
+              "like": 1,
+              "coin": 0,
+              "favorite": 0,
+              "share": 0
+            },
+            "span_days": 1,
+            "delta_status": "derived",
+            "rates": {
+              "engagement": 3.4289,
+              "danmaku": 0.0609,
+              "reply": 0.2043,
+              "like": 2.8594,
+              "coin": 0.1949,
+              "favorite": 0.3746,
+              "share": 0.0893
+            }
           }
         ],
         "latest": {
-          "date_local": "2026-09-14",
-          "days_since_pub": 36,
+          "date_local": "2026-09-15",
+          "days_since_pub": 37,
           "stats": {
-            "view": 2453521,
+            "view": 2453535,
             "danmaku": 1493,
             "reply": 5013,
-            "like": 70156,
+            "like": 70157,
             "coin": 4781,
             "favorite": 9191,
             "share": 2190
@@ -6543,7 +7482,7 @@
             "share": 0.0893
           }
         },
-        "latest_view": 2453521,
+        "latest_view": 2453535,
         "ramp": {
           "available": false,
           "first_capture_days_since_pub": 36,
@@ -6596,31 +7535,65 @@
               "favorite": 0.4559,
               "share": 0.1233
             }
+          },
+          {
+            "date_local": "2026-09-15",
+            "days_since_pub": 55,
+            "stats": {
+              "view": 2701366,
+              "danmaku": 2125,
+              "reply": 6378,
+              "like": 71785,
+              "coin": 6777,
+              "favorite": 12314,
+              "share": 3331
+            },
+            "status": "observed",
+            "deltas": {
+              "view": 57,
+              "danmaku": 0,
+              "reply": 0,
+              "like": 0,
+              "coin": 0,
+              "favorite": -1,
+              "share": 0
+            },
+            "span_days": 1,
+            "delta_status": "derived",
+            "rates": {
+              "engagement": 3.3641,
+              "danmaku": 0.0787,
+              "reply": 0.2361,
+              "like": 2.6574,
+              "coin": 0.2509,
+              "favorite": 0.4558,
+              "share": 0.1233
+            }
           }
         ],
         "latest": {
-          "date_local": "2026-09-14",
-          "days_since_pub": 54,
+          "date_local": "2026-09-15",
+          "days_since_pub": 55,
           "stats": {
-            "view": 2701309,
+            "view": 2701366,
             "danmaku": 2125,
             "reply": 6378,
             "like": 71785,
             "coin": 6777,
-            "favorite": 12315,
+            "favorite": 12314,
             "share": 3331
           },
           "rates": {
-            "engagement": 3.3642,
+            "engagement": 3.3641,
             "danmaku": 0.0787,
             "reply": 0.2361,
             "like": 2.6574,
             "coin": 0.2509,
-            "favorite": 0.4559,
+            "favorite": 0.4558,
             "share": 0.1233
           }
         },
-        "latest_view": 2701309,
+        "latest_view": 2701366,
         "ramp": {
           "available": false,
           "first_capture_days_since_pub": 54,
@@ -6673,31 +7646,65 @@
               "favorite": 0.8308,
               "share": 0.1254
             }
+          },
+          {
+            "date_local": "2026-09-15",
+            "days_since_pub": 54,
+            "stats": {
+              "view": 884704,
+              "danmaku": 569,
+              "reply": 4622,
+              "like": 34108,
+              "coin": 5401,
+              "favorite": 7349,
+              "share": 1109
+            },
+            "status": "observed",
+            "deltas": {
+              "view": 15,
+              "danmaku": 0,
+              "reply": 0,
+              "like": 0,
+              "coin": 0,
+              "favorite": -1,
+              "share": 0
+            },
+            "span_days": 1,
+            "delta_status": "derived",
+            "rates": {
+              "engagement": 5.2965,
+              "danmaku": 0.0643,
+              "reply": 0.5224,
+              "like": 3.8553,
+              "coin": 0.6105,
+              "favorite": 0.8307,
+              "share": 0.1254
+            }
           }
         ],
         "latest": {
-          "date_local": "2026-09-14",
-          "days_since_pub": 53,
+          "date_local": "2026-09-15",
+          "days_since_pub": 54,
           "stats": {
-            "view": 884689,
+            "view": 884704,
             "danmaku": 569,
             "reply": 4622,
             "like": 34108,
             "coin": 5401,
-            "favorite": 7350,
+            "favorite": 7349,
             "share": 1109
           },
           "rates": {
-            "engagement": 5.2967,
+            "engagement": 5.2965,
             "danmaku": 0.0643,
             "reply": 0.5224,
-            "like": 3.8554,
+            "like": 3.8553,
             "coin": 0.6105,
-            "favorite": 0.8308,
+            "favorite": 0.8307,
             "share": 0.1254
           }
         },
-        "latest_view": 884689,
+        "latest_view": 884704,
         "ramp": {
           "available": false,
           "first_capture_days_since_pub": 53,
@@ -6750,13 +7757,47 @@
               "favorite": 0.5037,
               "share": 0.3983
             }
+          },
+          {
+            "date_local": "2026-09-15",
+            "days_since_pub": 58,
+            "stats": {
+              "view": 782869,
+              "danmaku": 1145,
+              "reply": 5872,
+              "like": 33908,
+              "coin": 4877,
+              "favorite": 3943,
+              "share": 3118
+            },
+            "status": "observed",
+            "deltas": {
+              "view": 10,
+              "danmaku": 0,
+              "reply": 0,
+              "like": 0,
+              "coin": 0,
+              "favorite": 0,
+              "share": 0
+            },
+            "span_days": 1,
+            "delta_status": "derived",
+            "rates": {
+              "engagement": 5.4579,
+              "danmaku": 0.1463,
+              "reply": 0.7501,
+              "like": 4.3312,
+              "coin": 0.623,
+              "favorite": 0.5037,
+              "share": 0.3983
+            }
           }
         ],
         "latest": {
-          "date_local": "2026-09-14",
-          "days_since_pub": 57,
+          "date_local": "2026-09-15",
+          "days_since_pub": 58,
           "stats": {
-            "view": 782859,
+            "view": 782869,
             "danmaku": 1145,
             "reply": 5872,
             "like": 33908,
@@ -6768,13 +7809,13 @@
             "engagement": 5.4579,
             "danmaku": 0.1463,
             "reply": 0.7501,
-            "like": 4.3313,
+            "like": 4.3312,
             "coin": 0.623,
             "favorite": 0.5037,
             "share": 0.3983
           }
         },
-        "latest_view": 782859,
+        "latest_view": 782869,
         "ramp": {
           "available": false,
           "first_capture_days_since_pub": 57,
@@ -6827,16 +7868,50 @@
               "favorite": 0.4227,
               "share": 0.1742
             }
+          },
+          {
+            "date_local": "2026-09-15",
+            "days_since_pub": 76,
+            "stats": {
+              "view": 2890158,
+              "danmaku": 4637,
+              "reply": 12150,
+              "like": 66500,
+              "coin": 10672,
+              "favorite": 12217,
+              "share": 5034
+            },
+            "status": "observed",
+            "deltas": {
+              "view": 36,
+              "danmaku": 0,
+              "reply": 0,
+              "like": 1,
+              "coin": 0,
+              "favorite": 0,
+              "share": 0
+            },
+            "span_days": 1,
+            "delta_status": "derived",
+            "rates": {
+              "engagement": 3.0929,
+              "danmaku": 0.1604,
+              "reply": 0.4204,
+              "like": 2.3009,
+              "coin": 0.3693,
+              "favorite": 0.4227,
+              "share": 0.1742
+            }
           }
         ],
         "latest": {
-          "date_local": "2026-09-14",
-          "days_since_pub": 75,
+          "date_local": "2026-09-15",
+          "days_since_pub": 76,
           "stats": {
-            "view": 2890122,
+            "view": 2890158,
             "danmaku": 4637,
             "reply": 12150,
-            "like": 66499,
+            "like": 66500,
             "coin": 10672,
             "favorite": 12217,
             "share": 5034
@@ -6851,7 +7926,7 @@
             "share": 0.1742
           }
         },
-        "latest_view": 2890122,
+        "latest_view": 2890158,
         "ramp": {
           "available": false,
           "first_capture_days_since_pub": 75,
@@ -6904,13 +7979,47 @@
               "favorite": 0.5975,
               "share": 0.1081
             }
+          },
+          {
+            "date_local": "2026-09-15",
+            "days_since_pub": 75,
+            "stats": {
+              "view": 1079602,
+              "danmaku": 2077,
+              "reply": 10485,
+              "like": 28238,
+              "coin": 4421,
+              "favorite": 6450,
+              "share": 1167
+            },
+            "status": "observed",
+            "deltas": {
+              "view": 21,
+              "danmaku": 0,
+              "reply": 0,
+              "like": 0,
+              "coin": 0,
+              "favorite": 0,
+              "share": 0
+            },
+            "span_days": 1,
+            "delta_status": "derived",
+            "rates": {
+              "engagement": 3.6225,
+              "danmaku": 0.1924,
+              "reply": 0.9712,
+              "like": 2.6156,
+              "coin": 0.4095,
+              "favorite": 0.5974,
+              "share": 0.1081
+            }
           }
         ],
         "latest": {
-          "date_local": "2026-09-14",
-          "days_since_pub": 74,
+          "date_local": "2026-09-15",
+          "days_since_pub": 75,
           "stats": {
-            "view": 1079581,
+            "view": 1079602,
             "danmaku": 2077,
             "reply": 10485,
             "like": 28238,
@@ -6919,16 +8028,16 @@
             "share": 1167
           },
           "rates": {
-            "engagement": 3.6226,
+            "engagement": 3.6225,
             "danmaku": 0.1924,
             "reply": 0.9712,
             "like": 2.6156,
             "coin": 0.4095,
-            "favorite": 0.5975,
+            "favorite": 0.5974,
             "share": 0.1081
           }
         },
-        "latest_view": 1079581,
+        "latest_view": 1079602,
         "ramp": {
           "available": false,
           "first_capture_days_since_pub": 74,
@@ -6981,18 +8090,52 @@
               "favorite": 0.471,
               "share": 0.1507
             }
+          },
+          {
+            "date_local": "2026-09-15",
+            "days_since_pub": 77,
+            "stats": {
+              "view": 3043596,
+              "danmaku": 1873,
+              "reply": 7080,
+              "like": 74768,
+              "coin": 9222,
+              "favorite": 14333,
+              "share": 4588
+            },
+            "status": "observed",
+            "deltas": {
+              "view": 17,
+              "danmaku": 0,
+              "reply": 0,
+              "like": 0,
+              "coin": 0,
+              "favorite": -1,
+              "share": 0
+            },
+            "span_days": 1,
+            "delta_status": "derived",
+            "rates": {
+              "engagement": 3.2305,
+              "danmaku": 0.0615,
+              "reply": 0.2326,
+              "like": 2.4566,
+              "coin": 0.303,
+              "favorite": 0.4709,
+              "share": 0.1507
+            }
           }
         ],
         "latest": {
-          "date_local": "2026-09-14",
-          "days_since_pub": 76,
+          "date_local": "2026-09-15",
+          "days_since_pub": 77,
           "stats": {
-            "view": 3043579,
+            "view": 3043596,
             "danmaku": 1873,
             "reply": 7080,
             "like": 74768,
             "coin": 9222,
-            "favorite": 14334,
+            "favorite": 14333,
             "share": 4588
           },
           "rates": {
@@ -7001,11 +8144,11 @@
             "reply": 0.2326,
             "like": 2.4566,
             "coin": 0.303,
-            "favorite": 0.471,
+            "favorite": 0.4709,
             "share": 0.1507
           }
         },
-        "latest_view": 3043579,
+        "latest_view": 3043596,
         "ramp": {
           "available": false,
           "first_capture_days_since_pub": 76,
@@ -7058,13 +8201,47 @@
               "favorite": 0.5198,
               "share": 0.3103
             }
+          },
+          {
+            "date_local": "2026-09-15",
+            "days_since_pub": 79,
+            "stats": {
+              "view": 1344536,
+              "danmaku": 1445,
+              "reply": 6137,
+              "like": 48718,
+              "coin": 5664,
+              "favorite": 6989,
+              "share": 4172
+            },
+            "status": "observed",
+            "deltas": {
+              "view": 9,
+              "danmaku": 0,
+              "reply": 0,
+              "like": 0,
+              "coin": 0,
+              "favorite": 0,
+              "share": 0
+            },
+            "span_days": 1,
+            "delta_status": "derived",
+            "rates": {
+              "engagement": 4.5645,
+              "danmaku": 0.1075,
+              "reply": 0.4564,
+              "like": 3.6234,
+              "coin": 0.4213,
+              "favorite": 0.5198,
+              "share": 0.3103
+            }
           }
         ],
         "latest": {
-          "date_local": "2026-09-14",
-          "days_since_pub": 78,
+          "date_local": "2026-09-15",
+          "days_since_pub": 79,
           "stats": {
-            "view": 1344527,
+            "view": 1344536,
             "danmaku": 1445,
             "reply": 6137,
             "like": 48718,
@@ -7082,7 +8259,7 @@
             "share": 0.3103
           }
         },
-        "latest_view": 1344527,
+        "latest_view": 1344536,
         "ramp": {
           "available": false,
           "first_capture_days_since_pub": 78,
@@ -7135,13 +8312,47 @@
               "favorite": 0.2981,
               "share": 0.3086
             }
+          },
+          {
+            "date_local": "2026-09-15",
+            "days_since_pub": 80,
+            "stats": {
+              "view": 3504735,
+              "danmaku": 4221,
+              "reply": 13859,
+              "like": 75953,
+              "coin": 12580,
+              "favorite": 10447,
+              "share": 10815
+            },
+            "status": "observed",
+            "deltas": {
+              "view": 21,
+              "danmaku": 0,
+              "reply": 0,
+              "like": 0,
+              "coin": 0,
+              "favorite": 0,
+              "share": 0
+            },
+            "span_days": 1,
+            "delta_status": "derived",
+            "rates": {
+              "engagement": 2.8242,
+              "danmaku": 0.1204,
+              "reply": 0.3954,
+              "like": 2.1672,
+              "coin": 0.3589,
+              "favorite": 0.2981,
+              "share": 0.3086
+            }
           }
         ],
         "latest": {
-          "date_local": "2026-09-14",
-          "days_since_pub": 79,
+          "date_local": "2026-09-15",
+          "days_since_pub": 80,
           "stats": {
-            "view": 3504714,
+            "view": 3504735,
             "danmaku": 4221,
             "reply": 13859,
             "like": 75953,
@@ -7159,7 +8370,7 @@
             "share": 0.3086
           }
         },
-        "latest_view": 3504714,
+        "latest_view": 3504735,
         "ramp": {
           "available": false,
           "first_capture_days_since_pub": 79,
@@ -7212,13 +8423,47 @@
               "favorite": 0.2967,
               "share": 0.1599
             }
+          },
+          {
+            "date_local": "2026-09-15",
+            "days_since_pub": 90,
+            "stats": {
+              "view": 2177210,
+              "danmaku": 1633,
+              "reply": 5037,
+              "like": 53210,
+              "coin": 4957,
+              "favorite": 6460,
+              "share": 3482
+            },
+            "status": "observed",
+            "deltas": {
+              "view": 14,
+              "danmaku": 0,
+              "reply": 0,
+              "like": 0,
+              "coin": 0,
+              "favorite": 0,
+              "share": 0
+            },
+            "span_days": 1,
+            "delta_status": "derived",
+            "rates": {
+              "engagement": 2.9683,
+              "danmaku": 0.075,
+              "reply": 0.2314,
+              "like": 2.444,
+              "coin": 0.2277,
+              "favorite": 0.2967,
+              "share": 0.1599
+            }
           }
         ],
         "latest": {
-          "date_local": "2026-09-14",
-          "days_since_pub": 89,
+          "date_local": "2026-09-15",
+          "days_since_pub": 90,
           "stats": {
-            "view": 2177196,
+            "view": 2177210,
             "danmaku": 1633,
             "reply": 5037,
             "like": 53210,
@@ -7227,7 +8472,7 @@
             "share": 3482
           },
           "rates": {
-            "engagement": 2.9684,
+            "engagement": 2.9683,
             "danmaku": 0.075,
             "reply": 0.2314,
             "like": 2.444,
@@ -7236,7 +8481,7 @@
             "share": 0.1599
           }
         },
-        "latest_view": 2177196,
+        "latest_view": 2177210,
         "ramp": {
           "available": false,
           "first_capture_days_since_pub": 89,
@@ -7289,13 +8534,47 @@
               "favorite": 0.4571,
               "share": 0.1283
             }
+          },
+          {
+            "date_local": "2026-09-15",
+            "days_since_pub": 89,
+            "stats": {
+              "view": 1278689,
+              "danmaku": 424,
+              "reply": 4332,
+              "like": 31165,
+              "coin": 4054,
+              "favorite": 5845,
+              "share": 1640
+            },
+            "status": "observed",
+            "deltas": {
+              "view": 12,
+              "danmaku": 0,
+              "reply": 0,
+              "like": 0,
+              "coin": 0,
+              "favorite": 0,
+              "share": 0
+            },
+            "span_days": 1,
+            "delta_status": "derived",
+            "rates": {
+              "engagement": 3.2114,
+              "danmaku": 0.0332,
+              "reply": 0.3388,
+              "like": 2.4373,
+              "coin": 0.317,
+              "favorite": 0.4571,
+              "share": 0.1283
+            }
           }
         ],
         "latest": {
-          "date_local": "2026-09-14",
-          "days_since_pub": 88,
+          "date_local": "2026-09-15",
+          "days_since_pub": 89,
           "stats": {
-            "view": 1278677,
+            "view": 1278689,
             "danmaku": 424,
             "reply": 4332,
             "like": 31165,
@@ -7313,7 +8592,7 @@
             "share": 0.1283
           }
         },
-        "latest_view": 1278677,
+        "latest_view": 1278689,
         "ramp": {
           "available": false,
           "first_capture_days_since_pub": 88,
@@ -7366,16 +8645,50 @@
               "favorite": 0.3123,
               "share": 0.5505
             }
+          },
+          {
+            "date_local": "2026-09-15",
+            "days_since_pub": 93,
+            "stats": {
+              "view": 920153,
+              "danmaku": 1358,
+              "reply": 6483,
+              "like": 31814,
+              "coin": 3805,
+              "favorite": 2874,
+              "share": 5065
+            },
+            "status": "observed",
+            "deltas": {
+              "view": 9,
+              "danmaku": 0,
+              "reply": 0,
+              "like": 1,
+              "coin": 0,
+              "favorite": 0,
+              "share": 0
+            },
+            "span_days": 1,
+            "delta_status": "derived",
+            "rates": {
+              "engagement": 4.1833,
+              "danmaku": 0.1476,
+              "reply": 0.7046,
+              "like": 3.4575,
+              "coin": 0.4135,
+              "favorite": 0.3123,
+              "share": 0.5505
+            }
           }
         ],
         "latest": {
-          "date_local": "2026-09-14",
-          "days_since_pub": 92,
+          "date_local": "2026-09-15",
+          "days_since_pub": 93,
           "stats": {
-            "view": 920144,
+            "view": 920153,
             "danmaku": 1358,
             "reply": 6483,
-            "like": 31813,
+            "like": 31814,
             "coin": 3805,
             "favorite": 2874,
             "share": 5065
@@ -7384,13 +8697,13 @@
             "engagement": 4.1833,
             "danmaku": 0.1476,
             "reply": 0.7046,
-            "like": 3.4574,
+            "like": 3.4575,
             "coin": 0.4135,
             "favorite": 0.3123,
             "share": 0.5505
           }
         },
-        "latest_view": 920144,
+        "latest_view": 920153,
         "ramp": {
           "available": false,
           "first_capture_days_since_pub": 92,
@@ -7401,21 +8714,21 @@
     "totals": {
       "videos": 19,
       "totals": {
-        "view": 34898733,
+        "view": 34899736,
         "danmaku": 34873,
-        "reply": 156192,
-        "like": 932138,
+        "reply": 156199,
+        "like": 932157,
         "coin": 122091,
         "favorite": 148620,
-        "share": 73768
+        "share": 73770
       },
       "rates": {
-        "engagement": 3.4467,
+        "engagement": 3.4466,
         "danmaku": 0.0999,
         "reply": 0.4476,
         "like": 2.671,
         "coin": 0.3498,
-        "favorite": 0.4259,
+        "favorite": 0.4258,
         "share": 0.2114
       }
     }
@@ -7438,10 +8751,16 @@
   "quality": {
     "summary": {
       "error": 0,
-      "warn": 1,
+      "warn": 2,
       "info": 2
     },
     "issues": [
+      {
+        "level": "warn",
+        "code": "stale_data",
+        "message": "今天尚未采集，最新快照为 2026-09-14",
+        "stale_days": 1
+      },
       {
         "level": "info",
         "code": "short_coverage",
