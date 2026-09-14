@@ -23,6 +23,31 @@
       "status": "observed"
     }
   ],
+  "online_daily": [
+    {
+      "date_local": "2026-09-14",
+      "peak": 4504,
+      "trough": 4504,
+      "mean": 4504,
+      "peak_hour": 23,
+      "trough_hour": 23,
+      "peak_trough_ratio": 1.0,
+      "samples": 1,
+      "status": "partial"
+    }
+  ],
+  "online_hourly": [
+    {
+      "date_local": "2026-09-14",
+      "hour_local": 23,
+      "sampled_at": "2026-09-14T15:28:17+00:00",
+      "game_id": "neverness_to_everness",
+      "steam_app_id": 4508340,
+      "players": 4504,
+      "status": "observed",
+      "note": ""
+    }
+  ],
   "review_series": [
     {
       "date_local": "2026-09-14",
@@ -1290,6 +1315,2842 @@
     "days": 69,
     "method": "appreviews_backfill"
   },
+  "review_profile": {
+    "method": "appreviews_backfill",
+    "status": "reconstructed",
+    "collected_at": "2026-09-14",
+    "total_reviews": 6388,
+    "coverage": {
+      "start": "2026-07-07",
+      "end": "2026-09-14",
+      "days": 70
+    },
+    "daily": [
+      {
+        "date_local": "2026-07-07",
+        "reviews": 39,
+        "positive": 37,
+        "negative": 2,
+        "review_rate": 94.87,
+        "playtime_at_review_median": 12,
+        "playtime_at_review_p25": 8,
+        "playtime_at_review_p75": 30,
+        "short_play_share": 84.62,
+        "heavy_play_share": 0.0,
+        "observation_days": 69,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 3193,
+        "post_review_minutes_per_day": 46.28,
+        "still_playing_share": 87.18,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "russian": 3,
+          "schinese": 1,
+          "english": 28,
+          "latam": 1,
+          "brazilian": 2,
+          "spanish": 2,
+          "polish": 1,
+          "turkish": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-07-08",
+        "reviews": 914,
+        "positive": 807,
+        "negative": 107,
+        "review_rate": 88.29,
+        "playtime_at_review_median": 132,
+        "playtime_at_review_p25": 45,
+        "playtime_at_review_p75": 300,
+        "short_play_share": 47.48,
+        "heavy_play_share": 1.42,
+        "observation_days": 68,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 2684,
+        "post_review_minutes_per_day": 39.46,
+        "still_playing_share": 86.87,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 454,
+          "spanish": 47,
+          "turkish": 20,
+          "russian": 154,
+          "polish": 10,
+          "japanese": 15,
+          "brazilian": 37,
+          "latam": 36,
+          "schinese": 14,
+          "german": 28,
+          "romanian": 1,
+          "italian": 4,
+          "tchinese": 2,
+          "koreana": 42,
+          "ukrainian": 9,
+          "norwegian": 1,
+          "french": 21,
+          "czech": 3,
+          "thai": 12,
+          "hungarian": 2,
+          "dutch": 2
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-07-09",
+        "reviews": 501,
+        "positive": 416,
+        "negative": 85,
+        "review_rate": 83.03,
+        "playtime_at_review_median": 274,
+        "playtime_at_review_p25": 98,
+        "playtime_at_review_p75": 548,
+        "short_play_share": 27.54,
+        "heavy_play_share": 1.6,
+        "observation_days": 67,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 2070,
+        "post_review_minutes_per_day": 30.9,
+        "still_playing_share": 81.84,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "thai": 4,
+          "english": 248,
+          "russian": 90,
+          "german": 16,
+          "spanish": 30,
+          "portuguese": 1,
+          "latam": 17,
+          "turkish": 11,
+          "japanese": 11,
+          "schinese": 8,
+          "hungarian": 1,
+          "koreana": 19,
+          "french": 13,
+          "brazilian": 22,
+          "czech": 1,
+          "polish": 5,
+          "swedish": 1,
+          "ukrainian": 1,
+          "indonesian": 1,
+          "italian": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-07-10",
+        "reviews": 297,
+        "positive": 237,
+        "negative": 60,
+        "review_rate": 79.8,
+        "playtime_at_review_median": 244,
+        "playtime_at_review_p25": 91,
+        "playtime_at_review_p75": 618,
+        "short_play_share": 27.61,
+        "heavy_play_share": 1.68,
+        "observation_days": 66,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1832,
+        "post_review_minutes_per_day": 27.76,
+        "still_playing_share": 77.44,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "russian": 63,
+          "thai": 4,
+          "german": 6,
+          "english": 136,
+          "ukrainian": 3,
+          "spanish": 11,
+          "turkish": 4,
+          "brazilian": 16,
+          "polish": 6,
+          "koreana": 17,
+          "czech": 1,
+          "latam": 9,
+          "french": 8,
+          "hungarian": 2,
+          "japanese": 6,
+          "indonesian": 2,
+          "schinese": 3
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-07-11",
+        "reviews": 274,
+        "positive": 229,
+        "negative": 45,
+        "review_rate": 83.58,
+        "playtime_at_review_median": 334,
+        "playtime_at_review_p25": 122,
+        "playtime_at_review_p75": 777,
+        "short_play_share": 23.72,
+        "heavy_play_share": 0.36,
+        "observation_days": 65,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1597,
+        "post_review_minutes_per_day": 24.32,
+        "still_playing_share": 80.29,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 125,
+          "french": 1,
+          "schinese": 2,
+          "spanish": 17,
+          "brazilian": 14,
+          "german": 9,
+          "portuguese": 1,
+          "russian": 68,
+          "turkish": 3,
+          "hungarian": 1,
+          "latam": 7,
+          "ukrainian": 2,
+          "tchinese": 2,
+          "japanese": 5,
+          "koreana": 13,
+          "finnish": 1,
+          "thai": 3
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-07-12",
+        "reviews": 194,
+        "positive": 159,
+        "negative": 35,
+        "review_rate": 81.96,
+        "playtime_at_review_median": 426,
+        "playtime_at_review_p25": 144,
+        "playtime_at_review_p75": 879,
+        "short_play_share": 23.2,
+        "heavy_play_share": 2.06,
+        "observation_days": 64,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1385,
+        "post_review_minutes_per_day": 21.49,
+        "still_playing_share": 78.87,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "koreana": 15,
+          "english": 88,
+          "russian": 41,
+          "french": 5,
+          "latam": 5,
+          "portuguese": 1,
+          "german": 4,
+          "schinese": 5,
+          "spanish": 4,
+          "japanese": 6,
+          "polish": 2,
+          "ukrainian": 2,
+          "brazilian": 7,
+          "turkish": 7,
+          "thai": 1,
+          "czech": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-07-13",
+        "reviews": 164,
+        "positive": 145,
+        "negative": 19,
+        "review_rate": 88.41,
+        "playtime_at_review_median": 468,
+        "playtime_at_review_p25": 209,
+        "playtime_at_review_p75": 1028,
+        "short_play_share": 16.46,
+        "heavy_play_share": 2.44,
+        "observation_days": 63,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 2130,
+        "post_review_minutes_per_day": 33.47,
+        "still_playing_share": 82.93,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 74,
+          "spanish": 10,
+          "russian": 31,
+          "latam": 6,
+          "dutch": 1,
+          "schinese": 4,
+          "polish": 2,
+          "brazilian": 6,
+          "bulgarian": 1,
+          "italian": 3,
+          "german": 7,
+          "koreana": 13,
+          "ukrainian": 1,
+          "turkish": 3,
+          "japanese": 2
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-07-14",
+        "reviews": 140,
+        "positive": 113,
+        "negative": 27,
+        "review_rate": 80.71,
+        "playtime_at_review_median": 504,
+        "playtime_at_review_p25": 200,
+        "playtime_at_review_p75": 915,
+        "short_play_share": 17.14,
+        "heavy_play_share": 0.71,
+        "observation_days": 62,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1605,
+        "post_review_minutes_per_day": 25.69,
+        "still_playing_share": 77.14,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "french": 5,
+          "english": 62,
+          "russian": 33,
+          "japanese": 2,
+          "latam": 5,
+          "brazilian": 8,
+          "spanish": 9,
+          "turkish": 3,
+          "german": 3,
+          "koreana": 7,
+          "polish": 1,
+          "norwegian": 1,
+          "ukrainian": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-07-15",
+        "reviews": 143,
+        "positive": 112,
+        "negative": 31,
+        "review_rate": 78.32,
+        "playtime_at_review_median": 419,
+        "playtime_at_review_p25": 191,
+        "playtime_at_review_p75": 1114,
+        "short_play_share": 18.88,
+        "heavy_play_share": 1.4,
+        "observation_days": 61,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1174,
+        "post_review_minutes_per_day": 19.25,
+        "still_playing_share": 73.43,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "spanish": 9,
+          "english": 57,
+          "portuguese": 1,
+          "russian": 44,
+          "latam": 2,
+          "turkish": 2,
+          "german": 2,
+          "french": 3,
+          "polish": 3,
+          "brazilian": 7,
+          "japanese": 5,
+          "koreana": 5,
+          "ukrainian": 1,
+          "italian": 1,
+          "hungarian": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-07-16",
+        "reviews": 168,
+        "positive": 149,
+        "negative": 19,
+        "review_rate": 88.69,
+        "playtime_at_review_median": 639,
+        "playtime_at_review_p25": 262,
+        "playtime_at_review_p75": 1295,
+        "short_play_share": 11.31,
+        "heavy_play_share": 2.38,
+        "observation_days": 60,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 2065,
+        "post_review_minutes_per_day": 33.62,
+        "still_playing_share": 80.95,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 69,
+          "russian": 36,
+          "brazilian": 12,
+          "german": 7,
+          "koreana": 15,
+          "portuguese": 2,
+          "spanish": 6,
+          "turkish": 3,
+          "french": 6,
+          "latam": 5,
+          "italian": 1,
+          "tchinese": 1,
+          "japanese": 3,
+          "czech": 1,
+          "schinese": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-07-17",
+        "reviews": 100,
+        "positive": 82,
+        "negative": 18,
+        "review_rate": 82.0,
+        "playtime_at_review_median": 659,
+        "playtime_at_review_p25": 264,
+        "playtime_at_review_p75": 1554,
+        "short_play_share": 11.0,
+        "heavy_play_share": 2.0,
+        "observation_days": 59,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1430,
+        "post_review_minutes_per_day": 24.14,
+        "still_playing_share": 79.0,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "japanese": 3,
+          "english": 42,
+          "german": 4,
+          "russian": 22,
+          "koreana": 7,
+          "brazilian": 4,
+          "spanish": 6,
+          "polish": 2,
+          "schinese": 2,
+          "ukrainian": 2,
+          "french": 1,
+          "turkish": 1,
+          "latam": 3,
+          "indonesian": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-07-18",
+        "reviews": 98,
+        "positive": 84,
+        "negative": 14,
+        "review_rate": 85.71,
+        "playtime_at_review_median": 734,
+        "playtime_at_review_p25": 340,
+        "playtime_at_review_p75": 1950,
+        "short_play_share": 8.16,
+        "heavy_play_share": 1.02,
+        "observation_days": 58,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1784,
+        "post_review_minutes_per_day": 30.52,
+        "still_playing_share": 85.71,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "german": 3,
+          "russian": 20,
+          "english": 48,
+          "french": 3,
+          "latam": 2,
+          "spanish": 7,
+          "turkish": 2,
+          "koreana": 4,
+          "brazilian": 5,
+          "ukrainian": 1,
+          "schinese": 3
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-07-19",
+        "reviews": 90,
+        "positive": 70,
+        "negative": 20,
+        "review_rate": 77.78,
+        "playtime_at_review_median": 661,
+        "playtime_at_review_p25": 225,
+        "playtime_at_review_p75": 1297,
+        "short_play_share": 13.33,
+        "heavy_play_share": 0.0,
+        "observation_days": 57,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1093,
+        "post_review_minutes_per_day": 17.28,
+        "still_playing_share": 73.33,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 49,
+          "brazilian": 5,
+          "turkish": 4,
+          "russian": 16,
+          "spanish": 5,
+          "schinese": 3,
+          "german": 1,
+          "latam": 1,
+          "french": 2,
+          "koreana": 3,
+          "tchinese": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-07-20",
+        "reviews": 77,
+        "positive": 69,
+        "negative": 8,
+        "review_rate": 89.61,
+        "playtime_at_review_median": 780,
+        "playtime_at_review_p25": 308,
+        "playtime_at_review_p75": 1529,
+        "short_play_share": 9.09,
+        "heavy_play_share": 2.6,
+        "observation_days": 56,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1062,
+        "post_review_minutes_per_day": 18.96,
+        "still_playing_share": 81.82,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 26,
+          "german": 3,
+          "portuguese": 1,
+          "russian": 15,
+          "spanish": 8,
+          "turkish": 3,
+          "french": 4,
+          "brazilian": 4,
+          "greek": 1,
+          "koreana": 7,
+          "polish": 1,
+          "ukrainian": 1,
+          "latam": 1,
+          "thai": 1,
+          "japanese": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-07-21",
+        "reviews": 63,
+        "positive": 57,
+        "negative": 6,
+        "review_rate": 90.48,
+        "playtime_at_review_median": 749,
+        "playtime_at_review_p25": 260,
+        "playtime_at_review_p75": 1471,
+        "short_play_share": 17.46,
+        "heavy_play_share": 0.0,
+        "observation_days": 55,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1106,
+        "post_review_minutes_per_day": 20.11,
+        "still_playing_share": 80.95,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 30,
+          "brazilian": 2,
+          "russian": 18,
+          "polish": 1,
+          "schinese": 2,
+          "ukrainian": 1,
+          "french": 1,
+          "german": 1,
+          "koreana": 3,
+          "spanish": 2,
+          "hungarian": 1,
+          "japanese": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-07-22",
+        "reviews": 87,
+        "positive": 68,
+        "negative": 19,
+        "review_rate": 78.16,
+        "playtime_at_review_median": 615,
+        "playtime_at_review_p25": 244,
+        "playtime_at_review_p75": 2101,
+        "short_play_share": 13.79,
+        "heavy_play_share": 0.0,
+        "observation_days": 54,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1326,
+        "post_review_minutes_per_day": 24.56,
+        "still_playing_share": 77.01,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "koreana": 6,
+          "russian": 20,
+          "spanish": 3,
+          "english": 39,
+          "japanese": 3,
+          "ukrainian": 2,
+          "brazilian": 5,
+          "german": 2,
+          "turkish": 1,
+          "italian": 1,
+          "polish": 2,
+          "french": 1,
+          "latam": 2
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-07-23",
+        "reviews": 74,
+        "positive": 60,
+        "negative": 14,
+        "review_rate": 81.08,
+        "playtime_at_review_median": 613,
+        "playtime_at_review_p25": 237,
+        "playtime_at_review_p75": 1434,
+        "short_play_share": 10.81,
+        "heavy_play_share": 1.35,
+        "observation_days": 53,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1440,
+        "post_review_minutes_per_day": 26.16,
+        "still_playing_share": 85.14,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "japanese": 4,
+          "spanish": 6,
+          "english": 30,
+          "french": 2,
+          "koreana": 1,
+          "brazilian": 3,
+          "russian": 18,
+          "polish": 1,
+          "latam": 3,
+          "turkish": 2,
+          "thai": 1,
+          "indonesian": 1,
+          "czech": 1,
+          "portuguese": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-07-24",
+        "reviews": 81,
+        "positive": 61,
+        "negative": 20,
+        "review_rate": 75.31,
+        "playtime_at_review_median": 668,
+        "playtime_at_review_p25": 257,
+        "playtime_at_review_p75": 2078,
+        "short_play_share": 11.11,
+        "heavy_play_share": 4.94,
+        "observation_days": 52,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1463,
+        "post_review_minutes_per_day": 28.13,
+        "still_playing_share": 85.19,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "brazilian": 4,
+          "english": 27,
+          "german": 3,
+          "spanish": 7,
+          "russian": 23,
+          "polish": 3,
+          "latam": 3,
+          "french": 2,
+          "hungarian": 1,
+          "koreana": 5,
+          "japanese": 1,
+          "portuguese": 1,
+          "schinese": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-07-25",
+        "reviews": 53,
+        "positive": 42,
+        "negative": 11,
+        "review_rate": 79.25,
+        "playtime_at_review_median": 517,
+        "playtime_at_review_p25": 152,
+        "playtime_at_review_p75": 1400,
+        "short_play_share": 22.64,
+        "heavy_play_share": 1.89,
+        "observation_days": 51,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1258,
+        "post_review_minutes_per_day": 24.67,
+        "still_playing_share": 67.92,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "portuguese": 1,
+          "english": 20,
+          "turkish": 1,
+          "spanish": 4,
+          "russian": 13,
+          "koreana": 4,
+          "polish": 2,
+          "brazilian": 1,
+          "french": 3,
+          "german": 1,
+          "schinese": 1,
+          "dutch": 1,
+          "latam": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-07-26",
+        "reviews": 60,
+        "positive": 50,
+        "negative": 10,
+        "review_rate": 83.33,
+        "playtime_at_review_median": 1106,
+        "playtime_at_review_p25": 513,
+        "playtime_at_review_p75": 2563,
+        "short_play_share": 3.33,
+        "heavy_play_share": 15.0,
+        "observation_days": 50,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1528,
+        "post_review_minutes_per_day": 30.37,
+        "still_playing_share": 90.0,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 25,
+          "russian": 11,
+          "thai": 1,
+          "turkish": 1,
+          "german": 5,
+          "ukrainian": 1,
+          "brazilian": 2,
+          "koreana": 5,
+          "french": 3,
+          "schinese": 2,
+          "spanish": 2,
+          "tchinese": 1,
+          "japanese": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-07-27",
+        "reviews": 67,
+        "positive": 57,
+        "negative": 10,
+        "review_rate": 85.07,
+        "playtime_at_review_median": 959,
+        "playtime_at_review_p25": 255,
+        "playtime_at_review_p75": 1965,
+        "short_play_share": 14.93,
+        "heavy_play_share": 1.49,
+        "observation_days": 49,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1541,
+        "post_review_minutes_per_day": 31.45,
+        "still_playing_share": 82.09,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "russian": 15,
+          "english": 26,
+          "brazilian": 5,
+          "spanish": 5,
+          "indonesian": 1,
+          "french": 1,
+          "turkish": 1,
+          "german": 4,
+          "koreana": 5,
+          "latam": 2,
+          "japanese": 1,
+          "schinese": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-07-28",
+        "reviews": 77,
+        "positive": 68,
+        "negative": 9,
+        "review_rate": 88.31,
+        "playtime_at_review_median": 1814,
+        "playtime_at_review_p25": 410,
+        "playtime_at_review_p75": 3353,
+        "short_play_share": 12.99,
+        "heavy_play_share": 11.69,
+        "observation_days": 48,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1674,
+        "post_review_minutes_per_day": 34.88,
+        "still_playing_share": 90.91,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "latam": 3,
+          "brazilian": 5,
+          "english": 29,
+          "spanish": 8,
+          "russian": 13,
+          "japanese": 4,
+          "german": 4,
+          "ukrainian": 1,
+          "czech": 1,
+          "turkish": 1,
+          "french": 2,
+          "koreana": 3,
+          "indonesian": 1,
+          "norwegian": 1,
+          "tchinese": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-07-29",
+        "reviews": 88,
+        "positive": 74,
+        "negative": 14,
+        "review_rate": 84.09,
+        "playtime_at_review_median": 1086,
+        "playtime_at_review_p25": 219,
+        "playtime_at_review_p75": 2076,
+        "short_play_share": 17.05,
+        "heavy_play_share": 3.41,
+        "observation_days": 47,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1342,
+        "post_review_minutes_per_day": 27.88,
+        "still_playing_share": 86.36,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "russian": 20,
+          "english": 38,
+          "german": 5,
+          "tchinese": 1,
+          "swedish": 1,
+          "koreana": 4,
+          "dutch": 1,
+          "turkish": 2,
+          "spanish": 9,
+          "thai": 2,
+          "french": 2,
+          "schinese": 1,
+          "japanese": 1,
+          "latam": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-07-30",
+        "reviews": 59,
+        "positive": 49,
+        "negative": 10,
+        "review_rate": 83.05,
+        "playtime_at_review_median": 447,
+        "playtime_at_review_p25": 149,
+        "playtime_at_review_p75": 1387,
+        "short_play_share": 22.03,
+        "heavy_play_share": 3.39,
+        "observation_days": 46,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 922,
+        "post_review_minutes_per_day": 20.04,
+        "still_playing_share": 71.19,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "spanish": 4,
+          "english": 16,
+          "czech": 1,
+          "latam": 3,
+          "polish": 2,
+          "russian": 16,
+          "schinese": 1,
+          "greek": 1,
+          "turkish": 4,
+          "french": 1,
+          "japanese": 3,
+          "brazilian": 2,
+          "koreana": 4,
+          "german": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-07-31",
+        "reviews": 68,
+        "positive": 57,
+        "negative": 11,
+        "review_rate": 83.82,
+        "playtime_at_review_median": 836,
+        "playtime_at_review_p25": 250,
+        "playtime_at_review_p75": 2088,
+        "short_play_share": 5.88,
+        "heavy_play_share": 5.88,
+        "observation_days": 45,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1582,
+        "post_review_minutes_per_day": 33.38,
+        "still_playing_share": 77.94,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "russian": 25,
+          "english": 19,
+          "brazilian": 6,
+          "spanish": 5,
+          "koreana": 7,
+          "latam": 3,
+          "italian": 1,
+          "french": 1,
+          "indonesian": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-01",
+        "reviews": 46,
+        "positive": 39,
+        "negative": 7,
+        "review_rate": 84.78,
+        "playtime_at_review_median": 1803,
+        "playtime_at_review_p25": 396,
+        "playtime_at_review_p75": 3014,
+        "short_play_share": 6.52,
+        "heavy_play_share": 4.35,
+        "observation_days": 44,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1844,
+        "post_review_minutes_per_day": 40.76,
+        "still_playing_share": 89.13,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 26,
+          "russian": 6,
+          "german": 1,
+          "brazilian": 2,
+          "japanese": 4,
+          "latam": 2,
+          "spanish": 1,
+          "french": 1,
+          "thai": 1,
+          "norwegian": 1,
+          "koreana": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-02",
+        "reviews": 67,
+        "positive": 50,
+        "negative": 17,
+        "review_rate": 74.63,
+        "playtime_at_review_median": 858,
+        "playtime_at_review_p25": 269,
+        "playtime_at_review_p75": 2768,
+        "short_play_share": 11.94,
+        "heavy_play_share": 7.46,
+        "observation_days": 43,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1243,
+        "post_review_minutes_per_day": 28.91,
+        "still_playing_share": 83.58,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "russian": 15,
+          "spanish": 1,
+          "english": 29,
+          "german": 3,
+          "brazilian": 6,
+          "french": 2,
+          "thai": 1,
+          "ukrainian": 1,
+          "polish": 2,
+          "latam": 3,
+          "japanese": 2,
+          "schinese": 1,
+          "turkish": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-03",
+        "reviews": 55,
+        "positive": 46,
+        "negative": 9,
+        "review_rate": 83.64,
+        "playtime_at_review_median": 728,
+        "playtime_at_review_p25": 253,
+        "playtime_at_review_p75": 2165,
+        "short_play_share": 18.18,
+        "heavy_play_share": 9.09,
+        "observation_days": 42,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 828,
+        "post_review_minutes_per_day": 19.71,
+        "still_playing_share": 74.55,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 20,
+          "spanish": 7,
+          "russian": 13,
+          "german": 2,
+          "turkish": 2,
+          "brazilian": 2,
+          "schinese": 1,
+          "czech": 1,
+          "japanese": 1,
+          "polish": 1,
+          "koreana": 2,
+          "french": 1,
+          "thai": 1,
+          "italian": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-04",
+        "reviews": 58,
+        "positive": 41,
+        "negative": 17,
+        "review_rate": 70.69,
+        "playtime_at_review_median": 700,
+        "playtime_at_review_p25": 220,
+        "playtime_at_review_p75": 2272,
+        "short_play_share": 15.52,
+        "heavy_play_share": 8.62,
+        "observation_days": 41,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 357,
+        "post_review_minutes_per_day": 7.61,
+        "still_playing_share": 65.52,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "indonesian": 1,
+          "norwegian": 1,
+          "french": 3,
+          "english": 18,
+          "german": 4,
+          "japanese": 3,
+          "russian": 14,
+          "ukrainian": 1,
+          "brazilian": 1,
+          "koreana": 5,
+          "spanish": 1,
+          "czech": 1,
+          "schinese": 1,
+          "latam": 2,
+          "turkish": 1,
+          "italian": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-05",
+        "reviews": 55,
+        "positive": 49,
+        "negative": 6,
+        "review_rate": 89.09,
+        "playtime_at_review_median": 842,
+        "playtime_at_review_p25": 442,
+        "playtime_at_review_p75": 2397,
+        "short_play_share": 14.55,
+        "heavy_play_share": 1.82,
+        "observation_days": 40,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1650,
+        "post_review_minutes_per_day": 41.25,
+        "still_playing_share": 87.27,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "spanish": 2,
+          "english": 27,
+          "polish": 1,
+          "russian": 13,
+          "german": 2,
+          "brazilian": 1,
+          "koreana": 2,
+          "thai": 1,
+          "turkish": 1,
+          "schinese": 1,
+          "latam": 3,
+          "portuguese": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-06",
+        "reviews": 37,
+        "positive": 26,
+        "negative": 11,
+        "review_rate": 70.27,
+        "playtime_at_review_median": 1270,
+        "playtime_at_review_p25": 289,
+        "playtime_at_review_p75": 2312,
+        "short_play_share": 16.22,
+        "heavy_play_share": 0.0,
+        "observation_days": 39,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 2835,
+        "post_review_minutes_per_day": 72.69,
+        "still_playing_share": 81.08,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 16,
+          "hungarian": 1,
+          "russian": 6,
+          "latam": 1,
+          "spanish": 1,
+          "polish": 1,
+          "brazilian": 2,
+          "koreana": 4,
+          "german": 2,
+          "japanese": 2,
+          "indonesian": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-07",
+        "reviews": 40,
+        "positive": 31,
+        "negative": 9,
+        "review_rate": 77.5,
+        "playtime_at_review_median": 1247,
+        "playtime_at_review_p25": 353,
+        "playtime_at_review_p75": 2359,
+        "short_play_share": 10.0,
+        "heavy_play_share": 7.5,
+        "observation_days": 38,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1182,
+        "post_review_minutes_per_day": 29.54,
+        "still_playing_share": 75.0,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 21,
+          "brazilian": 2,
+          "russian": 10,
+          "spanish": 2,
+          "japanese": 2,
+          "finnish": 1,
+          "schinese": 1,
+          "german": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-08",
+        "reviews": 61,
+        "positive": 51,
+        "negative": 10,
+        "review_rate": 83.61,
+        "playtime_at_review_median": 1793,
+        "playtime_at_review_p25": 293,
+        "playtime_at_review_p75": 3481,
+        "short_play_share": 8.2,
+        "heavy_play_share": 11.48,
+        "observation_days": 37,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1196,
+        "post_review_minutes_per_day": 32.32,
+        "still_playing_share": 86.89,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "brazilian": 5,
+          "russian": 14,
+          "english": 27,
+          "ukrainian": 1,
+          "japanese": 1,
+          "tchinese": 1,
+          "polish": 1,
+          "french": 2,
+          "spanish": 4,
+          "koreana": 2,
+          "schinese": 1,
+          "latam": 1,
+          "german": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-09",
+        "reviews": 52,
+        "positive": 42,
+        "negative": 10,
+        "review_rate": 80.77,
+        "playtime_at_review_median": 1220,
+        "playtime_at_review_p25": 447,
+        "playtime_at_review_p75": 2935,
+        "short_play_share": 11.54,
+        "heavy_play_share": 11.54,
+        "observation_days": 36,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1401,
+        "post_review_minutes_per_day": 38.58,
+        "still_playing_share": 82.69,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 27,
+          "spanish": 6,
+          "russian": 5,
+          "latam": 3,
+          "german": 1,
+          "brazilian": 3,
+          "polish": 1,
+          "turkish": 2,
+          "koreana": 4
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-10",
+        "reviews": 47,
+        "positive": 40,
+        "negative": 7,
+        "review_rate": 85.11,
+        "playtime_at_review_median": 1096,
+        "playtime_at_review_p25": 344,
+        "playtime_at_review_p75": 2265,
+        "short_play_share": 10.64,
+        "heavy_play_share": 4.26,
+        "observation_days": 35,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1066,
+        "post_review_minutes_per_day": 30.46,
+        "still_playing_share": 82.98,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 24,
+          "spanish": 2,
+          "russian": 9,
+          "thai": 1,
+          "indonesian": 1,
+          "koreana": 3,
+          "polish": 1,
+          "turkish": 1,
+          "japanese": 1,
+          "french": 1,
+          "brazilian": 1,
+          "latam": 2
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-11",
+        "reviews": 57,
+        "positive": 50,
+        "negative": 7,
+        "review_rate": 87.72,
+        "playtime_at_review_median": 1222,
+        "playtime_at_review_p25": 436,
+        "playtime_at_review_p75": 2160,
+        "short_play_share": 8.77,
+        "heavy_play_share": 1.75,
+        "observation_days": 34,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1613,
+        "post_review_minutes_per_day": 47.44,
+        "still_playing_share": 85.96,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 25,
+          "russian": 11,
+          "spanish": 5,
+          "french": 3,
+          "brazilian": 1,
+          "ukrainian": 1,
+          "italian": 1,
+          "turkish": 2,
+          "polish": 1,
+          "czech": 1,
+          "indonesian": 2,
+          "schinese": 1,
+          "koreana": 3
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-12",
+        "reviews": 49,
+        "positive": 40,
+        "negative": 9,
+        "review_rate": 81.63,
+        "playtime_at_review_median": 1205,
+        "playtime_at_review_p25": 325,
+        "playtime_at_review_p75": 2978,
+        "short_play_share": 8.16,
+        "heavy_play_share": 8.16,
+        "observation_days": 33,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 594,
+        "post_review_minutes_per_day": 18.0,
+        "still_playing_share": 81.63,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 21,
+          "thai": 2,
+          "koreana": 4,
+          "turkish": 2,
+          "spanish": 5,
+          "russian": 7,
+          "german": 3,
+          "czech": 1,
+          "schinese": 3,
+          "latam": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-13",
+        "reviews": 45,
+        "positive": 43,
+        "negative": 2,
+        "review_rate": 95.56,
+        "playtime_at_review_median": 1340,
+        "playtime_at_review_p25": 344,
+        "playtime_at_review_p75": 3003,
+        "short_play_share": 8.89,
+        "heavy_play_share": 4.44,
+        "observation_days": 32,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1591,
+        "post_review_minutes_per_day": 49.72,
+        "still_playing_share": 91.11,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 21,
+          "russian": 9,
+          "czech": 1,
+          "latam": 1,
+          "brazilian": 2,
+          "italian": 1,
+          "japanese": 3,
+          "spanish": 3,
+          "koreana": 2,
+          "french": 1,
+          "ukrainian": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-14",
+        "reviews": 35,
+        "positive": 29,
+        "negative": 6,
+        "review_rate": 82.86,
+        "playtime_at_review_median": 785,
+        "playtime_at_review_p25": 213,
+        "playtime_at_review_p75": 1900,
+        "short_play_share": 17.14,
+        "heavy_play_share": 8.57,
+        "observation_days": 31,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1709,
+        "post_review_minutes_per_day": 55.13,
+        "still_playing_share": 77.14,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "brazilian": 5,
+          "russian": 11,
+          "english": 13,
+          "french": 1,
+          "polish": 1,
+          "koreana": 3,
+          "indonesian": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-15",
+        "reviews": 43,
+        "positive": 33,
+        "negative": 10,
+        "review_rate": 76.74,
+        "playtime_at_review_median": 1654,
+        "playtime_at_review_p25": 329,
+        "playtime_at_review_p75": 3930,
+        "short_play_share": 18.6,
+        "heavy_play_share": 11.63,
+        "observation_days": 30,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1521,
+        "post_review_minutes_per_day": 50.7,
+        "still_playing_share": 76.74,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 19,
+          "russian": 9,
+          "german": 1,
+          "spanish": 3,
+          "dutch": 1,
+          "brazilian": 2,
+          "koreana": 6,
+          "latam": 1,
+          "french": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-16",
+        "reviews": 38,
+        "positive": 31,
+        "negative": 7,
+        "review_rate": 81.58,
+        "playtime_at_review_median": 712,
+        "playtime_at_review_p25": 280,
+        "playtime_at_review_p75": 2761,
+        "short_play_share": 15.79,
+        "heavy_play_share": 5.26,
+        "observation_days": 29,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 960,
+        "post_review_minutes_per_day": 28.66,
+        "still_playing_share": 78.95,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 14,
+          "schinese": 1,
+          "japanese": 1,
+          "spanish": 3,
+          "russian": 6,
+          "vietnamese": 1,
+          "french": 1,
+          "koreana": 5,
+          "german": 2,
+          "latam": 1,
+          "brazilian": 1,
+          "turkish": 1,
+          "polish": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-17",
+        "reviews": 61,
+        "positive": 51,
+        "negative": 10,
+        "review_rate": 83.61,
+        "playtime_at_review_median": 1442,
+        "playtime_at_review_p25": 417,
+        "playtime_at_review_p75": 3002,
+        "short_play_share": 8.2,
+        "heavy_play_share": 8.2,
+        "observation_days": 28,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1659,
+        "post_review_minutes_per_day": 59.25,
+        "still_playing_share": 78.69,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 27,
+          "brazilian": 2,
+          "spanish": 6,
+          "russian": 8,
+          "polish": 1,
+          "japanese": 2,
+          "thai": 2,
+          "koreana": 5,
+          "german": 2,
+          "french": 2,
+          "turkish": 1,
+          "schinese": 1,
+          "indonesian": 1,
+          "latam": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-18",
+        "reviews": 48,
+        "positive": 41,
+        "negative": 7,
+        "review_rate": 85.42,
+        "playtime_at_review_median": 1253,
+        "playtime_at_review_p25": 444,
+        "playtime_at_review_p75": 2661,
+        "short_play_share": 4.17,
+        "heavy_play_share": 8.33,
+        "observation_days": 27,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1453,
+        "post_review_minutes_per_day": 53.24,
+        "still_playing_share": 87.5,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "spanish": 8,
+          "latam": 2,
+          "brazilian": 1,
+          "english": 25,
+          "japanese": 3,
+          "turkish": 3,
+          "polish": 1,
+          "russian": 3,
+          "ukrainian": 1,
+          "koreana": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-19",
+        "reviews": 132,
+        "positive": 114,
+        "negative": 18,
+        "review_rate": 86.36,
+        "playtime_at_review_median": 1320,
+        "playtime_at_review_p25": 397,
+        "playtime_at_review_p75": 2963,
+        "short_play_share": 9.85,
+        "heavy_play_share": 7.58,
+        "observation_days": 26,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1478,
+        "post_review_minutes_per_day": 56.54,
+        "still_playing_share": 84.09,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 48,
+          "brazilian": 13,
+          "russian": 27,
+          "german": 6,
+          "tchinese": 1,
+          "turkish": 3,
+          "polish": 1,
+          "schinese": 3,
+          "spanish": 11,
+          "thai": 3,
+          "koreana": 8,
+          "czech": 1,
+          "french": 3,
+          "ukrainian": 1,
+          "latam": 2,
+          "japanese": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-20",
+        "reviews": 99,
+        "positive": 75,
+        "negative": 24,
+        "review_rate": 75.76,
+        "playtime_at_review_median": 1026,
+        "playtime_at_review_p25": 236,
+        "playtime_at_review_p75": 2756,
+        "short_play_share": 13.13,
+        "heavy_play_share": 8.08,
+        "observation_days": 25,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 647,
+        "post_review_minutes_per_day": 25.88,
+        "still_playing_share": 75.76,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "koreana": 11,
+          "russian": 31,
+          "english": 29,
+          "turkish": 4,
+          "spanish": 5,
+          "latam": 3,
+          "german": 3,
+          "ukrainian": 1,
+          "hungarian": 1,
+          "japanese": 1,
+          "finnish": 1,
+          "schinese": 5,
+          "french": 3,
+          "thai": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-21",
+        "reviews": 79,
+        "positive": 61,
+        "negative": 18,
+        "review_rate": 77.22,
+        "playtime_at_review_median": 938,
+        "playtime_at_review_p25": 310,
+        "playtime_at_review_p75": 2588,
+        "short_play_share": 12.66,
+        "heavy_play_share": 3.8,
+        "observation_days": 24,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 723,
+        "post_review_minutes_per_day": 30.12,
+        "still_playing_share": 77.22,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "french": 3,
+          "english": 37,
+          "russian": 12,
+          "turkish": 2,
+          "spanish": 3,
+          "german": 3,
+          "latam": 2,
+          "polish": 1,
+          "thai": 1,
+          "italian": 1,
+          "koreana": 10,
+          "brazilian": 2,
+          "schinese": 1,
+          "japanese": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-22",
+        "reviews": 76,
+        "positive": 58,
+        "negative": 18,
+        "review_rate": 76.32,
+        "playtime_at_review_median": 919,
+        "playtime_at_review_p25": 299,
+        "playtime_at_review_p75": 2514,
+        "short_play_share": 9.21,
+        "heavy_play_share": 5.26,
+        "observation_days": 23,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1207,
+        "post_review_minutes_per_day": 52.2,
+        "still_playing_share": 75.0,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 25,
+          "brazilian": 3,
+          "german": 1,
+          "russian": 25,
+          "spanish": 4,
+          "turkish": 2,
+          "french": 6,
+          "latam": 1,
+          "polish": 1,
+          "koreana": 6,
+          "ukrainian": 1,
+          "japanese": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-23",
+        "reviews": 89,
+        "positive": 65,
+        "negative": 24,
+        "review_rate": 73.03,
+        "playtime_at_review_median": 1196,
+        "playtime_at_review_p25": 392,
+        "playtime_at_review_p75": 2752,
+        "short_play_share": 11.24,
+        "heavy_play_share": 12.36,
+        "observation_days": 22,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 559,
+        "post_review_minutes_per_day": 25.41,
+        "still_playing_share": 71.91,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 36,
+          "russian": 21,
+          "spanish": 3,
+          "brazilian": 5,
+          "hungarian": 1,
+          "latam": 3,
+          "koreana": 7,
+          "ukrainian": 1,
+          "french": 2,
+          "japanese": 2,
+          "indonesian": 1,
+          "german": 2,
+          "finnish": 2,
+          "portuguese": 1,
+          "thai": 2
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-24",
+        "reviews": 67,
+        "positive": 54,
+        "negative": 13,
+        "review_rate": 80.6,
+        "playtime_at_review_median": 873,
+        "playtime_at_review_p25": 270,
+        "playtime_at_review_p75": 2537,
+        "short_play_share": 8.96,
+        "heavy_play_share": 8.96,
+        "observation_days": 21,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 702,
+        "post_review_minutes_per_day": 33.43,
+        "still_playing_share": 80.6,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "spanish": 2,
+          "english": 31,
+          "russian": 16,
+          "turkish": 1,
+          "polish": 2,
+          "latam": 2,
+          "koreana": 3,
+          "french": 4,
+          "german": 2,
+          "japanese": 1,
+          "portuguese": 1,
+          "schinese": 1,
+          "swedish": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-25",
+        "reviews": 78,
+        "positive": 69,
+        "negative": 9,
+        "review_rate": 88.46,
+        "playtime_at_review_median": 1977,
+        "playtime_at_review_p25": 905,
+        "playtime_at_review_p75": 3792,
+        "short_play_share": 1.28,
+        "heavy_play_share": 10.26,
+        "observation_days": 20,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 1094,
+        "post_review_minutes_per_day": 54.38,
+        "still_playing_share": 85.9,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "brazilian": 7,
+          "english": 24,
+          "russian": 15,
+          "latam": 3,
+          "czech": 1,
+          "turkish": 1,
+          "polish": 1,
+          "japanese": 3,
+          "thai": 1,
+          "spanish": 7,
+          "italian": 1,
+          "german": 5,
+          "schinese": 2,
+          "french": 2,
+          "ukrainian": 2,
+          "koreana": 3
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-26",
+        "reviews": 59,
+        "positive": 46,
+        "negative": 13,
+        "review_rate": 77.97,
+        "playtime_at_review_median": 488,
+        "playtime_at_review_p25": 195,
+        "playtime_at_review_p75": 1640,
+        "short_play_share": 20.34,
+        "heavy_play_share": 3.39,
+        "observation_days": 19,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 464,
+        "post_review_minutes_per_day": 24.42,
+        "still_playing_share": 72.88,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "russian": 15,
+          "english": 22,
+          "spanish": 3,
+          "brazilian": 5,
+          "turkish": 1,
+          "finnish": 1,
+          "german": 2,
+          "tchinese": 1,
+          "schinese": 1,
+          "polish": 1,
+          "koreana": 5,
+          "latam": 2
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-27",
+        "reviews": 75,
+        "positive": 58,
+        "negative": 17,
+        "review_rate": 77.33,
+        "playtime_at_review_median": 866,
+        "playtime_at_review_p25": 366,
+        "playtime_at_review_p75": 2058,
+        "short_play_share": 6.67,
+        "heavy_play_share": 5.33,
+        "observation_days": 18,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 454,
+        "post_review_minutes_per_day": 25.22,
+        "still_playing_share": 72.0,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 29,
+          "brazilian": 2,
+          "spanish": 5,
+          "russian": 13,
+          "french": 5,
+          "latam": 2,
+          "polish": 2,
+          "czech": 2,
+          "german": 4,
+          "turkish": 3,
+          "japanese": 2,
+          "schinese": 2,
+          "koreana": 3,
+          "ukrainian": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-28",
+        "reviews": 46,
+        "positive": 36,
+        "negative": 10,
+        "review_rate": 78.26,
+        "playtime_at_review_median": 839,
+        "playtime_at_review_p25": 350,
+        "playtime_at_review_p75": 2687,
+        "short_play_share": 8.7,
+        "heavy_play_share": 4.35,
+        "observation_days": 17,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 515,
+        "post_review_minutes_per_day": 30.09,
+        "still_playing_share": 86.96,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 14,
+          "spanish": 6,
+          "russian": 12,
+          "koreana": 5,
+          "brazilian": 4,
+          "french": 2,
+          "german": 3
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-29",
+        "reviews": 50,
+        "positive": 38,
+        "negative": 12,
+        "review_rate": 76.0,
+        "playtime_at_review_median": 1280,
+        "playtime_at_review_p25": 471,
+        "playtime_at_review_p75": 3608,
+        "short_play_share": 14.0,
+        "heavy_play_share": 12.0,
+        "observation_days": 16,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 535,
+        "post_review_minutes_per_day": 31.72,
+        "still_playing_share": 68.0,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "brazilian": 3,
+          "czech": 1,
+          "koreana": 6,
+          "english": 15,
+          "russian": 11,
+          "french": 1,
+          "polish": 2,
+          "turkish": 2,
+          "german": 3,
+          "latam": 2,
+          "thai": 1,
+          "schinese": 2,
+          "spanish": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-30",
+        "reviews": 55,
+        "positive": 46,
+        "negative": 9,
+        "review_rate": 83.64,
+        "playtime_at_review_median": 759,
+        "playtime_at_review_p25": 356,
+        "playtime_at_review_p75": 2029,
+        "short_play_share": 9.09,
+        "heavy_play_share": 1.82,
+        "observation_days": 15,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 641,
+        "post_review_minutes_per_day": 42.73,
+        "still_playing_share": 74.55,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "koreana": 4,
+          "english": 25,
+          "russian": 10,
+          "spanish": 3,
+          "japanese": 1,
+          "german": 1,
+          "brazilian": 1,
+          "indonesian": 1,
+          "french": 3,
+          "turkish": 2,
+          "polish": 1,
+          "schinese": 2,
+          "latam": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-08-31",
+        "reviews": 41,
+        "positive": 33,
+        "negative": 8,
+        "review_rate": 80.49,
+        "playtime_at_review_median": 1228,
+        "playtime_at_review_p25": 360,
+        "playtime_at_review_p75": 2179,
+        "short_play_share": 7.32,
+        "heavy_play_share": 12.2,
+        "observation_days": 14,
+        "observation_sufficient": true,
+        "post_review_minutes_median": 747,
+        "post_review_minutes_per_day": 53.36,
+        "still_playing_share": 68.29,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "portuguese": 1,
+          "spanish": 2,
+          "schinese": 1,
+          "turkish": 2,
+          "russian": 6,
+          "japanese": 2,
+          "english": 22,
+          "koreana": 3,
+          "german": 2
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-09-01",
+        "reviews": 49,
+        "positive": 41,
+        "negative": 8,
+        "review_rate": 83.67,
+        "playtime_at_review_median": 1519,
+        "playtime_at_review_p25": 420,
+        "playtime_at_review_p75": 4776,
+        "short_play_share": 6.12,
+        "heavy_play_share": 8.16,
+        "observation_days": 13,
+        "observation_sufficient": false,
+        "post_review_minutes_median": null,
+        "post_review_minutes_per_day": null,
+        "still_playing_share": null,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 23,
+          "polish": 1,
+          "schinese": 2,
+          "spanish": 2,
+          "thai": 1,
+          "portuguese": 1,
+          "koreana": 4,
+          "french": 2,
+          "russian": 6,
+          "german": 1,
+          "turkish": 1,
+          "latam": 2,
+          "brazilian": 1,
+          "japanese": 2
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-09-02",
+        "reviews": 37,
+        "positive": 28,
+        "negative": 9,
+        "review_rate": 75.68,
+        "playtime_at_review_median": 1469,
+        "playtime_at_review_p25": 483,
+        "playtime_at_review_p75": 3129,
+        "short_play_share": 8.11,
+        "heavy_play_share": 13.51,
+        "observation_days": 12,
+        "observation_sufficient": false,
+        "post_review_minutes_median": null,
+        "post_review_minutes_per_day": null,
+        "still_playing_share": null,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "koreana": 1,
+          "english": 17,
+          "german": 1,
+          "russian": 8,
+          "latam": 2,
+          "thai": 1,
+          "portuguese": 1,
+          "czech": 1,
+          "spanish": 5
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-09-03",
+        "reviews": 35,
+        "positive": 28,
+        "negative": 7,
+        "review_rate": 80.0,
+        "playtime_at_review_median": 1389,
+        "playtime_at_review_p25": 342,
+        "playtime_at_review_p75": 3368,
+        "short_play_share": 11.43,
+        "heavy_play_share": 8.57,
+        "observation_days": 11,
+        "observation_sufficient": false,
+        "post_review_minutes_median": null,
+        "post_review_minutes_per_day": null,
+        "still_playing_share": null,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 14,
+          "french": 1,
+          "spanish": 2,
+          "turkish": 2,
+          "russian": 7,
+          "german": 1,
+          "italian": 1,
+          "brazilian": 3,
+          "koreana": 3,
+          "japanese": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-09-04",
+        "reviews": 40,
+        "positive": 29,
+        "negative": 11,
+        "review_rate": 72.5,
+        "playtime_at_review_median": 1495,
+        "playtime_at_review_p25": 315,
+        "playtime_at_review_p75": 3812,
+        "short_play_share": 7.5,
+        "heavy_play_share": 12.5,
+        "observation_days": 10,
+        "observation_sufficient": false,
+        "post_review_minutes_median": null,
+        "post_review_minutes_per_day": null,
+        "still_playing_share": null,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 21,
+          "russian": 9,
+          "koreana": 3,
+          "french": 1,
+          "norwegian": 1,
+          "bulgarian": 1,
+          "german": 1,
+          "czech": 1,
+          "polish": 1,
+          "spanish": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-09-05",
+        "reviews": 43,
+        "positive": 38,
+        "negative": 5,
+        "review_rate": 88.37,
+        "playtime_at_review_median": 2070,
+        "playtime_at_review_p25": 356,
+        "playtime_at_review_p75": 4656,
+        "short_play_share": 9.3,
+        "heavy_play_share": 13.95,
+        "observation_days": 9,
+        "observation_sufficient": false,
+        "post_review_minutes_median": null,
+        "post_review_minutes_per_day": null,
+        "still_playing_share": null,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "german": 3,
+          "russian": 8,
+          "english": 20,
+          "spanish": 2,
+          "schinese": 1,
+          "koreana": 1,
+          "japanese": 1,
+          "french": 1,
+          "turkish": 2,
+          "latam": 2,
+          "brazilian": 2
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-09-06",
+        "reviews": 45,
+        "positive": 32,
+        "negative": 13,
+        "review_rate": 71.11,
+        "playtime_at_review_median": 892,
+        "playtime_at_review_p25": 342,
+        "playtime_at_review_p75": 2543,
+        "short_play_share": 20.0,
+        "heavy_play_share": 13.33,
+        "observation_days": 8,
+        "observation_sufficient": false,
+        "post_review_minutes_median": null,
+        "post_review_minutes_per_day": null,
+        "still_playing_share": null,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "german": 2,
+          "romanian": 1,
+          "english": 23,
+          "spanish": 6,
+          "latam": 2,
+          "brazilian": 2,
+          "russian": 5,
+          "japanese": 1,
+          "turkish": 1,
+          "koreana": 1,
+          "thai": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-09-07",
+        "reviews": 44,
+        "positive": 35,
+        "negative": 9,
+        "review_rate": 79.55,
+        "playtime_at_review_median": 1040,
+        "playtime_at_review_p25": 440,
+        "playtime_at_review_p75": 2306,
+        "short_play_share": 6.82,
+        "heavy_play_share": 4.55,
+        "observation_days": 7,
+        "observation_sufficient": false,
+        "post_review_minutes_median": null,
+        "post_review_minutes_per_day": null,
+        "still_playing_share": null,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 16,
+          "spanish": 3,
+          "polish": 2,
+          "french": 1,
+          "brazilian": 3,
+          "russian": 11,
+          "ukrainian": 1,
+          "koreana": 3,
+          "czech": 1,
+          "german": 1,
+          "thai": 1,
+          "latam": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-09-08",
+        "reviews": 42,
+        "positive": 38,
+        "negative": 4,
+        "review_rate": 90.48,
+        "playtime_at_review_median": 1849,
+        "playtime_at_review_p25": 676,
+        "playtime_at_review_p75": 3376,
+        "short_play_share": 4.76,
+        "heavy_play_share": 11.9,
+        "observation_days": 6,
+        "observation_sufficient": false,
+        "post_review_minutes_median": null,
+        "post_review_minutes_per_day": null,
+        "still_playing_share": null,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 16,
+          "hungarian": 1,
+          "brazilian": 4,
+          "spanish": 7,
+          "latam": 2,
+          "french": 2,
+          "koreana": 4,
+          "turkish": 2,
+          "german": 1,
+          "japanese": 1,
+          "italian": 1,
+          "russian": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-09-09",
+        "reviews": 68,
+        "positive": 56,
+        "negative": 12,
+        "review_rate": 82.35,
+        "playtime_at_review_median": 1233,
+        "playtime_at_review_p25": 493,
+        "playtime_at_review_p75": 2341,
+        "short_play_share": 8.82,
+        "heavy_play_share": 11.76,
+        "observation_days": 5,
+        "observation_sufficient": false,
+        "post_review_minutes_median": null,
+        "post_review_minutes_per_day": null,
+        "still_playing_share": null,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 38,
+          "koreana": 3,
+          "spanish": 7,
+          "russian": 10,
+          "italian": 3,
+          "ukrainian": 1,
+          "brazilian": 1,
+          "german": 2,
+          "thai": 1,
+          "japanese": 1,
+          "turkish": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-09-10",
+        "reviews": 33,
+        "positive": 26,
+        "negative": 7,
+        "review_rate": 78.79,
+        "playtime_at_review_median": 1437,
+        "playtime_at_review_p25": 197,
+        "playtime_at_review_p75": 3478,
+        "short_play_share": 21.21,
+        "heavy_play_share": 18.18,
+        "observation_days": 4,
+        "observation_sufficient": false,
+        "post_review_minutes_median": null,
+        "post_review_minutes_per_day": null,
+        "still_playing_share": null,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "russian": 9,
+          "spanish": 9,
+          "english": 8,
+          "turkish": 2,
+          "portuguese": 1,
+          "japanese": 1,
+          "latam": 1,
+          "koreana": 2
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-09-11",
+        "reviews": 36,
+        "positive": 32,
+        "negative": 4,
+        "review_rate": 88.89,
+        "playtime_at_review_median": 1147,
+        "playtime_at_review_p25": 344,
+        "playtime_at_review_p75": 2414,
+        "short_play_share": 8.33,
+        "heavy_play_share": 11.11,
+        "observation_days": 3,
+        "observation_sufficient": false,
+        "post_review_minutes_median": null,
+        "post_review_minutes_per_day": null,
+        "still_playing_share": null,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 17,
+          "latam": 1,
+          "russian": 6,
+          "spanish": 1,
+          "portuguese": 1,
+          "german": 1,
+          "french": 2,
+          "koreana": 5,
+          "japanese": 1,
+          "swedish": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-09-12",
+        "reviews": 48,
+        "positive": 40,
+        "negative": 8,
+        "review_rate": 83.33,
+        "playtime_at_review_median": 1003,
+        "playtime_at_review_p25": 424,
+        "playtime_at_review_p75": 3402,
+        "short_play_share": 10.42,
+        "heavy_play_share": 12.5,
+        "observation_days": 2,
+        "observation_sufficient": false,
+        "post_review_minutes_median": null,
+        "post_review_minutes_per_day": null,
+        "still_playing_share": null,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 20,
+          "russian": 11,
+          "latam": 2,
+          "polish": 1,
+          "japanese": 2,
+          "spanish": 6,
+          "turkish": 1,
+          "dutch": 1,
+          "french": 2,
+          "koreana": 1,
+          "schinese": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-09-13",
+        "reviews": 37,
+        "positive": 35,
+        "negative": 2,
+        "review_rate": 94.59,
+        "playtime_at_review_median": 1326,
+        "playtime_at_review_p25": 371,
+        "playtime_at_review_p75": 4542,
+        "short_play_share": 5.41,
+        "heavy_play_share": 24.32,
+        "observation_days": 1,
+        "observation_sufficient": false,
+        "post_review_minutes_median": null,
+        "post_review_minutes_per_day": null,
+        "still_playing_share": null,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 15,
+          "italian": 2,
+          "brazilian": 2,
+          "russian": 12,
+          "latam": 1,
+          "french": 2,
+          "ukrainian": 1,
+          "schinese": 1,
+          "koreana": 1
+        },
+        "status": "reconstructed"
+      },
+      {
+        "date_local": "2026-09-14",
+        "reviews": 15,
+        "positive": 11,
+        "negative": 4,
+        "review_rate": 73.33,
+        "playtime_at_review_median": 1745,
+        "playtime_at_review_p25": 755,
+        "playtime_at_review_p75": 3313,
+        "short_play_share": 6.67,
+        "heavy_play_share": 0.0,
+        "observation_days": 0,
+        "observation_sufficient": false,
+        "post_review_minutes_median": null,
+        "post_review_minutes_per_day": null,
+        "still_playing_share": null,
+        "steam_purchase_share": 100.0,
+        "received_for_free_share": 0.0,
+        "languages": {
+          "english": 5,
+          "german": 1,
+          "koreana": 1,
+          "russian": 3,
+          "japanese": 1,
+          "polish": 1,
+          "latam": 1,
+          "brazilian": 1,
+          "spanish": 1
+        },
+        "status": "reconstructed"
+      }
+    ],
+    "language_share": {
+      "bucket_days": 7,
+      "languages": [
+        "english",
+        "russian",
+        "spanish",
+        "koreana",
+        "brazilian",
+        "german",
+        "latam",
+        "french",
+        "other"
+      ],
+      "overall": {
+        "english": 2815,
+        "russian": 1317,
+        "spanish": 393,
+        "koreana": 373,
+        "brazilian": 287,
+        "german": 196,
+        "latam": 185,
+        "french": 158
+      },
+      "overall_total": 6388,
+      "buckets": [
+        {
+          "start": "2026-07-07",
+          "end": "2026-07-13",
+          "reviews": 2383,
+          "shares": {
+            "english": 48.38,
+            "russian": 18.88,
+            "spanish": 5.08,
+            "koreana": 4.99,
+            "brazilian": 4.36,
+            "german": 2.94,
+            "latam": 3.4,
+            "french": 2.01,
+            "other": 9.95
+          },
+          "counts": {
+            "english": 1153,
+            "russian": 450,
+            "spanish": 121,
+            "koreana": 119,
+            "brazilian": 104,
+            "german": 70,
+            "latam": 81,
+            "french": 48
+          },
+          "status": "reconstructed"
+        },
+        {
+          "start": "2026-07-14",
+          "end": "2026-07-20",
+          "reviews": 816,
+          "shares": {
+            "english": 43.26,
+            "russian": 22.79,
+            "spanish": 6.13,
+            "koreana": 5.88,
+            "brazilian": 5.51,
+            "german": 2.82,
+            "latam": 2.33,
+            "french": 2.94,
+            "other": 8.33
+          },
+          "counts": {
+            "english": 353,
+            "russian": 186,
+            "spanish": 50,
+            "koreana": 48,
+            "brazilian": 45,
+            "german": 23,
+            "latam": 19,
+            "french": 24
+          },
+          "status": "reconstructed"
+        },
+        {
+          "start": "2026-07-21",
+          "end": "2026-07-27",
+          "reviews": 485,
+          "shares": {
+            "english": 40.62,
+            "russian": 24.33,
+            "spanish": 5.98,
+            "koreana": 5.98,
+            "brazilian": 4.54,
+            "german": 3.3,
+            "latam": 2.27,
+            "french": 2.68,
+            "other": 10.31
+          },
+          "counts": {
+            "english": 197,
+            "russian": 118,
+            "spanish": 29,
+            "koreana": 29,
+            "brazilian": 22,
+            "german": 16,
+            "latam": 11,
+            "french": 13
+          },
+          "status": "reconstructed"
+        },
+        {
+          "start": "2026-07-28",
+          "end": "2026-08-03",
+          "reviews": 460,
+          "shares": {
+            "english": 38.48,
+            "russian": 23.48,
+            "spanish": 7.61,
+            "koreana": 4.57,
+            "brazilian": 5.0,
+            "german": 3.48,
+            "latam": 3.26,
+            "french": 2.17,
+            "other": 11.96
+          },
+          "counts": {
+            "english": 177,
+            "russian": 108,
+            "spanish": 35,
+            "koreana": 21,
+            "brazilian": 23,
+            "german": 16,
+            "latam": 15,
+            "french": 10
+          },
+          "status": "reconstructed"
+        },
+        {
+          "start": "2026-08-04",
+          "end": "2026-08-10",
+          "reviews": 350,
+          "shares": {
+            "english": 45.71,
+            "russian": 20.29,
+            "spanish": 5.14,
+            "koreana": 5.71,
+            "brazilian": 4.29,
+            "german": 3.14,
+            "latam": 3.43,
+            "french": 1.71,
+            "other": 10.57
+          },
+          "counts": {
+            "english": 160,
+            "russian": 71,
+            "spanish": 18,
+            "koreana": 20,
+            "brazilian": 15,
+            "german": 11,
+            "latam": 12,
+            "french": 6
+          },
+          "status": "reconstructed"
+        },
+        {
+          "start": "2026-08-11",
+          "end": "2026-08-17",
+          "reviews": 328,
+          "shares": {
+            "english": 42.68,
+            "russian": 18.6,
+            "spanish": 7.62,
+            "koreana": 8.54,
+            "brazilian": 3.96,
+            "german": 2.44,
+            "latam": 1.52,
+            "french": 2.74,
+            "other": 11.89
+          },
+          "counts": {
+            "english": 140,
+            "russian": 61,
+            "spanish": 25,
+            "koreana": 28,
+            "brazilian": 13,
+            "german": 8,
+            "latam": 5,
+            "french": 9
+          },
+          "status": "reconstructed"
+        },
+        {
+          "start": "2026-08-18",
+          "end": "2026-08-24",
+          "reviews": 590,
+          "shares": {
+            "english": 39.15,
+            "russian": 22.88,
+            "spanish": 6.1,
+            "koreana": 7.8,
+            "brazilian": 4.07,
+            "german": 2.88,
+            "latam": 2.54,
+            "french": 3.56,
+            "other": 11.02
+          },
+          "counts": {
+            "english": 231,
+            "russian": 135,
+            "spanish": 36,
+            "koreana": 46,
+            "brazilian": 24,
+            "german": 17,
+            "latam": 15,
+            "french": 21
+          },
+          "status": "reconstructed"
+        },
+        {
+          "start": "2026-08-25",
+          "end": "2026-08-31",
+          "reviews": 404,
+          "shares": {
+            "english": 37.38,
+            "russian": 20.3,
+            "spanish": 6.68,
+            "koreana": 7.18,
+            "brazilian": 5.45,
+            "german": 4.95,
+            "latam": 2.48,
+            "french": 3.22,
+            "other": 12.38
+          },
+          "counts": {
+            "english": 151,
+            "russian": 82,
+            "spanish": 27,
+            "koreana": 29,
+            "brazilian": 22,
+            "german": 20,
+            "latam": 10,
+            "french": 13
+          },
+          "status": "reconstructed"
+        },
+        {
+          "start": "2026-09-01",
+          "end": "2026-09-07",
+          "reviews": 293,
+          "shares": {
+            "english": 45.73,
+            "russian": 18.43,
+            "spanish": 7.17,
+            "koreana": 5.46,
+            "brazilian": 3.75,
+            "german": 3.41,
+            "latam": 3.07,
+            "french": 2.05,
+            "other": 10.92
+          },
+          "counts": {
+            "english": 134,
+            "russian": 54,
+            "spanish": 21,
+            "koreana": 16,
+            "brazilian": 11,
+            "german": 10,
+            "latam": 9,
+            "french": 6
+          },
+          "status": "reconstructed"
+        },
+        {
+          "start": "2026-09-08",
+          "end": "2026-09-14",
+          "reviews": 279,
+          "shares": {
+            "english": 42.65,
+            "russian": 18.64,
+            "spanish": 11.11,
+            "koreana": 6.09,
+            "brazilian": 2.87,
+            "german": 1.79,
+            "latam": 2.87,
+            "french": 2.87,
+            "other": 11.11
+          },
+          "counts": {
+            "english": 119,
+            "russian": 52,
+            "spanish": 31,
+            "koreana": 17,
+            "brazilian": 8,
+            "german": 5,
+            "latam": 8,
+            "french": 8
+          },
+          "status": "reconstructed"
+        }
+      ]
+    },
+    "version_windows": [
+      {
+        "version_id": "1.2",
+        "date_local": "2026-07-07",
+        "title": "Version 1.2 \"999 Nights\" Patch Notes",
+        "source_url": "https://steamstore-a.akamaihd.net/news/externalpost/steam_community_announcements/1836506165577421",
+        "window": 7,
+        "complete": false,
+        "before_days": 0,
+        "after_days": 7,
+        "coverage_note": "前后窗口不完整（前 0/7 天，后 7/7 天），评测历史仅覆盖 2026-07-07 → 2026-09-14",
+        "comparisons": [
+          {
+            "field": "reviews",
+            "label": "日均新增评测",
+            "before": null,
+            "after": 340.43,
+            "change": null,
+            "change_kind": null
+          },
+          {
+            "field": "review_rate",
+            "label": "区间好评率",
+            "before": null,
+            "after": 85.19,
+            "change": null,
+            "change_kind": null
+          },
+          {
+            "field": "playtime_at_review_median",
+            "label": "评测时中位时长",
+            "before": null,
+            "after": 274,
+            "change": null,
+            "change_kind": null
+          },
+          {
+            "field": "short_play_share",
+            "label": "2 小时内评测占比",
+            "before": null,
+            "after": 34.58,
+            "change": null,
+            "change_kind": null
+          },
+          {
+            "field": "heavy_play_share",
+            "label": "100 小时以上评测占比",
+            "before": null,
+            "after": 1.47,
+            "change": null,
+            "change_kind": null
+          }
+        ],
+        "status": "reconstructed"
+      },
+      {
+        "version_id": "1.3",
+        "date_local": "2026-08-18",
+        "title": "Ver. 1.3 \"Rising from the Moonlit Fog\" Patch Notes",
+        "source_url": "https://steamstore-a.akamaihd.net/news/externalpost/steam_community_announcements/1840944183787941",
+        "window": 7,
+        "complete": true,
+        "before_days": 7,
+        "after_days": 7,
+        "coverage_note": "",
+        "comparisons": [
+          {
+            "field": "reviews",
+            "label": "日均新增评测",
+            "before": 46.86,
+            "after": 84.29,
+            "change": 79.9,
+            "change_kind": "pct"
+          },
+          {
+            "field": "review_rate",
+            "label": "区间好评率",
+            "before": 84.45,
+            "after": 79.32,
+            "change": -5.13,
+            "change_kind": "pp"
+          },
+          {
+            "field": "playtime_at_review_median",
+            "label": "评测时中位时长",
+            "before": 1222,
+            "after": 1026,
+            "change": -16.0,
+            "change_kind": "pct"
+          },
+          {
+            "field": "short_play_share",
+            "label": "2 小时内评测占比",
+            "before": 11.58,
+            "after": 10.34,
+            "change": -1.24,
+            "change_kind": "pp"
+          },
+          {
+            "field": "heavy_play_share",
+            "label": "100 小时以上评测占比",
+            "before": 6.71,
+            "after": 7.8,
+            "change": 1.09,
+            "change_kind": "pp"
+          }
+        ],
+        "status": "reconstructed"
+      }
+    ],
+    "caveats": [
+      "仅含今天仍然存在的评测，越早的日期越可能低估当日真实值",
+      "playtime_forever 为今天的累计值，评测后时长需按 observation_days 归一化后比较",
+      "评测者不是玩家的随机样本，分布只代表评测者"
+    ]
+  },
   "price_series": [
     {
       "date_local": "2026-09-14",
@@ -1298,6 +4159,19 @@
       "discount_percent": null,
       "status": "unavailable",
       "note": "appdetails_unavailable;storesearch_no_price_field"
+    }
+  ],
+  "build_series": [
+    {
+      "date_local": "2026-09-14",
+      "game_id": "neverness_to_everness",
+      "steam_app_id": 4508340,
+      "buildid": "25196072",
+      "build_updated_at": "2026-09-09T06:13:38",
+      "build_updated_date": "2026-09-09",
+      "build_name": "NTE: Neverness to Everness",
+      "build_status": "third_party",
+      "build_note": ""
     }
   ],
   "events": [
@@ -1309,6 +4183,7 @@
       "version_id": null,
       "version_confirmed": false,
       "bvid": "BV1gdEr6QE1a",
+      "platform": "bilibili",
       "source": "bilibili",
       "source_url": "https://www.bilibili.com/video/BV1gdEr6QE1a/",
       "evidence": "manual"
@@ -1321,6 +4196,7 @@
       "version_id": null,
       "version_confirmed": false,
       "bvid": "BV18dEr6DErw",
+      "platform": "bilibili",
       "source": "bilibili",
       "source_url": "https://www.bilibili.com/video/BV18dEr6DErw/",
       "evidence": "manual"
@@ -1333,6 +4209,7 @@
       "version_id": null,
       "version_confirmed": false,
       "bvid": "BV1tcEk67EBB",
+      "platform": "bilibili",
       "source": "bilibili",
       "source_url": "https://www.bilibili.com/video/BV1tcEk67EBB/",
       "evidence": "manual"
@@ -1345,6 +4222,7 @@
       "version_id": "1.2",
       "version_confirmed": true,
       "bvid": "BV1Bo736yE99",
+      "platform": "bilibili",
       "source": "bilibili",
       "source_url": "https://www.bilibili.com/video/BV1Bo736yE99/",
       "evidence": "manual"
@@ -1357,6 +4235,7 @@
       "version_id": null,
       "version_confirmed": false,
       "bvid": "BV11f7J6LEwU",
+      "platform": "bilibili",
       "source": "bilibili",
       "source_url": "https://www.bilibili.com/video/BV11f7J6LEwU/",
       "evidence": "manual"
@@ -1369,6 +4248,7 @@
       "version_id": null,
       "version_confirmed": false,
       "bvid": "BV12BKU6AEW1",
+      "platform": "bilibili",
       "source": "bilibili",
       "source_url": "https://www.bilibili.com/video/BV12BKU6AEW1/",
       "evidence": "manual"
@@ -1381,6 +4261,7 @@
       "version_id": null,
       "version_confirmed": false,
       "bvid": "BV12iKU6eEyj",
+      "platform": "bilibili",
       "source": "bilibili",
       "source_url": "https://www.bilibili.com/video/BV12iKU6eEyj/",
       "evidence": "manual"
@@ -1393,6 +4274,7 @@
       "version_id": null,
       "version_confirmed": false,
       "bvid": "BV1xiKU6eED2",
+      "platform": "bilibili",
       "source": "bilibili",
       "source_url": "https://www.bilibili.com/video/BV1xiKU6eED2/",
       "evidence": "manual"
@@ -1416,6 +4298,7 @@
       "version_id": null,
       "version_confirmed": false,
       "bvid": "BV1YLKH6PEPP",
+      "platform": "bilibili",
       "source": "bilibili",
       "source_url": "https://www.bilibili.com/video/BV1YLKH6PEPP/",
       "evidence": "manual"
@@ -1428,6 +4311,7 @@
       "version_id": null,
       "version_confirmed": false,
       "bvid": "BV1VVKH6vEnH",
+      "platform": "bilibili",
       "source": "bilibili",
       "source_url": "https://www.bilibili.com/video/BV1VVKH6vEnH/",
       "evidence": "manual"
@@ -1440,6 +4324,7 @@
       "version_id": null,
       "version_confirmed": false,
       "bvid": "BV1YVKH6vEdg",
+      "platform": "bilibili",
       "source": "bilibili",
       "source_url": "https://www.bilibili.com/video/BV1YVKH6vEdg/",
       "evidence": "manual"
@@ -1463,6 +4348,7 @@
       "version_id": null,
       "version_confirmed": false,
       "bvid": "BV1RgM16rEe6",
+      "platform": "bilibili",
       "source": "bilibili",
       "source_url": "https://www.bilibili.com/video/BV1RgM16rEe6/",
       "evidence": "manual"
@@ -1475,6 +4361,7 @@
       "version_id": "1.3",
       "version_confirmed": true,
       "bvid": "BV1egM16kE9D",
+      "platform": "bilibili",
       "source": "bilibili",
       "source_url": "https://www.bilibili.com/video/BV1egM16kE9D/",
       "evidence": "manual"
@@ -1487,6 +4374,7 @@
       "version_id": null,
       "version_confirmed": false,
       "bvid": "BV15gM16kE1g",
+      "platform": "bilibili",
       "source": "bilibili",
       "source_url": "https://www.bilibili.com/video/BV15gM16kE1g/",
       "evidence": "manual"
@@ -1499,6 +4387,7 @@
       "version_id": null,
       "version_confirmed": false,
       "bvid": "BV1y1uq6zEud",
+      "platform": "bilibili",
       "source": "bilibili",
       "source_url": "https://www.bilibili.com/video/BV1y1uq6zEud/",
       "evidence": "manual"
@@ -1511,6 +4400,7 @@
       "version_id": null,
       "version_confirmed": false,
       "bvid": "BV1W1uq6zEdG",
+      "platform": "bilibili",
       "source": "bilibili",
       "source_url": "https://www.bilibili.com/video/BV1W1uq6zEdG/",
       "evidence": "manual"
@@ -1534,6 +4424,7 @@
       "version_id": null,
       "version_confirmed": false,
       "bvid": "BV1UU4C6kEam",
+      "platform": "bilibili",
       "source": "bilibili",
       "source_url": "https://www.bilibili.com/video/BV1UU4C6kEam/",
       "evidence": "manual"
@@ -1546,6 +4437,7 @@
       "version_id": null,
       "version_confirmed": false,
       "bvid": "BV1jVtt6LEjP",
+      "platform": "bilibili",
       "source": "bilibili",
       "source_url": "https://www.bilibili.com/video/BV1jVtt6LEjP/",
       "evidence": "manual"
@@ -1558,6 +4450,7 @@
       "version_id": null,
       "version_confirmed": false,
       "bvid": "BV18btt6NEJw",
+      "platform": "bilibili",
       "source": "bilibili",
       "source_url": "https://www.bilibili.com/video/BV18btt6NEJw/",
       "evidence": "manual"
@@ -1584,18 +4477,73 @@
       "version_confirmed": false,
       "content_type": "character_trailer",
       "owner_mid": 3546636978489848,
+      "channel_id": null,
+      "platform": "bilibili",
       "pubdate": "2026-09-02",
       "points": [
         {
           "date_local": "2026-09-14",
-          "view": 2435561,
+          "days_since_pub": 12,
+          "stats": {
+            "view": 2435561,
+            "danmaku": 1375,
+            "reply": 6688,
+            "like": 58859,
+            "coin": 7185,
+            "favorite": 7443,
+            "share": 2623
+          },
           "status": "observed",
-          "delta": null,
+          "deltas": {
+            "view": null,
+            "danmaku": null,
+            "reply": null,
+            "like": null,
+            "coin": null,
+            "favorite": null,
+            "share": null
+          },
           "span_days": null,
-          "delta_status": "unavailable"
+          "delta_status": "unavailable",
+          "rates": {
+            "engagement": 3.0173,
+            "danmaku": 0.0565,
+            "reply": 0.2746,
+            "like": 2.4167,
+            "coin": 0.295,
+            "favorite": 0.3056,
+            "share": 0.1077
+          }
         }
       ],
-      "latest_view": 2435561
+      "latest": {
+        "date_local": "2026-09-14",
+        "days_since_pub": 12,
+        "stats": {
+          "view": 2435561,
+          "danmaku": 1375,
+          "reply": 6688,
+          "like": 58859,
+          "coin": 7185,
+          "favorite": 7443,
+          "share": 2623
+        },
+        "rates": {
+          "engagement": 3.0173,
+          "danmaku": 0.0565,
+          "reply": 0.2746,
+          "like": 2.4167,
+          "coin": 0.295,
+          "favorite": 0.3056,
+          "share": 0.1077
+        }
+      },
+      "latest_view": 2435561,
+      "ramp": {
+        "available": false,
+        "first_capture_days_since_pub": 12,
+        "points": []
+      }
     },
     {
       "bvid": "BV18btt6NEJw",
@@ -1606,18 +4554,73 @@
       "version_confirmed": false,
       "content_type": "character_ep",
       "owner_mid": 3546636978489848,
+      "channel_id": null,
+      "platform": "bilibili",
       "pubdate": "2026-09-03",
       "points": [
         {
           "date_local": "2026-09-14",
-          "view": 561076,
+          "days_since_pub": 11,
+          "stats": {
+            "view": 561076,
+            "danmaku": 351,
+            "reply": 3166,
+            "like": 19534,
+            "coin": 3919,
+            "favorite": 4397,
+            "share": 728
+          },
           "status": "observed",
-          "delta": null,
+          "deltas": {
+            "view": null,
+            "danmaku": null,
+            "reply": null,
+            "like": null,
+            "coin": null,
+            "favorite": null,
+            "share": null
+          },
           "span_days": null,
-          "delta_status": "unavailable"
+          "delta_status": "unavailable",
+          "rates": {
+            "engagement": 4.9637,
+            "danmaku": 0.0626,
+            "reply": 0.5643,
+            "like": 3.4815,
+            "coin": 0.6985,
+            "favorite": 0.7837,
+            "share": 0.1298
+          }
         }
       ],
-      "latest_view": 561076
+      "latest": {
+        "date_local": "2026-09-14",
+        "days_since_pub": 11,
+        "stats": {
+          "view": 561076,
+          "danmaku": 351,
+          "reply": 3166,
+          "like": 19534,
+          "coin": 3919,
+          "favorite": 4397,
+          "share": 728
+        },
+        "rates": {
+          "engagement": 4.9637,
+          "danmaku": 0.0626,
+          "reply": 0.5643,
+          "like": 3.4815,
+          "coin": 0.6985,
+          "favorite": 0.7837,
+          "share": 0.1298
+        }
+      },
+      "latest_view": 561076,
+      "ramp": {
+        "available": false,
+        "first_capture_days_since_pub": 11,
+        "points": []
+      }
     },
     {
       "bvid": "BV1UU4C6kEam",
@@ -1628,18 +4631,73 @@
       "version_confirmed": false,
       "content_type": "character_demo",
       "owner_mid": 3546636978489848,
+      "channel_id": null,
+      "platform": "bilibili",
       "pubdate": "2026-08-30",
       "points": [
         {
           "date_local": "2026-09-14",
-          "view": 697611,
+          "days_since_pub": 15,
+          "stats": {
+            "view": 697611,
+            "danmaku": 842,
+            "reply": 8876,
+            "like": 25852,
+            "coin": 3412,
+            "favorite": 2793,
+            "share": 1647
+          },
           "status": "observed",
-          "delta": null,
+          "deltas": {
+            "view": null,
+            "danmaku": null,
+            "reply": null,
+            "like": null,
+            "coin": null,
+            "favorite": null,
+            "share": null
+          },
           "span_days": null,
-          "delta_status": "unavailable"
+          "delta_status": "unavailable",
+          "rates": {
+            "engagement": 4.5953,
+            "danmaku": 0.1207,
+            "reply": 1.2723,
+            "like": 3.7058,
+            "coin": 0.4891,
+            "favorite": 0.4004,
+            "share": 0.2361
+          }
         }
       ],
-      "latest_view": 697611
+      "latest": {
+        "date_local": "2026-09-14",
+        "days_since_pub": 15,
+        "stats": {
+          "view": 697611,
+          "danmaku": 842,
+          "reply": 8876,
+          "like": 25852,
+          "coin": 3412,
+          "favorite": 2793,
+          "share": 1647
+        },
+        "rates": {
+          "engagement": 4.5953,
+          "danmaku": 0.1207,
+          "reply": 1.2723,
+          "like": 3.7058,
+          "coin": 0.4891,
+          "favorite": 0.4004,
+          "share": 0.2361
+        }
+      },
+      "latest_view": 697611,
+      "ramp": {
+        "available": false,
+        "first_capture_days_since_pub": 15,
+        "points": []
+      }
     },
     {
       "bvid": "BV1y1uq6zEud",
@@ -1650,18 +4708,73 @@
       "version_confirmed": false,
       "content_type": "character_trailer",
       "owner_mid": 3546636978489848,
+      "channel_id": null,
+      "platform": "bilibili",
       "pubdate": "2026-08-12",
       "points": [
         {
           "date_local": "2026-09-14",
-          "view": 3692500,
+          "days_since_pub": 33,
+          "stats": {
+            "view": 3692500,
+            "danmaku": 3375,
+            "reply": 19869,
+            "like": 81130,
+            "coin": 10361,
+            "favorite": 15100,
+            "share": 5702
+          },
           "status": "observed",
-          "delta": null,
+          "deltas": {
+            "view": null,
+            "danmaku": null,
+            "reply": null,
+            "like": null,
+            "coin": null,
+            "favorite": null,
+            "share": null
+          },
           "span_days": null,
-          "delta_status": "unavailable"
+          "delta_status": "unavailable",
+          "rates": {
+            "engagement": 2.8867,
+            "danmaku": 0.0914,
+            "reply": 0.5381,
+            "like": 2.1972,
+            "coin": 0.2806,
+            "favorite": 0.4089,
+            "share": 0.1544
+          }
         }
       ],
-      "latest_view": 3692500
+      "latest": {
+        "date_local": "2026-09-14",
+        "days_since_pub": 33,
+        "stats": {
+          "view": 3692500,
+          "danmaku": 3375,
+          "reply": 19869,
+          "like": 81130,
+          "coin": 10361,
+          "favorite": 15100,
+          "share": 5702
+        },
+        "rates": {
+          "engagement": 2.8867,
+          "danmaku": 0.0914,
+          "reply": 0.5381,
+          "like": 2.1972,
+          "coin": 0.2806,
+          "favorite": 0.4089,
+          "share": 0.1544
+        }
+      },
+      "latest_view": 3692500,
+      "ramp": {
+        "available": false,
+        "first_capture_days_since_pub": 33,
+        "points": []
+      }
     },
     {
       "bvid": "BV1W1uq6zEdG",
@@ -1672,18 +4785,73 @@
       "version_confirmed": false,
       "content_type": "character_ep",
       "owner_mid": 3546636978489848,
+      "channel_id": null,
+      "platform": "bilibili",
       "pubdate": "2026-08-13",
       "points": [
         {
           "date_local": "2026-09-14",
-          "view": 939800,
+          "days_since_pub": 32,
+          "stats": {
+            "view": 939800,
+            "danmaku": 854,
+            "reply": 11203,
+            "like": 27755,
+            "coin": 4703,
+            "favorite": 6188,
+            "share": 1230
+          },
           "status": "observed",
-          "delta": null,
+          "deltas": {
+            "view": null,
+            "danmaku": null,
+            "reply": null,
+            "like": null,
+            "coin": null,
+            "favorite": null,
+            "share": null
+          },
           "span_days": null,
-          "delta_status": "unavailable"
+          "delta_status": "unavailable",
+          "rates": {
+            "engagement": 4.1122,
+            "danmaku": 0.0909,
+            "reply": 1.1921,
+            "like": 2.9533,
+            "coin": 0.5004,
+            "favorite": 0.6584,
+            "share": 0.1309
+          }
         }
       ],
-      "latest_view": 939800
+      "latest": {
+        "date_local": "2026-09-14",
+        "days_since_pub": 32,
+        "stats": {
+          "view": 939800,
+          "danmaku": 854,
+          "reply": 11203,
+          "like": 27755,
+          "coin": 4703,
+          "favorite": 6188,
+          "share": 1230
+        },
+        "rates": {
+          "engagement": 4.1122,
+          "danmaku": 0.0909,
+          "reply": 1.1921,
+          "like": 2.9533,
+          "coin": 0.5004,
+          "favorite": 0.6584,
+          "share": 0.1309
+        }
+      },
+      "latest_view": 939800,
+      "ramp": {
+        "available": false,
+        "first_capture_days_since_pub": 32,
+        "points": []
+      }
     },
     {
       "bvid": "BV1RgM16rEe6",
@@ -1694,18 +4862,73 @@
       "version_confirmed": false,
       "content_type": "animation_short",
       "owner_mid": 3546636978489848,
+      "channel_id": null,
+      "platform": "bilibili",
       "pubdate": "2026-08-08",
       "points": [
         {
           "date_local": "2026-09-14",
-          "view": 2783272,
+          "days_since_pub": 37,
+          "stats": {
+            "view": 2783272,
+            "danmaku": 3721,
+            "reply": 12221,
+            "like": 68693,
+            "coin": 11045,
+            "favorite": 10252,
+            "share": 11090
+          },
           "status": "observed",
-          "delta": null,
+          "deltas": {
+            "view": null,
+            "danmaku": null,
+            "reply": null,
+            "like": null,
+            "coin": null,
+            "favorite": null,
+            "share": null
+          },
           "span_days": null,
-          "delta_status": "unavailable"
+          "delta_status": "unavailable",
+          "rates": {
+            "engagement": 3.2332,
+            "danmaku": 0.1337,
+            "reply": 0.4391,
+            "like": 2.4681,
+            "coin": 0.3968,
+            "favorite": 0.3683,
+            "share": 0.3985
+          }
         }
       ],
-      "latest_view": 2783272
+      "latest": {
+        "date_local": "2026-09-14",
+        "days_since_pub": 37,
+        "stats": {
+          "view": 2783272,
+          "danmaku": 3721,
+          "reply": 12221,
+          "like": 68693,
+          "coin": 11045,
+          "favorite": 10252,
+          "share": 11090
+        },
+        "rates": {
+          "engagement": 3.2332,
+          "danmaku": 0.1337,
+          "reply": 0.4391,
+          "like": 2.4681,
+          "coin": 0.3968,
+          "favorite": 0.3683,
+          "share": 0.3985
+        }
+      },
+      "latest_view": 2783272,
+      "ramp": {
+        "available": false,
+        "first_capture_days_since_pub": 37,
+        "points": []
+      }
     },
     {
       "bvid": "BV15gM16kE1g",
@@ -1716,18 +4939,73 @@
       "version_confirmed": false,
       "content_type": "character_demo",
       "owner_mid": 3546636978489848,
+      "channel_id": null,
+      "platform": "bilibili",
       "pubdate": "2026-08-10",
       "points": [
         {
           "date_local": "2026-09-14",
-          "view": 727995,
+          "days_since_pub": 35,
+          "stats": {
+            "view": 727995,
+            "danmaku": 1355,
+            "reply": 6721,
+            "like": 29994,
+            "coin": 4255,
+            "favorite": 4032,
+            "share": 5037
+          },
           "status": "observed",
-          "delta": null,
+          "deltas": {
+            "view": null,
+            "danmaku": null,
+            "reply": null,
+            "like": null,
+            "coin": null,
+            "favorite": null,
+            "share": null
+          },
           "span_days": null,
-          "delta_status": "unavailable"
+          "delta_status": "unavailable",
+          "rates": {
+            "engagement": 5.2584,
+            "danmaku": 0.1861,
+            "reply": 0.9232,
+            "like": 4.1201,
+            "coin": 0.5845,
+            "favorite": 0.5538,
+            "share": 0.6919
+          }
         }
       ],
-      "latest_view": 727995
+      "latest": {
+        "date_local": "2026-09-14",
+        "days_since_pub": 35,
+        "stats": {
+          "view": 727995,
+          "danmaku": 1355,
+          "reply": 6721,
+          "like": 29994,
+          "coin": 4255,
+          "favorite": 4032,
+          "share": 5037
+        },
+        "rates": {
+          "engagement": 5.2584,
+          "danmaku": 0.1861,
+          "reply": 0.9232,
+          "like": 4.1201,
+          "coin": 0.5845,
+          "favorite": 0.5538,
+          "share": 0.6919
+        }
+      },
+      "latest_view": 727995,
+      "ramp": {
+        "available": false,
+        "first_capture_days_since_pub": 35,
+        "points": []
+      }
     },
     {
       "bvid": "BV1egM16kE9D",
@@ -1738,18 +5016,73 @@
       "version_confirmed": true,
       "content_type": "version_trailer",
       "owner_mid": 3546636978489848,
+      "channel_id": null,
+      "platform": "bilibili",
       "pubdate": "2026-08-09",
       "points": [
         {
           "date_local": "2026-09-14",
-          "view": 2453521,
+          "days_since_pub": 36,
+          "stats": {
+            "view": 2453521,
+            "danmaku": 1493,
+            "reply": 5013,
+            "like": 70156,
+            "coin": 4781,
+            "favorite": 9191,
+            "share": 2190
+          },
           "status": "observed",
-          "delta": null,
+          "deltas": {
+            "view": null,
+            "danmaku": null,
+            "reply": null,
+            "like": null,
+            "coin": null,
+            "favorite": null,
+            "share": null
+          },
           "span_days": null,
-          "delta_status": "unavailable"
+          "delta_status": "unavailable",
+          "rates": {
+            "engagement": 3.4289,
+            "danmaku": 0.0609,
+            "reply": 0.2043,
+            "like": 2.8594,
+            "coin": 0.1949,
+            "favorite": 0.3746,
+            "share": 0.0893
+          }
         }
       ],
-      "latest_view": 2453521
+      "latest": {
+        "date_local": "2026-09-14",
+        "days_since_pub": 36,
+        "stats": {
+          "view": 2453521,
+          "danmaku": 1493,
+          "reply": 5013,
+          "like": 70156,
+          "coin": 4781,
+          "favorite": 9191,
+          "share": 2190
+        },
+        "rates": {
+          "engagement": 3.4289,
+          "danmaku": 0.0609,
+          "reply": 0.2043,
+          "like": 2.8594,
+          "coin": 0.1949,
+          "favorite": 0.3746,
+          "share": 0.0893
+        }
+      },
+      "latest_view": 2453521,
+      "ramp": {
+        "available": false,
+        "first_capture_days_since_pub": 36,
+        "points": []
+      }
     },
     {
       "bvid": "BV1VVKH6vEnH",
@@ -1760,18 +5093,73 @@
       "version_confirmed": false,
       "content_type": "character_trailer",
       "owner_mid": 3546636978489848,
+      "channel_id": null,
+      "platform": "bilibili",
       "pubdate": "2026-07-22",
       "points": [
         {
           "date_local": "2026-09-14",
-          "view": 2701309,
+          "days_since_pub": 54,
+          "stats": {
+            "view": 2701309,
+            "danmaku": 2125,
+            "reply": 6378,
+            "like": 71785,
+            "coin": 6777,
+            "favorite": 12315,
+            "share": 3331
+          },
           "status": "observed",
-          "delta": null,
+          "deltas": {
+            "view": null,
+            "danmaku": null,
+            "reply": null,
+            "like": null,
+            "coin": null,
+            "favorite": null,
+            "share": null
+          },
           "span_days": null,
-          "delta_status": "unavailable"
+          "delta_status": "unavailable",
+          "rates": {
+            "engagement": 3.3642,
+            "danmaku": 0.0787,
+            "reply": 0.2361,
+            "like": 2.6574,
+            "coin": 0.2509,
+            "favorite": 0.4559,
+            "share": 0.1233
+          }
         }
       ],
-      "latest_view": 2701309
+      "latest": {
+        "date_local": "2026-09-14",
+        "days_since_pub": 54,
+        "stats": {
+          "view": 2701309,
+          "danmaku": 2125,
+          "reply": 6378,
+          "like": 71785,
+          "coin": 6777,
+          "favorite": 12315,
+          "share": 3331
+        },
+        "rates": {
+          "engagement": 3.3642,
+          "danmaku": 0.0787,
+          "reply": 0.2361,
+          "like": 2.6574,
+          "coin": 0.2509,
+          "favorite": 0.4559,
+          "share": 0.1233
+        }
+      },
+      "latest_view": 2701309,
+      "ramp": {
+        "available": false,
+        "first_capture_days_since_pub": 54,
+        "points": []
+      }
     },
     {
       "bvid": "BV1YVKH6vEdg",
@@ -1782,18 +5170,73 @@
       "version_confirmed": false,
       "content_type": "character_ep",
       "owner_mid": 3546636978489848,
+      "channel_id": null,
+      "platform": "bilibili",
       "pubdate": "2026-07-23",
       "points": [
         {
           "date_local": "2026-09-14",
-          "view": 884689,
+          "days_since_pub": 53,
+          "stats": {
+            "view": 884689,
+            "danmaku": 569,
+            "reply": 4622,
+            "like": 34108,
+            "coin": 5401,
+            "favorite": 7350,
+            "share": 1109
+          },
           "status": "observed",
-          "delta": null,
+          "deltas": {
+            "view": null,
+            "danmaku": null,
+            "reply": null,
+            "like": null,
+            "coin": null,
+            "favorite": null,
+            "share": null
+          },
           "span_days": null,
-          "delta_status": "unavailable"
+          "delta_status": "unavailable",
+          "rates": {
+            "engagement": 5.2967,
+            "danmaku": 0.0643,
+            "reply": 0.5224,
+            "like": 3.8554,
+            "coin": 0.6105,
+            "favorite": 0.8308,
+            "share": 0.1254
+          }
         }
       ],
-      "latest_view": 884689
+      "latest": {
+        "date_local": "2026-09-14",
+        "days_since_pub": 53,
+        "stats": {
+          "view": 884689,
+          "danmaku": 569,
+          "reply": 4622,
+          "like": 34108,
+          "coin": 5401,
+          "favorite": 7350,
+          "share": 1109
+        },
+        "rates": {
+          "engagement": 5.2967,
+          "danmaku": 0.0643,
+          "reply": 0.5224,
+          "like": 3.8554,
+          "coin": 0.6105,
+          "favorite": 0.8308,
+          "share": 0.1254
+        }
+      },
+      "latest_view": 884689,
+      "ramp": {
+        "available": false,
+        "first_capture_days_since_pub": 53,
+        "points": []
+      }
     },
     {
       "bvid": "BV1YLKH6PEPP",
@@ -1804,18 +5247,73 @@
       "version_confirmed": false,
       "content_type": "character_demo",
       "owner_mid": 3546636978489848,
+      "channel_id": null,
+      "platform": "bilibili",
       "pubdate": "2026-07-19",
       "points": [
         {
           "date_local": "2026-09-14",
-          "view": 782859,
+          "days_since_pub": 57,
+          "stats": {
+            "view": 782859,
+            "danmaku": 1145,
+            "reply": 5872,
+            "like": 33908,
+            "coin": 4877,
+            "favorite": 3943,
+            "share": 3118
+          },
           "status": "observed",
-          "delta": null,
+          "deltas": {
+            "view": null,
+            "danmaku": null,
+            "reply": null,
+            "like": null,
+            "coin": null,
+            "favorite": null,
+            "share": null
+          },
           "span_days": null,
-          "delta_status": "unavailable"
+          "delta_status": "unavailable",
+          "rates": {
+            "engagement": 5.4579,
+            "danmaku": 0.1463,
+            "reply": 0.7501,
+            "like": 4.3313,
+            "coin": 0.623,
+            "favorite": 0.5037,
+            "share": 0.3983
+          }
         }
       ],
-      "latest_view": 782859
+      "latest": {
+        "date_local": "2026-09-14",
+        "days_since_pub": 57,
+        "stats": {
+          "view": 782859,
+          "danmaku": 1145,
+          "reply": 5872,
+          "like": 33908,
+          "coin": 4877,
+          "favorite": 3943,
+          "share": 3118
+        },
+        "rates": {
+          "engagement": 5.4579,
+          "danmaku": 0.1463,
+          "reply": 0.7501,
+          "like": 4.3313,
+          "coin": 0.623,
+          "favorite": 0.5037,
+          "share": 0.3983
+        }
+      },
+      "latest_view": 782859,
+      "ramp": {
+        "available": false,
+        "first_capture_days_since_pub": 57,
+        "points": []
+      }
     },
     {
       "bvid": "BV12iKU6eEyj",
@@ -1826,18 +5324,73 @@
       "version_confirmed": false,
       "content_type": "character_trailer",
       "owner_mid": 3546636978489848,
+      "channel_id": null,
+      "platform": "bilibili",
       "pubdate": "2026-07-01",
       "points": [
         {
           "date_local": "2026-09-14",
-          "view": 2890122,
+          "days_since_pub": 75,
+          "stats": {
+            "view": 2890122,
+            "danmaku": 4637,
+            "reply": 12150,
+            "like": 66499,
+            "coin": 10672,
+            "favorite": 12217,
+            "share": 5034
+          },
           "status": "observed",
-          "delta": null,
+          "deltas": {
+            "view": null,
+            "danmaku": null,
+            "reply": null,
+            "like": null,
+            "coin": null,
+            "favorite": null,
+            "share": null
+          },
           "span_days": null,
-          "delta_status": "unavailable"
+          "delta_status": "unavailable",
+          "rates": {
+            "engagement": 3.0929,
+            "danmaku": 0.1604,
+            "reply": 0.4204,
+            "like": 2.3009,
+            "coin": 0.3693,
+            "favorite": 0.4227,
+            "share": 0.1742
+          }
         }
       ],
-      "latest_view": 2890122
+      "latest": {
+        "date_local": "2026-09-14",
+        "days_since_pub": 75,
+        "stats": {
+          "view": 2890122,
+          "danmaku": 4637,
+          "reply": 12150,
+          "like": 66499,
+          "coin": 10672,
+          "favorite": 12217,
+          "share": 5034
+        },
+        "rates": {
+          "engagement": 3.0929,
+          "danmaku": 0.1604,
+          "reply": 0.4204,
+          "like": 2.3009,
+          "coin": 0.3693,
+          "favorite": 0.4227,
+          "share": 0.1742
+        }
+      },
+      "latest_view": 2890122,
+      "ramp": {
+        "available": false,
+        "first_capture_days_since_pub": 75,
+        "points": []
+      }
     },
     {
       "bvid": "BV1xiKU6eED2",
@@ -1848,18 +5401,73 @@
       "version_confirmed": false,
       "content_type": "character_ep",
       "owner_mid": 3546636978489848,
+      "channel_id": null,
+      "platform": "bilibili",
       "pubdate": "2026-07-02",
       "points": [
         {
           "date_local": "2026-09-14",
-          "view": 1079581,
+          "days_since_pub": 74,
+          "stats": {
+            "view": 1079581,
+            "danmaku": 2077,
+            "reply": 10485,
+            "like": 28238,
+            "coin": 4421,
+            "favorite": 6450,
+            "share": 1167
+          },
           "status": "observed",
-          "delta": null,
+          "deltas": {
+            "view": null,
+            "danmaku": null,
+            "reply": null,
+            "like": null,
+            "coin": null,
+            "favorite": null,
+            "share": null
+          },
           "span_days": null,
-          "delta_status": "unavailable"
+          "delta_status": "unavailable",
+          "rates": {
+            "engagement": 3.6226,
+            "danmaku": 0.1924,
+            "reply": 0.9712,
+            "like": 2.6156,
+            "coin": 0.4095,
+            "favorite": 0.5975,
+            "share": 0.1081
+          }
         }
       ],
-      "latest_view": 1079581
+      "latest": {
+        "date_local": "2026-09-14",
+        "days_since_pub": 74,
+        "stats": {
+          "view": 1079581,
+          "danmaku": 2077,
+          "reply": 10485,
+          "like": 28238,
+          "coin": 4421,
+          "favorite": 6450,
+          "share": 1167
+        },
+        "rates": {
+          "engagement": 3.6226,
+          "danmaku": 0.1924,
+          "reply": 0.9712,
+          "like": 2.6156,
+          "coin": 0.4095,
+          "favorite": 0.5975,
+          "share": 0.1081
+        }
+      },
+      "latest_view": 1079581,
+      "ramp": {
+        "available": false,
+        "first_capture_days_since_pub": 74,
+        "points": []
+      }
     },
     {
       "bvid": "BV12BKU6AEW1",
@@ -1870,18 +5478,73 @@
       "version_confirmed": false,
       "content_type": "animation_short",
       "owner_mid": 3546636978489848,
+      "channel_id": null,
+      "platform": "bilibili",
       "pubdate": "2026-06-30",
       "points": [
         {
           "date_local": "2026-09-14",
-          "view": 3043579,
+          "days_since_pub": 76,
+          "stats": {
+            "view": 3043579,
+            "danmaku": 1873,
+            "reply": 7080,
+            "like": 74768,
+            "coin": 9222,
+            "favorite": 14334,
+            "share": 4588
+          },
           "status": "observed",
-          "delta": null,
+          "deltas": {
+            "view": null,
+            "danmaku": null,
+            "reply": null,
+            "like": null,
+            "coin": null,
+            "favorite": null,
+            "share": null
+          },
           "span_days": null,
-          "delta_status": "unavailable"
+          "delta_status": "unavailable",
+          "rates": {
+            "engagement": 3.2305,
+            "danmaku": 0.0615,
+            "reply": 0.2326,
+            "like": 2.4566,
+            "coin": 0.303,
+            "favorite": 0.471,
+            "share": 0.1507
+          }
         }
       ],
-      "latest_view": 3043579
+      "latest": {
+        "date_local": "2026-09-14",
+        "days_since_pub": 76,
+        "stats": {
+          "view": 3043579,
+          "danmaku": 1873,
+          "reply": 7080,
+          "like": 74768,
+          "coin": 9222,
+          "favorite": 14334,
+          "share": 4588
+        },
+        "rates": {
+          "engagement": 3.2305,
+          "danmaku": 0.0615,
+          "reply": 0.2326,
+          "like": 2.4566,
+          "coin": 0.303,
+          "favorite": 0.471,
+          "share": 0.1507
+        }
+      },
+      "latest_view": 3043579,
+      "ramp": {
+        "available": false,
+        "first_capture_days_since_pub": 76,
+        "points": []
+      }
     },
     {
       "bvid": "BV11f7J6LEwU",
@@ -1892,18 +5555,73 @@
       "version_confirmed": false,
       "content_type": "character_demo",
       "owner_mid": 3546636978489848,
+      "channel_id": null,
+      "platform": "bilibili",
       "pubdate": "2026-06-28",
       "points": [
         {
           "date_local": "2026-09-14",
-          "view": 1344527,
+          "days_since_pub": 78,
+          "stats": {
+            "view": 1344527,
+            "danmaku": 1445,
+            "reply": 6137,
+            "like": 48718,
+            "coin": 5664,
+            "favorite": 6989,
+            "share": 4172
+          },
           "status": "observed",
-          "delta": null,
+          "deltas": {
+            "view": null,
+            "danmaku": null,
+            "reply": null,
+            "like": null,
+            "coin": null,
+            "favorite": null,
+            "share": null
+          },
           "span_days": null,
-          "delta_status": "unavailable"
+          "delta_status": "unavailable",
+          "rates": {
+            "engagement": 4.5645,
+            "danmaku": 0.1075,
+            "reply": 0.4564,
+            "like": 3.6234,
+            "coin": 0.4213,
+            "favorite": 0.5198,
+            "share": 0.3103
+          }
         }
       ],
-      "latest_view": 1344527
+      "latest": {
+        "date_local": "2026-09-14",
+        "days_since_pub": 78,
+        "stats": {
+          "view": 1344527,
+          "danmaku": 1445,
+          "reply": 6137,
+          "like": 48718,
+          "coin": 5664,
+          "favorite": 6989,
+          "share": 4172
+        },
+        "rates": {
+          "engagement": 4.5645,
+          "danmaku": 0.1075,
+          "reply": 0.4564,
+          "like": 3.6234,
+          "coin": 0.4213,
+          "favorite": 0.5198,
+          "share": 0.3103
+        }
+      },
+      "latest_view": 1344527,
+      "ramp": {
+        "available": false,
+        "first_capture_days_since_pub": 78,
+        "points": []
+      }
     },
     {
       "bvid": "BV1Bo736yE99",
@@ -1914,18 +5632,73 @@
       "version_confirmed": true,
       "content_type": "version_trailer",
       "owner_mid": 3546636978489848,
+      "channel_id": null,
+      "platform": "bilibili",
       "pubdate": "2026-06-27",
       "points": [
         {
           "date_local": "2026-09-14",
-          "view": 3504714,
+          "days_since_pub": 79,
+          "stats": {
+            "view": 3504714,
+            "danmaku": 4221,
+            "reply": 13859,
+            "like": 75953,
+            "coin": 12580,
+            "favorite": 10447,
+            "share": 10815
+          },
           "status": "observed",
-          "delta": null,
+          "deltas": {
+            "view": null,
+            "danmaku": null,
+            "reply": null,
+            "like": null,
+            "coin": null,
+            "favorite": null,
+            "share": null
+          },
           "span_days": null,
-          "delta_status": "unavailable"
+          "delta_status": "unavailable",
+          "rates": {
+            "engagement": 2.8242,
+            "danmaku": 0.1204,
+            "reply": 0.3954,
+            "like": 2.1672,
+            "coin": 0.3589,
+            "favorite": 0.2981,
+            "share": 0.3086
+          }
         }
       ],
-      "latest_view": 3504714
+      "latest": {
+        "date_local": "2026-09-14",
+        "days_since_pub": 79,
+        "stats": {
+          "view": 3504714,
+          "danmaku": 4221,
+          "reply": 13859,
+          "like": 75953,
+          "coin": 12580,
+          "favorite": 10447,
+          "share": 10815
+        },
+        "rates": {
+          "engagement": 2.8242,
+          "danmaku": 0.1204,
+          "reply": 0.3954,
+          "like": 2.1672,
+          "coin": 0.3589,
+          "favorite": 0.2981,
+          "share": 0.3086
+        }
+      },
+      "latest_view": 3504714,
+      "ramp": {
+        "available": false,
+        "first_capture_days_since_pub": 79,
+        "points": []
+      }
     },
     {
       "bvid": "BV18dEr6DErw",
@@ -1936,18 +5709,73 @@
       "version_confirmed": false,
       "content_type": "character_trailer",
       "owner_mid": 3546636978489848,
+      "channel_id": null,
+      "platform": "bilibili",
       "pubdate": "2026-06-17",
       "points": [
         {
           "date_local": "2026-09-14",
-          "view": 2177196,
+          "days_since_pub": 89,
+          "stats": {
+            "view": 2177196,
+            "danmaku": 1633,
+            "reply": 5037,
+            "like": 53210,
+            "coin": 4957,
+            "favorite": 6460,
+            "share": 3482
+          },
           "status": "observed",
-          "delta": null,
+          "deltas": {
+            "view": null,
+            "danmaku": null,
+            "reply": null,
+            "like": null,
+            "coin": null,
+            "favorite": null,
+            "share": null
+          },
           "span_days": null,
-          "delta_status": "unavailable"
+          "delta_status": "unavailable",
+          "rates": {
+            "engagement": 2.9684,
+            "danmaku": 0.075,
+            "reply": 0.2314,
+            "like": 2.444,
+            "coin": 0.2277,
+            "favorite": 0.2967,
+            "share": 0.1599
+          }
         }
       ],
-      "latest_view": 2177196
+      "latest": {
+        "date_local": "2026-09-14",
+        "days_since_pub": 89,
+        "stats": {
+          "view": 2177196,
+          "danmaku": 1633,
+          "reply": 5037,
+          "like": 53210,
+          "coin": 4957,
+          "favorite": 6460,
+          "share": 3482
+        },
+        "rates": {
+          "engagement": 2.9684,
+          "danmaku": 0.075,
+          "reply": 0.2314,
+          "like": 2.444,
+          "coin": 0.2277,
+          "favorite": 0.2967,
+          "share": 0.1599
+        }
+      },
+      "latest_view": 2177196,
+      "ramp": {
+        "available": false,
+        "first_capture_days_since_pub": 89,
+        "points": []
+      }
     },
     {
       "bvid": "BV1tcEk67EBB",
@@ -1958,18 +5786,73 @@
       "version_confirmed": false,
       "content_type": "character_ep",
       "owner_mid": 3546636978489848,
+      "channel_id": null,
+      "platform": "bilibili",
       "pubdate": "2026-06-18",
       "points": [
         {
           "date_local": "2026-09-14",
-          "view": 1278677,
+          "days_since_pub": 88,
+          "stats": {
+            "view": 1278677,
+            "danmaku": 424,
+            "reply": 4332,
+            "like": 31165,
+            "coin": 4054,
+            "favorite": 5845,
+            "share": 1640
+          },
           "status": "observed",
-          "delta": null,
+          "deltas": {
+            "view": null,
+            "danmaku": null,
+            "reply": null,
+            "like": null,
+            "coin": null,
+            "favorite": null,
+            "share": null
+          },
           "span_days": null,
-          "delta_status": "unavailable"
+          "delta_status": "unavailable",
+          "rates": {
+            "engagement": 3.2114,
+            "danmaku": 0.0332,
+            "reply": 0.3388,
+            "like": 2.4373,
+            "coin": 0.317,
+            "favorite": 0.4571,
+            "share": 0.1283
+          }
         }
       ],
-      "latest_view": 1278677
+      "latest": {
+        "date_local": "2026-09-14",
+        "days_since_pub": 88,
+        "stats": {
+          "view": 1278677,
+          "danmaku": 424,
+          "reply": 4332,
+          "like": 31165,
+          "coin": 4054,
+          "favorite": 5845,
+          "share": 1640
+        },
+        "rates": {
+          "engagement": 3.2114,
+          "danmaku": 0.0332,
+          "reply": 0.3388,
+          "like": 2.4373,
+          "coin": 0.317,
+          "favorite": 0.4571,
+          "share": 0.1283
+        }
+      },
+      "latest_view": 1278677,
+      "ramp": {
+        "available": false,
+        "first_capture_days_since_pub": 88,
+        "points": []
+      }
     },
     {
       "bvid": "BV1gdEr6QE1a",
@@ -1980,20 +5863,1578 @@
       "version_confirmed": false,
       "content_type": "character_demo",
       "owner_mid": 3546636978489848,
+      "channel_id": null,
+      "platform": "bilibili",
       "pubdate": "2026-06-14",
       "points": [
         {
           "date_local": "2026-09-14",
-          "view": 920144,
+          "days_since_pub": 92,
+          "stats": {
+            "view": 920144,
+            "danmaku": 1358,
+            "reply": 6483,
+            "like": 31813,
+            "coin": 3805,
+            "favorite": 2874,
+            "share": 5065
+          },
           "status": "observed",
-          "delta": null,
+          "deltas": {
+            "view": null,
+            "danmaku": null,
+            "reply": null,
+            "like": null,
+            "coin": null,
+            "favorite": null,
+            "share": null
+          },
           "span_days": null,
-          "delta_status": "unavailable"
+          "delta_status": "unavailable",
+          "rates": {
+            "engagement": 4.1833,
+            "danmaku": 0.1476,
+            "reply": 0.7046,
+            "like": 3.4574,
+            "coin": 0.4135,
+            "favorite": 0.3123,
+            "share": 0.5505
+          }
         }
       ],
-      "latest_view": 920144
+      "latest": {
+        "date_local": "2026-09-14",
+        "days_since_pub": 92,
+        "stats": {
+          "view": 920144,
+          "danmaku": 1358,
+          "reply": 6483,
+          "like": 31813,
+          "coin": 3805,
+          "favorite": 2874,
+          "share": 5065
+        },
+        "rates": {
+          "engagement": 4.1833,
+          "danmaku": 0.1476,
+          "reply": 0.7046,
+          "like": 3.4574,
+          "coin": 0.4135,
+          "favorite": 0.3123,
+          "share": 0.5505
+        }
+      },
+      "latest_view": 920144,
+      "ramp": {
+        "available": false,
+        "first_capture_days_since_pub": 92,
+        "points": []
+      }
     }
   ],
+  "bilibili": {
+    "videos": [
+      {
+        "bvid": "BV1jVtt6LEjP",
+        "title": "《异环》灵可角色PV丨宇宙的频段",
+        "character_id": "lingke",
+        "character_name": "灵可",
+        "version_id": null,
+        "version_confirmed": false,
+        "content_type": "character_trailer",
+        "owner_mid": 3546636978489848,
+        "channel_id": null,
+        "platform": "bilibili",
+        "pubdate": "2026-09-02",
+        "points": [
+          {
+            "date_local": "2026-09-14",
+            "days_since_pub": 12,
+            "stats": {
+              "view": 2435561,
+              "danmaku": 1375,
+              "reply": 6688,
+              "like": 58859,
+              "coin": 7185,
+              "favorite": 7443,
+              "share": 2623
+            },
+            "status": "observed",
+            "deltas": {
+              "view": null,
+              "danmaku": null,
+              "reply": null,
+              "like": null,
+              "coin": null,
+              "favorite": null,
+              "share": null
+            },
+            "span_days": null,
+            "delta_status": "unavailable",
+            "rates": {
+              "engagement": 3.0173,
+              "danmaku": 0.0565,
+              "reply": 0.2746,
+              "like": 2.4167,
+              "coin": 0.295,
+              "favorite": 0.3056,
+              "share": 0.1077
+            }
+          }
+        ],
+        "latest": {
+          "date_local": "2026-09-14",
+          "days_since_pub": 12,
+          "stats": {
+            "view": 2435561,
+            "danmaku": 1375,
+            "reply": 6688,
+            "like": 58859,
+            "coin": 7185,
+            "favorite": 7443,
+            "share": 2623
+          },
+          "rates": {
+            "engagement": 3.0173,
+            "danmaku": 0.0565,
+            "reply": 0.2746,
+            "like": 2.4167,
+            "coin": 0.295,
+            "favorite": 0.3056,
+            "share": 0.1077
+          }
+        },
+        "latest_view": 2435561,
+        "ramp": {
+          "available": false,
+          "first_capture_days_since_pub": 12,
+          "points": []
+        }
+      },
+      {
+        "bvid": "BV18btt6NEJw",
+        "title": "《异环》灵可EP丨Frequency☆Finder",
+        "character_id": "lingke",
+        "character_name": "灵可",
+        "version_id": null,
+        "version_confirmed": false,
+        "content_type": "character_ep",
+        "owner_mid": 3546636978489848,
+        "channel_id": null,
+        "platform": "bilibili",
+        "pubdate": "2026-09-03",
+        "points": [
+          {
+            "date_local": "2026-09-14",
+            "days_since_pub": 11,
+            "stats": {
+              "view": 561076,
+              "danmaku": 351,
+              "reply": 3166,
+              "like": 19534,
+              "coin": 3919,
+              "favorite": 4397,
+              "share": 728
+            },
+            "status": "observed",
+            "deltas": {
+              "view": null,
+              "danmaku": null,
+              "reply": null,
+              "like": null,
+              "coin": null,
+              "favorite": null,
+              "share": null
+            },
+            "span_days": null,
+            "delta_status": "unavailable",
+            "rates": {
+              "engagement": 4.9637,
+              "danmaku": 0.0626,
+              "reply": 0.5643,
+              "like": 3.4815,
+              "coin": 0.6985,
+              "favorite": 0.7837,
+              "share": 0.1298
+            }
+          }
+        ],
+        "latest": {
+          "date_local": "2026-09-14",
+          "days_since_pub": 11,
+          "stats": {
+            "view": 561076,
+            "danmaku": 351,
+            "reply": 3166,
+            "like": 19534,
+            "coin": 3919,
+            "favorite": 4397,
+            "share": 728
+          },
+          "rates": {
+            "engagement": 4.9637,
+            "danmaku": 0.0626,
+            "reply": 0.5643,
+            "like": 3.4815,
+            "coin": 0.6985,
+            "favorite": 0.7837,
+            "share": 0.1298
+          }
+        },
+        "latest_view": 561076,
+        "ramp": {
+          "available": false,
+          "first_capture_days_since_pub": 11,
+          "points": []
+        }
+      },
+      {
+        "bvid": "BV1UU4C6kEam",
+        "title": "《异环》角色实机战斗丨灵可",
+        "character_id": "lingke",
+        "character_name": "灵可",
+        "version_id": null,
+        "version_confirmed": false,
+        "content_type": "character_demo",
+        "owner_mid": 3546636978489848,
+        "channel_id": null,
+        "platform": "bilibili",
+        "pubdate": "2026-08-30",
+        "points": [
+          {
+            "date_local": "2026-09-14",
+            "days_since_pub": 15,
+            "stats": {
+              "view": 697611,
+              "danmaku": 842,
+              "reply": 8876,
+              "like": 25852,
+              "coin": 3412,
+              "favorite": 2793,
+              "share": 1647
+            },
+            "status": "observed",
+            "deltas": {
+              "view": null,
+              "danmaku": null,
+              "reply": null,
+              "like": null,
+              "coin": null,
+              "favorite": null,
+              "share": null
+            },
+            "span_days": null,
+            "delta_status": "unavailable",
+            "rates": {
+              "engagement": 4.5953,
+              "danmaku": 0.1207,
+              "reply": 1.2723,
+              "like": 3.7058,
+              "coin": 0.4891,
+              "favorite": 0.4004,
+              "share": 0.2361
+            }
+          }
+        ],
+        "latest": {
+          "date_local": "2026-09-14",
+          "days_since_pub": 15,
+          "stats": {
+            "view": 697611,
+            "danmaku": 842,
+            "reply": 8876,
+            "like": 25852,
+            "coin": 3412,
+            "favorite": 2793,
+            "share": 1647
+          },
+          "rates": {
+            "engagement": 4.5953,
+            "danmaku": 0.1207,
+            "reply": 1.2723,
+            "like": 3.7058,
+            "coin": 0.4891,
+            "favorite": 0.4004,
+            "share": 0.2361
+          }
+        },
+        "latest_view": 697611,
+        "ramp": {
+          "available": false,
+          "first_capture_days_since_pub": 15,
+          "points": []
+        }
+      },
+      {
+        "bvid": "BV1y1uq6zEud",
+        "title": "《异环》残虹角色PV丨惑心谲影",
+        "character_id": "canhong",
+        "character_name": "残虹",
+        "version_id": null,
+        "version_confirmed": false,
+        "content_type": "character_trailer",
+        "owner_mid": 3546636978489848,
+        "channel_id": null,
+        "platform": "bilibili",
+        "pubdate": "2026-08-12",
+        "points": [
+          {
+            "date_local": "2026-09-14",
+            "days_since_pub": 33,
+            "stats": {
+              "view": 3692500,
+              "danmaku": 3375,
+              "reply": 19869,
+              "like": 81130,
+              "coin": 10361,
+              "favorite": 15100,
+              "share": 5702
+            },
+            "status": "observed",
+            "deltas": {
+              "view": null,
+              "danmaku": null,
+              "reply": null,
+              "like": null,
+              "coin": null,
+              "favorite": null,
+              "share": null
+            },
+            "span_days": null,
+            "delta_status": "unavailable",
+            "rates": {
+              "engagement": 2.8867,
+              "danmaku": 0.0914,
+              "reply": 0.5381,
+              "like": 2.1972,
+              "coin": 0.2806,
+              "favorite": 0.4089,
+              "share": 0.1544
+            }
+          }
+        ],
+        "latest": {
+          "date_local": "2026-09-14",
+          "days_since_pub": 33,
+          "stats": {
+            "view": 3692500,
+            "danmaku": 3375,
+            "reply": 19869,
+            "like": 81130,
+            "coin": 10361,
+            "favorite": 15100,
+            "share": 5702
+          },
+          "rates": {
+            "engagement": 2.8867,
+            "danmaku": 0.0914,
+            "reply": 0.5381,
+            "like": 2.1972,
+            "coin": 0.2806,
+            "favorite": 0.4089,
+            "share": 0.1544
+          }
+        },
+        "latest_view": 3692500,
+        "ramp": {
+          "available": false,
+          "first_capture_days_since_pub": 33,
+          "points": []
+        }
+      },
+      {
+        "bvid": "BV1W1uq6zEdG",
+        "title": "《异环》残虹EP丨Seven Shades of Red",
+        "character_id": "canhong",
+        "character_name": "残虹",
+        "version_id": null,
+        "version_confirmed": false,
+        "content_type": "character_ep",
+        "owner_mid": 3546636978489848,
+        "channel_id": null,
+        "platform": "bilibili",
+        "pubdate": "2026-08-13",
+        "points": [
+          {
+            "date_local": "2026-09-14",
+            "days_since_pub": 32,
+            "stats": {
+              "view": 939800,
+              "danmaku": 854,
+              "reply": 11203,
+              "like": 27755,
+              "coin": 4703,
+              "favorite": 6188,
+              "share": 1230
+            },
+            "status": "observed",
+            "deltas": {
+              "view": null,
+              "danmaku": null,
+              "reply": null,
+              "like": null,
+              "coin": null,
+              "favorite": null,
+              "share": null
+            },
+            "span_days": null,
+            "delta_status": "unavailable",
+            "rates": {
+              "engagement": 4.1122,
+              "danmaku": 0.0909,
+              "reply": 1.1921,
+              "like": 2.9533,
+              "coin": 0.5004,
+              "favorite": 0.6584,
+              "share": 0.1309
+            }
+          }
+        ],
+        "latest": {
+          "date_local": "2026-09-14",
+          "days_since_pub": 32,
+          "stats": {
+            "view": 939800,
+            "danmaku": 854,
+            "reply": 11203,
+            "like": 27755,
+            "coin": 4703,
+            "favorite": 6188,
+            "share": 1230
+          },
+          "rates": {
+            "engagement": 4.1122,
+            "danmaku": 0.0909,
+            "reply": 1.1921,
+            "like": 2.9533,
+            "coin": 0.5004,
+            "favorite": 0.6584,
+            "share": 0.1309
+          }
+        },
+        "latest_view": 939800,
+        "ramp": {
+          "available": false,
+          "first_capture_days_since_pub": 32,
+          "points": []
+        }
+      },
+      {
+        "bvid": "BV1RgM16rEe6",
+        "title": "《异环》残虹角色短片丨灵魂的颜色",
+        "character_id": "canhong",
+        "character_name": "残虹",
+        "version_id": null,
+        "version_confirmed": false,
+        "content_type": "animation_short",
+        "owner_mid": 3546636978489848,
+        "channel_id": null,
+        "platform": "bilibili",
+        "pubdate": "2026-08-08",
+        "points": [
+          {
+            "date_local": "2026-09-14",
+            "days_since_pub": 37,
+            "stats": {
+              "view": 2783272,
+              "danmaku": 3721,
+              "reply": 12221,
+              "like": 68693,
+              "coin": 11045,
+              "favorite": 10252,
+              "share": 11090
+            },
+            "status": "observed",
+            "deltas": {
+              "view": null,
+              "danmaku": null,
+              "reply": null,
+              "like": null,
+              "coin": null,
+              "favorite": null,
+              "share": null
+            },
+            "span_days": null,
+            "delta_status": "unavailable",
+            "rates": {
+              "engagement": 3.2332,
+              "danmaku": 0.1337,
+              "reply": 0.4391,
+              "like": 2.4681,
+              "coin": 0.3968,
+              "favorite": 0.3683,
+              "share": 0.3985
+            }
+          }
+        ],
+        "latest": {
+          "date_local": "2026-09-14",
+          "days_since_pub": 37,
+          "stats": {
+            "view": 2783272,
+            "danmaku": 3721,
+            "reply": 12221,
+            "like": 68693,
+            "coin": 11045,
+            "favorite": 10252,
+            "share": 11090
+          },
+          "rates": {
+            "engagement": 3.2332,
+            "danmaku": 0.1337,
+            "reply": 0.4391,
+            "like": 2.4681,
+            "coin": 0.3968,
+            "favorite": 0.3683,
+            "share": 0.3985
+          }
+        },
+        "latest_view": 2783272,
+        "ramp": {
+          "available": false,
+          "first_capture_days_since_pub": 37,
+          "points": []
+        }
+      },
+      {
+        "bvid": "BV15gM16kE1g",
+        "title": "《异环》角色实机战斗丨残虹",
+        "character_id": "canhong",
+        "character_name": "残虹",
+        "version_id": null,
+        "version_confirmed": false,
+        "content_type": "character_demo",
+        "owner_mid": 3546636978489848,
+        "channel_id": null,
+        "platform": "bilibili",
+        "pubdate": "2026-08-10",
+        "points": [
+          {
+            "date_local": "2026-09-14",
+            "days_since_pub": 35,
+            "stats": {
+              "view": 727995,
+              "danmaku": 1355,
+              "reply": 6721,
+              "like": 29994,
+              "coin": 4255,
+              "favorite": 4032,
+              "share": 5037
+            },
+            "status": "observed",
+            "deltas": {
+              "view": null,
+              "danmaku": null,
+              "reply": null,
+              "like": null,
+              "coin": null,
+              "favorite": null,
+              "share": null
+            },
+            "span_days": null,
+            "delta_status": "unavailable",
+            "rates": {
+              "engagement": 5.2584,
+              "danmaku": 0.1861,
+              "reply": 0.9232,
+              "like": 4.1201,
+              "coin": 0.5845,
+              "favorite": 0.5538,
+              "share": 0.6919
+            }
+          }
+        ],
+        "latest": {
+          "date_local": "2026-09-14",
+          "days_since_pub": 35,
+          "stats": {
+            "view": 727995,
+            "danmaku": 1355,
+            "reply": 6721,
+            "like": 29994,
+            "coin": 4255,
+            "favorite": 4032,
+            "share": 5037
+          },
+          "rates": {
+            "engagement": 5.2584,
+            "danmaku": 0.1861,
+            "reply": 0.9232,
+            "like": 4.1201,
+            "coin": 0.5845,
+            "favorite": 0.5538,
+            "share": 0.6919
+          }
+        },
+        "latest_view": 727995,
+        "ramp": {
+          "available": false,
+          "first_capture_days_since_pub": 35,
+          "points": []
+        }
+      },
+      {
+        "bvid": "BV1egM16kE9D",
+        "title": "《异环》1.3版本PV「雾中朔望星回」",
+        "character_id": null,
+        "character_name": null,
+        "version_id": "1.3",
+        "version_confirmed": true,
+        "content_type": "version_trailer",
+        "owner_mid": 3546636978489848,
+        "channel_id": null,
+        "platform": "bilibili",
+        "pubdate": "2026-08-09",
+        "points": [
+          {
+            "date_local": "2026-09-14",
+            "days_since_pub": 36,
+            "stats": {
+              "view": 2453521,
+              "danmaku": 1493,
+              "reply": 5013,
+              "like": 70156,
+              "coin": 4781,
+              "favorite": 9191,
+              "share": 2190
+            },
+            "status": "observed",
+            "deltas": {
+              "view": null,
+              "danmaku": null,
+              "reply": null,
+              "like": null,
+              "coin": null,
+              "favorite": null,
+              "share": null
+            },
+            "span_days": null,
+            "delta_status": "unavailable",
+            "rates": {
+              "engagement": 3.4289,
+              "danmaku": 0.0609,
+              "reply": 0.2043,
+              "like": 2.8594,
+              "coin": 0.1949,
+              "favorite": 0.3746,
+              "share": 0.0893
+            }
+          }
+        ],
+        "latest": {
+          "date_local": "2026-09-14",
+          "days_since_pub": 36,
+          "stats": {
+            "view": 2453521,
+            "danmaku": 1493,
+            "reply": 5013,
+            "like": 70156,
+            "coin": 4781,
+            "favorite": 9191,
+            "share": 2190
+          },
+          "rates": {
+            "engagement": 3.4289,
+            "danmaku": 0.0609,
+            "reply": 0.2043,
+            "like": 2.8594,
+            "coin": 0.1949,
+            "favorite": 0.3746,
+            "share": 0.0893
+          }
+        },
+        "latest_view": 2453521,
+        "ramp": {
+          "available": false,
+          "first_capture_days_since_pub": 36,
+          "points": []
+        }
+      },
+      {
+        "bvid": "BV1VVKH6vEnH",
+        "title": "《异环》伊洛伊角色PV丨想做什么梦？",
+        "character_id": "yiluoyi",
+        "character_name": "伊洛伊",
+        "version_id": null,
+        "version_confirmed": false,
+        "content_type": "character_trailer",
+        "owner_mid": 3546636978489848,
+        "channel_id": null,
+        "platform": "bilibili",
+        "pubdate": "2026-07-22",
+        "points": [
+          {
+            "date_local": "2026-09-14",
+            "days_since_pub": 54,
+            "stats": {
+              "view": 2701309,
+              "danmaku": 2125,
+              "reply": 6378,
+              "like": 71785,
+              "coin": 6777,
+              "favorite": 12315,
+              "share": 3331
+            },
+            "status": "observed",
+            "deltas": {
+              "view": null,
+              "danmaku": null,
+              "reply": null,
+              "like": null,
+              "coin": null,
+              "favorite": null,
+              "share": null
+            },
+            "span_days": null,
+            "delta_status": "unavailable",
+            "rates": {
+              "engagement": 3.3642,
+              "danmaku": 0.0787,
+              "reply": 0.2361,
+              "like": 2.6574,
+              "coin": 0.2509,
+              "favorite": 0.4559,
+              "share": 0.1233
+            }
+          }
+        ],
+        "latest": {
+          "date_local": "2026-09-14",
+          "days_since_pub": 54,
+          "stats": {
+            "view": 2701309,
+            "danmaku": 2125,
+            "reply": 6378,
+            "like": 71785,
+            "coin": 6777,
+            "favorite": 12315,
+            "share": 3331
+          },
+          "rates": {
+            "engagement": 3.3642,
+            "danmaku": 0.0787,
+            "reply": 0.2361,
+            "like": 2.6574,
+            "coin": 0.2509,
+            "favorite": 0.4559,
+            "share": 0.1233
+          }
+        },
+        "latest_view": 2701309,
+        "ramp": {
+          "available": false,
+          "first_capture_days_since_pub": 54,
+          "points": []
+        }
+      },
+      {
+        "bvid": "BV1YVKH6vEdg",
+        "title": "《异环》伊洛伊EP丨Lullaby",
+        "character_id": "yiluoyi",
+        "character_name": "伊洛伊",
+        "version_id": null,
+        "version_confirmed": false,
+        "content_type": "character_ep",
+        "owner_mid": 3546636978489848,
+        "channel_id": null,
+        "platform": "bilibili",
+        "pubdate": "2026-07-23",
+        "points": [
+          {
+            "date_local": "2026-09-14",
+            "days_since_pub": 53,
+            "stats": {
+              "view": 884689,
+              "danmaku": 569,
+              "reply": 4622,
+              "like": 34108,
+              "coin": 5401,
+              "favorite": 7350,
+              "share": 1109
+            },
+            "status": "observed",
+            "deltas": {
+              "view": null,
+              "danmaku": null,
+              "reply": null,
+              "like": null,
+              "coin": null,
+              "favorite": null,
+              "share": null
+            },
+            "span_days": null,
+            "delta_status": "unavailable",
+            "rates": {
+              "engagement": 5.2967,
+              "danmaku": 0.0643,
+              "reply": 0.5224,
+              "like": 3.8554,
+              "coin": 0.6105,
+              "favorite": 0.8308,
+              "share": 0.1254
+            }
+          }
+        ],
+        "latest": {
+          "date_local": "2026-09-14",
+          "days_since_pub": 53,
+          "stats": {
+            "view": 884689,
+            "danmaku": 569,
+            "reply": 4622,
+            "like": 34108,
+            "coin": 5401,
+            "favorite": 7350,
+            "share": 1109
+          },
+          "rates": {
+            "engagement": 5.2967,
+            "danmaku": 0.0643,
+            "reply": 0.5224,
+            "like": 3.8554,
+            "coin": 0.6105,
+            "favorite": 0.8308,
+            "share": 0.1254
+          }
+        },
+        "latest_view": 884689,
+        "ramp": {
+          "available": false,
+          "first_capture_days_since_pub": 53,
+          "points": []
+        }
+      },
+      {
+        "bvid": "BV1YLKH6PEPP",
+        "title": "《异环》角色实机战斗丨伊洛伊",
+        "character_id": "yiluoyi",
+        "character_name": "伊洛伊",
+        "version_id": null,
+        "version_confirmed": false,
+        "content_type": "character_demo",
+        "owner_mid": 3546636978489848,
+        "channel_id": null,
+        "platform": "bilibili",
+        "pubdate": "2026-07-19",
+        "points": [
+          {
+            "date_local": "2026-09-14",
+            "days_since_pub": 57,
+            "stats": {
+              "view": 782859,
+              "danmaku": 1145,
+              "reply": 5872,
+              "like": 33908,
+              "coin": 4877,
+              "favorite": 3943,
+              "share": 3118
+            },
+            "status": "observed",
+            "deltas": {
+              "view": null,
+              "danmaku": null,
+              "reply": null,
+              "like": null,
+              "coin": null,
+              "favorite": null,
+              "share": null
+            },
+            "span_days": null,
+            "delta_status": "unavailable",
+            "rates": {
+              "engagement": 5.4579,
+              "danmaku": 0.1463,
+              "reply": 0.7501,
+              "like": 4.3313,
+              "coin": 0.623,
+              "favorite": 0.5037,
+              "share": 0.3983
+            }
+          }
+        ],
+        "latest": {
+          "date_local": "2026-09-14",
+          "days_since_pub": 57,
+          "stats": {
+            "view": 782859,
+            "danmaku": 1145,
+            "reply": 5872,
+            "like": 33908,
+            "coin": 4877,
+            "favorite": 3943,
+            "share": 3118
+          },
+          "rates": {
+            "engagement": 5.4579,
+            "danmaku": 0.1463,
+            "reply": 0.7501,
+            "like": 4.3313,
+            "coin": 0.623,
+            "favorite": 0.5037,
+            "share": 0.3983
+          }
+        },
+        "latest_view": 782859,
+        "ramp": {
+          "available": false,
+          "first_capture_days_since_pub": 57,
+          "points": []
+        }
+      },
+      {
+        "bvid": "BV12iKU6eEyj",
+        "title": "《异环》真红角色PV丨梦的边缘",
+        "character_id": "zhenhong",
+        "character_name": "真红",
+        "version_id": null,
+        "version_confirmed": false,
+        "content_type": "character_trailer",
+        "owner_mid": 3546636978489848,
+        "channel_id": null,
+        "platform": "bilibili",
+        "pubdate": "2026-07-01",
+        "points": [
+          {
+            "date_local": "2026-09-14",
+            "days_since_pub": 75,
+            "stats": {
+              "view": 2890122,
+              "danmaku": 4637,
+              "reply": 12150,
+              "like": 66499,
+              "coin": 10672,
+              "favorite": 12217,
+              "share": 5034
+            },
+            "status": "observed",
+            "deltas": {
+              "view": null,
+              "danmaku": null,
+              "reply": null,
+              "like": null,
+              "coin": null,
+              "favorite": null,
+              "share": null
+            },
+            "span_days": null,
+            "delta_status": "unavailable",
+            "rates": {
+              "engagement": 3.0929,
+              "danmaku": 0.1604,
+              "reply": 0.4204,
+              "like": 2.3009,
+              "coin": 0.3693,
+              "favorite": 0.4227,
+              "share": 0.1742
+            }
+          }
+        ],
+        "latest": {
+          "date_local": "2026-09-14",
+          "days_since_pub": 75,
+          "stats": {
+            "view": 2890122,
+            "danmaku": 4637,
+            "reply": 12150,
+            "like": 66499,
+            "coin": 10672,
+            "favorite": 12217,
+            "share": 5034
+          },
+          "rates": {
+            "engagement": 3.0929,
+            "danmaku": 0.1604,
+            "reply": 0.4204,
+            "like": 2.3009,
+            "coin": 0.3693,
+            "favorite": 0.4227,
+            "share": 0.1742
+          }
+        },
+        "latest_view": 2890122,
+        "ramp": {
+          "available": false,
+          "first_capture_days_since_pub": 75,
+          "points": []
+        }
+      },
+      {
+        "bvid": "BV1xiKU6eED2",
+        "title": "《异环》真红EP丨Whatever It Says",
+        "character_id": "zhenhong",
+        "character_name": "真红",
+        "version_id": null,
+        "version_confirmed": false,
+        "content_type": "character_ep",
+        "owner_mid": 3546636978489848,
+        "channel_id": null,
+        "platform": "bilibili",
+        "pubdate": "2026-07-02",
+        "points": [
+          {
+            "date_local": "2026-09-14",
+            "days_since_pub": 74,
+            "stats": {
+              "view": 1079581,
+              "danmaku": 2077,
+              "reply": 10485,
+              "like": 28238,
+              "coin": 4421,
+              "favorite": 6450,
+              "share": 1167
+            },
+            "status": "observed",
+            "deltas": {
+              "view": null,
+              "danmaku": null,
+              "reply": null,
+              "like": null,
+              "coin": null,
+              "favorite": null,
+              "share": null
+            },
+            "span_days": null,
+            "delta_status": "unavailable",
+            "rates": {
+              "engagement": 3.6226,
+              "danmaku": 0.1924,
+              "reply": 0.9712,
+              "like": 2.6156,
+              "coin": 0.4095,
+              "favorite": 0.5975,
+              "share": 0.1081
+            }
+          }
+        ],
+        "latest": {
+          "date_local": "2026-09-14",
+          "days_since_pub": 74,
+          "stats": {
+            "view": 1079581,
+            "danmaku": 2077,
+            "reply": 10485,
+            "like": 28238,
+            "coin": 4421,
+            "favorite": 6450,
+            "share": 1167
+          },
+          "rates": {
+            "engagement": 3.6226,
+            "danmaku": 0.1924,
+            "reply": 0.9712,
+            "like": 2.6156,
+            "coin": 0.4095,
+            "favorite": 0.5975,
+            "share": 0.1081
+          }
+        },
+        "latest_view": 1079581,
+        "ramp": {
+          "available": false,
+          "first_capture_days_since_pub": 74,
+          "points": []
+        }
+      },
+      {
+        "bvid": "BV12BKU6AEW1",
+        "title": "《异环》真红角色短片丨赤龙假日",
+        "character_id": "zhenhong",
+        "character_name": "真红",
+        "version_id": null,
+        "version_confirmed": false,
+        "content_type": "animation_short",
+        "owner_mid": 3546636978489848,
+        "channel_id": null,
+        "platform": "bilibili",
+        "pubdate": "2026-06-30",
+        "points": [
+          {
+            "date_local": "2026-09-14",
+            "days_since_pub": 76,
+            "stats": {
+              "view": 3043579,
+              "danmaku": 1873,
+              "reply": 7080,
+              "like": 74768,
+              "coin": 9222,
+              "favorite": 14334,
+              "share": 4588
+            },
+            "status": "observed",
+            "deltas": {
+              "view": null,
+              "danmaku": null,
+              "reply": null,
+              "like": null,
+              "coin": null,
+              "favorite": null,
+              "share": null
+            },
+            "span_days": null,
+            "delta_status": "unavailable",
+            "rates": {
+              "engagement": 3.2305,
+              "danmaku": 0.0615,
+              "reply": 0.2326,
+              "like": 2.4566,
+              "coin": 0.303,
+              "favorite": 0.471,
+              "share": 0.1507
+            }
+          }
+        ],
+        "latest": {
+          "date_local": "2026-09-14",
+          "days_since_pub": 76,
+          "stats": {
+            "view": 3043579,
+            "danmaku": 1873,
+            "reply": 7080,
+            "like": 74768,
+            "coin": 9222,
+            "favorite": 14334,
+            "share": 4588
+          },
+          "rates": {
+            "engagement": 3.2305,
+            "danmaku": 0.0615,
+            "reply": 0.2326,
+            "like": 2.4566,
+            "coin": 0.303,
+            "favorite": 0.471,
+            "share": 0.1507
+          }
+        },
+        "latest_view": 3043579,
+        "ramp": {
+          "available": false,
+          "first_capture_days_since_pub": 76,
+          "points": []
+        }
+      },
+      {
+        "bvid": "BV11f7J6LEwU",
+        "title": "《异环》角色实机战斗丨真红",
+        "character_id": "zhenhong",
+        "character_name": "真红",
+        "version_id": null,
+        "version_confirmed": false,
+        "content_type": "character_demo",
+        "owner_mid": 3546636978489848,
+        "channel_id": null,
+        "platform": "bilibili",
+        "pubdate": "2026-06-28",
+        "points": [
+          {
+            "date_local": "2026-09-14",
+            "days_since_pub": 78,
+            "stats": {
+              "view": 1344527,
+              "danmaku": 1445,
+              "reply": 6137,
+              "like": 48718,
+              "coin": 5664,
+              "favorite": 6989,
+              "share": 4172
+            },
+            "status": "observed",
+            "deltas": {
+              "view": null,
+              "danmaku": null,
+              "reply": null,
+              "like": null,
+              "coin": null,
+              "favorite": null,
+              "share": null
+            },
+            "span_days": null,
+            "delta_status": "unavailable",
+            "rates": {
+              "engagement": 4.5645,
+              "danmaku": 0.1075,
+              "reply": 0.4564,
+              "like": 3.6234,
+              "coin": 0.4213,
+              "favorite": 0.5198,
+              "share": 0.3103
+            }
+          }
+        ],
+        "latest": {
+          "date_local": "2026-09-14",
+          "days_since_pub": 78,
+          "stats": {
+            "view": 1344527,
+            "danmaku": 1445,
+            "reply": 6137,
+            "like": 48718,
+            "coin": 5664,
+            "favorite": 6989,
+            "share": 4172
+          },
+          "rates": {
+            "engagement": 4.5645,
+            "danmaku": 0.1075,
+            "reply": 0.4564,
+            "like": 3.6234,
+            "coin": 0.4213,
+            "favorite": 0.5198,
+            "share": 0.3103
+          }
+        },
+        "latest_view": 1344527,
+        "ramp": {
+          "available": false,
+          "first_capture_days_since_pub": 78,
+          "points": []
+        }
+      },
+      {
+        "bvid": "BV1Bo736yE99",
+        "title": "《异环》1.2版本PV「九百九十九夜」",
+        "character_id": null,
+        "character_name": null,
+        "version_id": "1.2",
+        "version_confirmed": true,
+        "content_type": "version_trailer",
+        "owner_mid": 3546636978489848,
+        "channel_id": null,
+        "platform": "bilibili",
+        "pubdate": "2026-06-27",
+        "points": [
+          {
+            "date_local": "2026-09-14",
+            "days_since_pub": 79,
+            "stats": {
+              "view": 3504714,
+              "danmaku": 4221,
+              "reply": 13859,
+              "like": 75953,
+              "coin": 12580,
+              "favorite": 10447,
+              "share": 10815
+            },
+            "status": "observed",
+            "deltas": {
+              "view": null,
+              "danmaku": null,
+              "reply": null,
+              "like": null,
+              "coin": null,
+              "favorite": null,
+              "share": null
+            },
+            "span_days": null,
+            "delta_status": "unavailable",
+            "rates": {
+              "engagement": 2.8242,
+              "danmaku": 0.1204,
+              "reply": 0.3954,
+              "like": 2.1672,
+              "coin": 0.3589,
+              "favorite": 0.2981,
+              "share": 0.3086
+            }
+          }
+        ],
+        "latest": {
+          "date_local": "2026-09-14",
+          "days_since_pub": 79,
+          "stats": {
+            "view": 3504714,
+            "danmaku": 4221,
+            "reply": 13859,
+            "like": 75953,
+            "coin": 12580,
+            "favorite": 10447,
+            "share": 10815
+          },
+          "rates": {
+            "engagement": 2.8242,
+            "danmaku": 0.1204,
+            "reply": 0.3954,
+            "like": 2.1672,
+            "coin": 0.3589,
+            "favorite": 0.2981,
+            "share": 0.3086
+          }
+        },
+        "latest_view": 3504714,
+        "ramp": {
+          "available": false,
+          "first_capture_days_since_pub": 79,
+          "points": []
+        }
+      },
+      {
+        "bvid": "BV18dEr6DErw",
+        "title": "《异环》卡厄斯角色PV丨未尽的抉择",
+        "character_id": "kaeisi",
+        "character_name": "卡厄斯",
+        "version_id": null,
+        "version_confirmed": false,
+        "content_type": "character_trailer",
+        "owner_mid": 3546636978489848,
+        "channel_id": null,
+        "platform": "bilibili",
+        "pubdate": "2026-06-17",
+        "points": [
+          {
+            "date_local": "2026-09-14",
+            "days_since_pub": 89,
+            "stats": {
+              "view": 2177196,
+              "danmaku": 1633,
+              "reply": 5037,
+              "like": 53210,
+              "coin": 4957,
+              "favorite": 6460,
+              "share": 3482
+            },
+            "status": "observed",
+            "deltas": {
+              "view": null,
+              "danmaku": null,
+              "reply": null,
+              "like": null,
+              "coin": null,
+              "favorite": null,
+              "share": null
+            },
+            "span_days": null,
+            "delta_status": "unavailable",
+            "rates": {
+              "engagement": 2.9684,
+              "danmaku": 0.075,
+              "reply": 0.2314,
+              "like": 2.444,
+              "coin": 0.2277,
+              "favorite": 0.2967,
+              "share": 0.1599
+            }
+          }
+        ],
+        "latest": {
+          "date_local": "2026-09-14",
+          "days_since_pub": 89,
+          "stats": {
+            "view": 2177196,
+            "danmaku": 1633,
+            "reply": 5037,
+            "like": 53210,
+            "coin": 4957,
+            "favorite": 6460,
+            "share": 3482
+          },
+          "rates": {
+            "engagement": 2.9684,
+            "danmaku": 0.075,
+            "reply": 0.2314,
+            "like": 2.444,
+            "coin": 0.2277,
+            "favorite": 0.2967,
+            "share": 0.1599
+          }
+        },
+        "latest_view": 2177196,
+        "ramp": {
+          "available": false,
+          "first_capture_days_since_pub": 89,
+          "points": []
+        }
+      },
+      {
+        "bvid": "BV1tcEk67EBB",
+        "title": "《异环》卡厄斯EP丨Chains of the Dark",
+        "character_id": "kaeisi",
+        "character_name": "卡厄斯",
+        "version_id": null,
+        "version_confirmed": false,
+        "content_type": "character_ep",
+        "owner_mid": 3546636978489848,
+        "channel_id": null,
+        "platform": "bilibili",
+        "pubdate": "2026-06-18",
+        "points": [
+          {
+            "date_local": "2026-09-14",
+            "days_since_pub": 88,
+            "stats": {
+              "view": 1278677,
+              "danmaku": 424,
+              "reply": 4332,
+              "like": 31165,
+              "coin": 4054,
+              "favorite": 5845,
+              "share": 1640
+            },
+            "status": "observed",
+            "deltas": {
+              "view": null,
+              "danmaku": null,
+              "reply": null,
+              "like": null,
+              "coin": null,
+              "favorite": null,
+              "share": null
+            },
+            "span_days": null,
+            "delta_status": "unavailable",
+            "rates": {
+              "engagement": 3.2114,
+              "danmaku": 0.0332,
+              "reply": 0.3388,
+              "like": 2.4373,
+              "coin": 0.317,
+              "favorite": 0.4571,
+              "share": 0.1283
+            }
+          }
+        ],
+        "latest": {
+          "date_local": "2026-09-14",
+          "days_since_pub": 88,
+          "stats": {
+            "view": 1278677,
+            "danmaku": 424,
+            "reply": 4332,
+            "like": 31165,
+            "coin": 4054,
+            "favorite": 5845,
+            "share": 1640
+          },
+          "rates": {
+            "engagement": 3.2114,
+            "danmaku": 0.0332,
+            "reply": 0.3388,
+            "like": 2.4373,
+            "coin": 0.317,
+            "favorite": 0.4571,
+            "share": 0.1283
+          }
+        },
+        "latest_view": 1278677,
+        "ramp": {
+          "available": false,
+          "first_capture_days_since_pub": 88,
+          "points": []
+        }
+      },
+      {
+        "bvid": "BV1gdEr6QE1a",
+        "title": "《异环》角色实机战斗丨卡厄斯",
+        "character_id": "kaeisi",
+        "character_name": "卡厄斯",
+        "version_id": null,
+        "version_confirmed": false,
+        "content_type": "character_demo",
+        "owner_mid": 3546636978489848,
+        "channel_id": null,
+        "platform": "bilibili",
+        "pubdate": "2026-06-14",
+        "points": [
+          {
+            "date_local": "2026-09-14",
+            "days_since_pub": 92,
+            "stats": {
+              "view": 920144,
+              "danmaku": 1358,
+              "reply": 6483,
+              "like": 31813,
+              "coin": 3805,
+              "favorite": 2874,
+              "share": 5065
+            },
+            "status": "observed",
+            "deltas": {
+              "view": null,
+              "danmaku": null,
+              "reply": null,
+              "like": null,
+              "coin": null,
+              "favorite": null,
+              "share": null
+            },
+            "span_days": null,
+            "delta_status": "unavailable",
+            "rates": {
+              "engagement": 4.1833,
+              "danmaku": 0.1476,
+              "reply": 0.7046,
+              "like": 3.4574,
+              "coin": 0.4135,
+              "favorite": 0.3123,
+              "share": 0.5505
+            }
+          }
+        ],
+        "latest": {
+          "date_local": "2026-09-14",
+          "days_since_pub": 92,
+          "stats": {
+            "view": 920144,
+            "danmaku": 1358,
+            "reply": 6483,
+            "like": 31813,
+            "coin": 3805,
+            "favorite": 2874,
+            "share": 5065
+          },
+          "rates": {
+            "engagement": 4.1833,
+            "danmaku": 0.1476,
+            "reply": 0.7046,
+            "like": 3.4574,
+            "coin": 0.4135,
+            "favorite": 0.3123,
+            "share": 0.5505
+          }
+        },
+        "latest_view": 920144,
+        "ramp": {
+          "available": false,
+          "first_capture_days_since_pub": 92,
+          "points": []
+        }
+      }
+    ],
+    "totals": {
+      "videos": 19,
+      "totals": {
+        "view": 34898733,
+        "danmaku": 34873,
+        "reply": 156192,
+        "like": 932138,
+        "coin": 122091,
+        "favorite": 148620,
+        "share": 73768
+      },
+      "rates": {
+        "engagement": 3.4467,
+        "danmaku": 0.0999,
+        "reply": 0.4476,
+        "like": 2.671,
+        "coin": 0.3498,
+        "favorite": 0.4259,
+        "share": 0.2114
+      }
+    }
+  },
+  "youtube": {
+    "available": false,
+    "channel": {
+      "handle": "@NevernesstoEverness",
+      "channel_id": null,
+      "title": null,
+      "resolved_at": null
+    },
+    "videos": [],
+    "totals": {
+      "videos": 0,
+      "totals": null,
+      "rates": null
+    }
+  },
   "quality": {
     "summary": {
       "error": 0,
@@ -2043,7 +7484,25 @@
       "name": "B 站视频公开字段",
       "label": "observed",
       "url": "https://api.bilibili.com/x/web-interface/view",
-      "note": "仅登记视频的播放量，不是全站播放量或独立观众数"
+      "note": "播放/弹幕/评论/点赞/投币/收藏/分享七项；仅登记视频集合，不是全站播放量或独立观众数"
+    },
+    {
+      "name": "YouTube 视频公开统计",
+      "label": "observed",
+      "url": "https://www.googleapis.com/youtube/v3/videos",
+      "note": "观看/点赞/评论三项；点踩数已被平台下线，点赞与评论可被创作者隐藏，隐藏时记 null 不记 0"
+    },
+    {
+      "name": "Steam 构建号",
+      "label": "third_party",
+      "url": "https://api.steamcmd.net/v1/info/",
+      "note": "public 分支 buildid 与更新时间；第三方镜像，非 Valve 官方源，用作版本公告的旁证"
+    },
+    {
+      "name": "Steam 评测明细（玩家结构）",
+      "label": "reconstructed",
+      "url": "https://store.steampowered.com/appreviews/4508340",
+      "note": "评测时游戏时长、评测后游玩时长、语种、购买渠道；仅含今天仍存在的评测，且评测者不是玩家的随机样本"
     }
   ]
 }

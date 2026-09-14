@@ -19,3 +19,9 @@ collected_at	source	game_id	date_local	status	detail
 2026-09-14T14:42:38+00:00	steam	wuthering_waves	2026-09-14	update	observed_fields=2/3;news=17
 2026-09-14T14:42:50+00:00	steam	zenless_zone_zero	2026-09-14	update	observed_fields=2/3;news=15
 2026-09-14T14:43:01+00:00	steam	neverness_to_everness	2026-09-14	update	observed_fields=2/3;news=20
+2026-09-14T15:28:04+00:00	steam_build	wuthering_waves	2026-09-14	insert	buildid=24626793;updated=2026-08-20
+2026-09-14T15:28:08+00:00	steam_build	zenless_zone_zero	2026-09-14	insert	buildid=24927009;updated=2026-09-09
+2026-09-14T15:28:12+00:00	steam_build	neverness_to_everness	2026-09-14	insert	buildid=25196072;updated=2026-09-09
+2026-09-14T15:28:15+00:00	steam_online	wuthering_waves	2026-09-14	insert	hour=23;players=15291
+2026-09-14T15:28:16+00:00	steam_online	zenless_zone_zero	2026-09-14	insert	hour=23;players=10056
+2026-09-14T15:28:17+00:00	steam_online	neverness_to_everness	2026-09-14	insert	hour=23;players=4504

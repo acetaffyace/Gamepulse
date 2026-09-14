@@ -76,8 +76,9 @@ def get_game(game_id: str) -> dict:
     raise KeyError(f"games.yml 中没有 game_id={game_id}")
 
 
-def load_videos(game_id: str | None = None, active_only: bool = True) -> list[dict]:
-    videos = load_yaml("bilibili_videos.yml").get("videos", [])
+def _load_registry(filename: str, game_id: str | None,
+                   active_only: bool) -> list[dict]:
+    videos = load_yaml(filename).get("videos", []) or []
     if active_only:
         videos = [v for v in videos if v.get("active")]
     if game_id:
@@ -85,10 +86,33 @@ def load_videos(game_id: str | None = None, active_only: bool = True) -> list[di
     return videos
 
 
+def load_videos(game_id: str | None = None, active_only: bool = True) -> list[dict]:
+    return _load_registry("bilibili_videos.yml", game_id, active_only)
+
+
+def load_youtube_videos(game_id: str | None = None,
+                        active_only: bool = True) -> list[dict]:
+    return _load_registry("youtube_videos.yml", game_id, active_only)
+
+
 def official_mid(game_id: str) -> int | None:
     accounts = load_yaml("bilibili_videos.yml").get("official_accounts", {})
     entry = accounts.get(game_id) or {}
     return entry.get("mid")
+
+
+def youtube_channel(game_id: str) -> dict:
+    channels = load_yaml("youtube_videos.yml").get("official_channels", {}) or {}
+    return channels.get(game_id) or {}
+
+
+def youtube_api_key() -> str | None:
+    """YouTube Data API Key 只从环境变量读取，绝不入库。
+
+    未设置时返回 None，由调用方打印申请指引后跳过 —— 缺一个可选数据源
+    不应该让整条每日采集链路失败。
+    """
+    return os.environ.get("YOUTUBE_API_KEY") or None
 
 
 def session() -> requests.Session:
@@ -145,20 +169,29 @@ def read_series(game_id: str, source: str) -> list[dict]:
     return records
 
 
-def upsert_series(game_id: str, source: str, record: dict) -> str:
-    """按 date_local 幂等写入。返回 'insert' 或 'update'。"""
+def upsert_series_keyed(game_id: str, source: str, record: dict,
+                        keys: tuple[str, ...] = ("date_local",)) -> str:
+    """按 keys 组成的逻辑主键幂等写入。返回 'insert' 或 'update'。
+
+    日粒度序列用默认的 date_local；小时级采样需要 (date_local, hour_local)，
+    否则同一天的 24 个采样点会互相覆盖，只剩最后一个。
+    """
     path = series_path(game_id, source)
     records = read_series(game_id, source)
-    date_local = record["date_local"]
+
+    def key_of(rec: dict) -> tuple:
+        return tuple(rec.get(k) for k in keys)
+
+    target = key_of(record)
     action = "insert"
     for idx, existing in enumerate(records):
-        if existing.get("date_local") == date_local:
+        if key_of(existing) == target:
             records[idx] = record
             action = "update"
             break
     else:
         records.append(record)
-    records.sort(key=lambda r: r["date_local"])
+    records.sort(key=key_of)
 
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".jsonl.tmp")
@@ -167,6 +200,11 @@ def upsert_series(game_id: str, source: str, record: dict) -> str:
             fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
     os.replace(tmp, path)
     return action
+
+
+def upsert_series(game_id: str, source: str, record: dict) -> str:
+    """按 date_local 幂等写入。返回 'insert' 或 'update'。"""
+    return upsert_series_keyed(game_id, source, record, keys=("date_local",))
 
 
 def log_collection(source: str, game_id: str, date_local: str,

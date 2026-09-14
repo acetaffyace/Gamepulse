@@ -14,9 +14,44 @@ OBSERVED = "observed"
 DERIVED = "derived"
 UNAVAILABLE = "unavailable"
 
+# B 站 view 接口返回的全部公开计数字段。
+# 七项全采（collectors/bilibili.py），因此派生指标不需要新增任何请求。
+BILI_STATS = ("view", "danmaku", "reply", "like", "coin", "favorite", "share")
+
+# YouTube videos.list 的公开统计字段。
+# 点踩数已被 YouTube 于 2021 年下线，拿不到；favoriteCount 早已废弃恒为 0，
+# 因此两者都不进字段表 —— 留一个永远为 0 的字段比没有这个字段更容易误导。
+# likeCount 可被创作者隐藏，隐藏时为 None 而不是 0。
+YT_STATS = ("view", "like", "comment")
+
+# 互动率的分子构成，按平台分别定义。
+# B 站：投币成本最高（要消耗硬币），三项合计即「三连」。
+# YouTube：只有点赞一项可用，因此它的 engagement 与 B 站的不可直接比较 ——
+#          分子构成不同，跨平台比的是各自的时间趋势，不是绝对高低。
+INTERACTION_NUMERATORS = {
+    "bilibili": ("like", "coin", "favorite"),
+    "youtube": ("like",),
+}
+
 
 def _parse(d: str) -> date:
     return datetime.strptime(d, "%Y-%m-%d").date()
+
+
+def _days_between(a: str, b: str) -> int | None:
+    if not a or not b:
+        return None
+    try:
+        return (_parse(a) - _parse(b)).days
+    except ValueError:
+        return None
+
+
+def _rate(numerator: int | None, denominator: int | None) -> float | None:
+    """百分比，分母缺失或为 0 时返回 None（不返回 0）。"""
+    if numerator is None or denominator is None or denominator <= 0:
+        return None
+    return round(numerator / denominator * 100, 4)
 
 
 def review_rate(positive: int | None, total: int | None) -> float | None:
@@ -34,6 +69,45 @@ def online_series(steam_records: list[dict]) -> list[dict]:
             "date_local": rec["date_local"],
             "value": value,
             "status": OBSERVED if value is not None else UNAVAILABLE,
+        })
+    return out
+
+
+def online_daily(hourly_records: list[dict], min_samples: int = 6) -> list[dict]:
+    """把小时级采样聚合成日峰值 / 日谷值 / 日均值。
+
+    单点日采只能得到「某一时刻的在线数」，无法区分「整体盘子变大」和
+    「采样时刻恰好撞上活跃高峰」。小时级采样后，峰谷比与峰值出现时刻
+    才有意义 —— 后者还能反过来佐证玩家的地域构成。
+
+    采样数不足 min_samples 的日期标 partial：半天的样本算不出真实日峰值。
+    """
+    by_date: dict[str, list[dict]] = {}
+    for rec in hourly_records:
+        value = rec.get("players")
+        if value is None:
+            continue
+        by_date.setdefault(rec["date_local"], []).append(rec)
+
+    out: list[dict] = []
+    for date_local in sorted(by_date):
+        samples = by_date[date_local]
+        values = [s["players"] for s in samples]
+        peak_sample = max(samples, key=lambda s: s["players"])
+        trough_sample = min(samples, key=lambda s: s["players"])
+        peak, trough = peak_sample["players"], trough_sample["players"]
+        out.append({
+            "date_local": date_local,
+            "peak": peak,
+            "trough": trough,
+            "mean": round(sum(values) / len(values)),
+            "peak_hour": peak_sample.get("hour_local"),
+            "trough_hour": trough_sample.get("hour_local"),
+            # 峰谷比反映作息集中度：接近 1 说明全天平铺（多时区分散），
+            # 明显大于 1 说明用户集中在某几个小时（单一时区主导）。
+            "peak_trough_ratio": round(peak / trough, 2) if trough else None,
+            "samples": len(samples),
+            "status": OBSERVED if len(samples) >= min_samples else "partial",
         })
     return out
 
@@ -103,15 +177,48 @@ def price_series(steam_records: list[dict]) -> list[dict]:
     return out
 
 
-def video_view_series(bili_records: list[dict]) -> dict[str, dict]:
-    """按 BV 号聚合播放量时间线与日增量。"""
+def interaction_rates(stats: dict, platform: str = "bilibili") -> dict:
+    """由一组计数字段派生互动率（百分比）。
+
+    全部以播放量为分母 —— 这是唯一能让不同量级视频横向比较的口径。
+    分母缺失时全部返回 None，不用 0 代替。
+    """
+    view = stats.get("view")
+    numerators = INTERACTION_NUMERATORS.get(platform, ())
+    total = None
+    if view:
+        parts = [stats.get(k) for k in numerators]
+        if parts and all(p is not None for p in parts):
+            total = sum(parts)
+
+    rates = {"engagement": _rate(total, view)}
+    for key, value in stats.items():
+        if key == "view":
+            continue
+        rates[key] = _rate(value, view)
+    return rates
+
+
+def video_series(records: list[dict], platform: str = "bilibili",
+                 stats_keys: tuple[str, ...] | None = None,
+                 id_key: str = "bvid") -> dict[str, dict]:
+    """按视频 ID 聚合公开计数的时间线、日增量与互动率。
+
+    B 站与 YouTube 共用这一套：两边的字段名在采集器里已经统一成
+    view/like/comment 这类平台无关的名字，差异只在字段集合与互动率分子。
+
+    发布后 D1..D7 的爬坡曲线只有在「视频发布当天就已进采集表」时才成立。
+    事后补登记的视频，首次采集拿到的是已经积累若干天的累计值，
+    该视频的 ramp.available=False —— 不能把它和当天就入表的视频放一起比。
+    """
+    stats_keys = stats_keys or (BILI_STATS if platform == "bilibili" else YT_STATS)
     by_video: dict[str, dict] = {}
 
-    for rec in sorted(bili_records, key=lambda r: r["date_local"]):
+    for rec in sorted(records, key=lambda r: r["date_local"]):
         for v in rec.get("videos", []):
-            bvid = v["bvid"]
+            bvid = v[id_key]
             slot = by_video.setdefault(bvid, {
-                "bvid": bvid,
+                id_key: bvid,
                 "title": v.get("title"),
                 "character_id": v.get("character_id"),
                 "character_name": v.get("character_name"),
@@ -119,33 +226,100 @@ def video_view_series(bili_records: list[dict]) -> dict[str, dict]:
                 "version_confirmed": v.get("version_confirmed", False),
                 "content_type": v.get("content_type"),
                 "owner_mid": v.get("owner_mid"),
+                "channel_id": v.get("channel_id"),
+                "platform": platform,
                 "pubdate": v.get("pubdate"),
                 "points": [],
             })
+            # pubdate 以采集到的最新值为准（登记表可能填错，接口是事实）
+            if v.get("pubdate"):
+                slot["pubdate"] = v["pubdate"]
             slot["points"].append({
                 "date_local": rec["date_local"],
-                "view": v.get("view"),
+                "days_since_pub": _days_between(rec["date_local"], v.get("pubdate")),
+                "stats": {k: v.get(k) for k in stats_keys},
                 "status": v.get("status", UNAVAILABLE),
             })
 
     for slot in by_video.values():
-        prev_view, prev_date = None, None
+        prev_stats: dict[str, int] = {}
+        prev_date = None
+
         for pt in slot["points"]:
-            cur = pt.get("view")
-            if cur is None or prev_view is None:
-                pt["delta"] = None
-                pt["span_days"] = None
-                pt["delta_status"] = UNAVAILABLE
-            else:
-                span = (_parse(pt["date_local"]) - _parse(prev_date)).days
-                pt["delta"] = cur - prev_view
-                pt["span_days"] = span
-                pt["delta_status"] = DERIVED
-            if cur is not None:
-                prev_view, prev_date = cur, pt["date_local"]
-        latest = [p for p in slot["points"] if p.get("view") is not None]
-        slot["latest_view"] = latest[-1]["view"] if latest else None
+            stats = pt["stats"]
+            deltas: dict[str, int | None] = {}
+            span = _days_between(pt["date_local"], prev_date) if prev_date else None
+
+            for key in stats_keys:
+                cur, prev = stats.get(key), prev_stats.get(key)
+                deltas[key] = (cur - prev) if (cur is not None and prev is not None) else None
+
+            pt["deltas"] = deltas
+            pt["span_days"] = span
+            pt["delta_status"] = DERIVED if deltas.get("view") is not None else UNAVAILABLE
+            pt["rates"] = interaction_rates(stats, platform)
+
+            if stats.get("view") is not None:
+                prev_stats = {k: stats.get(k) for k in stats_keys
+                              if stats.get(k) is not None}
+                prev_date = pt["date_local"]
+
+        observed = [p for p in slot["points"] if p["stats"].get("view") is not None]
+        if observed:
+            last = observed[-1]
+            slot["latest"] = {
+                "date_local": last["date_local"],
+                "days_since_pub": last["days_since_pub"],
+                "stats": last["stats"],
+                "rates": last["rates"],
+            }
+            slot["latest_view"] = last["stats"]["view"]
+            first_gap = observed[0]["days_since_pub"]
+            # 允许 1 天误差：当天发布、次日首采仍能还原 D1 起的爬坡
+            slot["ramp"] = {
+                "available": first_gap is not None and first_gap <= 1,
+                "first_capture_days_since_pub": first_gap,
+                "points": [{"day": p["days_since_pub"],
+                            "view": p["stats"]["view"],
+                            "view_delta": p["deltas"].get("view")}
+                           for p in observed if p["days_since_pub"] is not None
+                           and p["days_since_pub"] <= 7],
+            }
+        else:
+            slot["latest"] = None
+            slot["latest_view"] = None
+            slot["ramp"] = {"available": False,
+                            "first_capture_days_since_pub": None, "points": []}
+
     return by_video
+
+
+# 旧名保留：MVP 期间的调用方与测试仍在使用
+video_view_series = video_series
+
+
+def video_totals(videos: dict[str, dict], platform: str = "bilibili") -> dict:
+    """登记视频集合的合计与加权互动率。
+
+    合计播放量不等于独立观众数 —— 同一个人看多个视频会被重复计入。
+    加权互动率用合计分子 / 合计分母，避免小视频的极端比率拉偏均值。
+    """
+    stats_keys = BILI_STATS if platform == "bilibili" else YT_STATS
+    totals = {k: 0 for k in stats_keys}
+    counted = 0
+    for slot in videos.values():
+        latest = slot.get("latest")
+        if not latest:
+            continue
+        counted += 1
+        for key in stats_keys:
+            value = latest["stats"].get(key)
+            if value is not None:
+                totals[key] += value
+    if not counted:
+        return {"videos": 0, "totals": None, "rates": None}
+    return {"videos": counted, "totals": totals,
+            "rates": interaction_rates(totals, platform)}
 
 
 def discount_events(price_points: list[dict]) -> list[dict]:
@@ -164,6 +338,30 @@ def discount_events(price_points: list[dict]) -> list[dict]:
             })
         prev = cur
     return events
+
+
+def indexed(points: list[dict], value_key: str = "value",
+            base: float = 100.0) -> list[dict]:
+    """首个有效值 = base 的指数化序列，用于不同量级游戏的趋势对比。
+
+    绝对在线人数相差一个数量级的游戏放同一张图会互相压扁，
+    指数化后比较的是「相对自己的变化」，这才是长线运营关心的东西。
+    """
+    out: list[dict] = []
+    baseline = None
+    for pt in points:
+        value = pt.get(value_key)
+        if value is None:
+            out.append({**pt, "indexed": None, "index_status": UNAVAILABLE})
+            continue
+        if baseline is None:
+            baseline = value
+        if not baseline:
+            out.append({**pt, "indexed": None, "index_status": UNAVAILABLE})
+            continue
+        out.append({**pt, "indexed": round(value / baseline * base, 2),
+                    "index_status": DERIVED})
+    return out
 
 
 def coverage(steam_records: list[dict]) -> dict:
