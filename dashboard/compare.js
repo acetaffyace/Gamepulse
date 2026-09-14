@@ -203,7 +203,11 @@ function renderCompare() {
   cmpChart.setOption({
     animationDuration: 420,
     textStyle: { fontFamily: FONT },
-    title: CMP_LANES.map((l, i) => laneTitle(laneTitles[i][0], laneTitles[i][1], l.top)),
+    // laneTitle 来自 app.js，签名是 (lane, top)，lane 需要 title/subtitle 两个字段。
+    // 对比视图的轨道不来自 dashboard.yml（它是固定的五轨对照），
+    // 所以在这里就地构造出同样形状的对象，而不是让 laneTitle 兼容两种入参。
+    title: CMP_LANES.map((l, i) => laneTitle(
+      { title: laneTitles[i][0], subtitle: laneTitles[i][1] }, l.top)),
     grid: grids, xAxis: xAxes, yAxis: yAxes,
     axisPointer: {
       link: [{ xAxisIndex: 'all' }],
