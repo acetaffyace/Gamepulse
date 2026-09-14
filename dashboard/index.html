@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>GamePulse · 游戏长线运营情报雷达</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+  /* 调色板取自 dataviz 参考实例，5 个数据实体已通过 validate_palette.js（light）:
+     lightness band / chroma floor / CVD 分离 / normal-vision floor 全部 PASS。
+     aqua 与 magenta 对比度低于 3:1，触发 relief 规则 —— 因此本页提供表格视图
+     与直接标注，颜色不单独承载信息。 */
+  .viz-root {
+    color-scheme: light;
+    --surface-1:      #fcfcfb;
+    --page:           #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --gridline:       #e1e0d9;
+    --baseline:       #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+
+    --series-new-reviews: #2a78d6;  /* slot 1 blue    每日新增评测 */
+    --series-rate-daily:  #eb6834;  /* slot 2 orange  当日好评率 */
+    --series-rate-cum:    #1baf7a;  /* slot 3 aqua    累计好评率 */
+    --series-online:      #4a3aa7;  /* slot 7 violet  Steam 同时在线 */
+    --series-video:       #e87ba4;  /* slot 5 magenta B 站官方视频 */
+
+    --status-good:     #0ca30c;
+    --status-warning:  #fab219;
+    --status-critical: #d03b3b;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .shell { width: 1440px; margin: 0 auto; padding: 32px 40px 64px; }
+
+  /* ---------- header ---------- */
+  header { display: flex; align-items: flex-end; justify-content: space-between;
+           padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+  h1 { font-size: 22px; font-weight: 600; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .sub { color: var(--text-secondary); font-size: 13px; margin: 0; }
+  .meta { text-align: right; color: var(--text-muted); font-size: 12px; }
+  .meta strong { color: var(--text-secondary); font-weight: 500; }
+
+  .badge { display: inline-flex; align-items: center; gap: 5px;
+           padding: 3px 9px; border-radius: 999px; font-size: 11.5px;
+           border: 1px solid var(--border); background: var(--surface-1);
+           color: var(--text-secondary); }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge.live .dot { background: var(--status-good); }
+  .badge.recon .dot { background: var(--status-warning); }
+
+  /* ---------- filter row (one row above everything it scopes) ---------- */
+  .filters { display: flex; align-items: center; gap: 24px;
+             margin: 20px 0 24px; }
+  .filter-group { display: flex; align-items: center; gap: 8px; }
+  .filter-label { color: var(--text-muted); font-size: 12px; }
+  select {
+    font: inherit; font-size: 13px; padding: 6px 10px; border-radius: 7px;
+    border: 1px solid var(--border); background: var(--surface-1);
+    color: var(--text-primary); cursor: pointer; min-width: 150px;
+  }
+  .segmented { display: inline-flex; background: var(--surface-1);
+               border: 1px solid var(--border); border-radius: 8px; padding: 2px; }
+  .segmented button {
+    font: inherit; font-size: 12.5px; padding: 5px 13px; border: 0;
+    background: transparent; color: var(--text-secondary);
+    border-radius: 6px; cursor: pointer; transition: background .12s, color .12s;
+  }
+  .segmented button:hover { background: rgba(11,11,11,0.04); }
+  .segmented button[aria-pressed="true"] {
+    background: var(--text-primary); color: #fff; font-weight: 500;
+  }
+  .spacer { flex: 1; }
+  .linkish {
+    font: inherit; font-size: 12.5px; border: 1px solid var(--border);
+    background: var(--surface-1); color: var(--text-secondary);
+    padding: 6px 12px; border-radius: 7px; cursor: pointer;
+  }
+  .linkish:hover { background: rgba(11,11,11,0.04); }
+
+  /* ---------- stat tiles ---------- */
+  .tiles { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px;
+           margin-bottom: 24px; }
+  .tile { background: var(--surface-1); border: 1px solid var(--border);
+          border-radius: 11px; padding: 15px 16px 14px; }
+  .tile .k { color: var(--text-muted); font-size: 11.5px; margin-bottom: 7px;
+             display: flex; align-items: center; gap: 5px; }
+  .tile .swatch { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+  .tile .v { font-size: 25px; font-weight: 600; letter-spacing: -0.02em;
+             line-height: 1.12; }
+  .tile .v .unit { font-size: 14px; font-weight: 500; color: var(--text-secondary);
+                   margin-left: 2px; }
+  .tile .n { color: var(--text-muted); font-size: 11.5px; margin-top: 5px; }
+  .tile .n.good { color: #006300; }
+  .tile .n.bad  { color: var(--status-critical); }
+
+  /* ---------- chart card ---------- */
+  .card { background: var(--surface-1); border: 1px solid var(--border);
+          border-radius: 12px; padding: 20px 22px 16px; margin-bottom: 20px; }
+  .card-head { display: flex; align-items: baseline; justify-content: space-between;
+               margin-bottom: 4px; }
+  .card-title { font-size: 15px; font-weight: 600; margin: 0; }
+  .card-note { color: var(--text-muted); font-size: 12px; margin: 3px 0 0; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; margin: 12px 0 2px; }
+  .legend-item { display: inline-flex; align-items: center; gap: 6px;
+                 font-size: 12px; color: var(--text-secondary); cursor: pointer;
+                 user-select: none; }
+  .legend-item .mark { width: 11px; height: 3px; border-radius: 2px; flex: none; }
+  .legend-item .mark.dot { width: 9px; height: 9px; border-radius: 50%; }
+  .legend-item .mark.bar { width: 9px; height: 11px; border-radius: 2px; }
+  .legend-item[data-off="true"] { opacity: .38; }
+  .legend-sep { width: 1px; background: var(--border); margin: 1px 2px; }
+
+  #pulse { width: 100%; height: 760px; }
+
+  /* ---------- lower grid ---------- */
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px;
+          font-variant-numeric: tabular-nums; }
+  th { text-align: left; color: var(--text-muted); font-weight: 500;
+       font-size: 11.5px; padding: 7px 10px; border-bottom: 1px solid var(--border);
+       white-space: nowrap; }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--gridline); }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: rgba(11,11,11,0.02); }
+  td.num, th.num { text-align: right; }
+  .pos { color: #006300; }
+  .neg { color: var(--status-critical); }
+  .muted { color: var(--text-muted); }
+  .chip { display: inline-block; padding: 1px 7px; border-radius: 5px;
+          font-size: 11px; background: rgba(11,11,11,0.05);
+          color: var(--text-secondary); }
+
+  .bar-cell { display: flex; align-items: center; gap: 8px; }
+  .bar-track { flex: 1; height: 6px; background: var(--gridline);
+               border-radius: 3px; overflow: hidden; min-width: 60px; }
+  .bar-fill { height: 100%; border-radius: 3px; }
+
+  /* ---------- sources ---------- */
+  .sources { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .source { border: 1px solid var(--border); border-radius: 9px; padding: 12px 13px;
+            background: var(--page); }
+  .source .t { font-size: 12.5px; font-weight: 500; margin-bottom: 4px; }
+  .source .d { color: var(--text-muted); font-size: 11.5px; line-height: 1.45; }
+  .tag { display: inline-block; font-size: 10.5px; padding: 1px 6px;
+         border-radius: 4px; margin-bottom: 6px; border: 1px solid var(--border);
+         color: var(--text-secondary); }
+
+  .caveat { margin-top: 16px; padding: 12px 14px; border-radius: 9px;
+            background: rgba(250,178,25,0.08);
+            border: 1px solid rgba(250,178,25,0.3);
+            color: var(--text-secondary); font-size: 12.5px; line-height: 1.55; }
+  .caveat b { color: var(--text-primary); font-weight: 600; }
+
+  .hidden { display: none !important; }
+  .loading { padding: 80px; text-align: center; color: var(--text-muted); }
+</style>
+</head>
+<body class="viz-root">
+<div class="shell">
+
+  <header>
+    <div>
+      <h1>GamePulse · 游戏长线运营情报雷达</h1>
+      <p class="sub">基于 Steam 与 B 站公开数据的版本趋势观测 · 仅公开信号，不含内部 DAU / 收入 / 留存</p>
+    </div>
+    <div class="meta">
+      <div id="metaBadges" style="margin-bottom:6px"></div>
+      <div>快照生成 <strong id="metaDate">—</strong></div>
+    </div>
+  </header>
+
+  <div class="filters">
+    <div class="filter-group">
+      <span class="filter-label">视图</span>
+      <div class="segmented" id="viewSeg">
+        <button data-view="single" aria-pressed="true">单游戏</button>
+        <button data-view="compare">三方对比</button>
+      </div>
+    </div>
+    <div class="filter-group" id="gameGroup">
+      <span class="filter-label">游戏</span>
+      <select id="gameSelect"></select>
+    </div>
+    <div class="filter-group hidden" id="alignGroup">
+      <span class="filter-label">对齐方式</span>
+      <div class="segmented" id="alignSeg">
+        <button data-align="absolute" aria-pressed="true">日历日期</button>
+        <button data-align="relative">上线后天数</button>
+      </div>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">时间范围</span>
+      <div class="segmented" id="rangeSeg">
+        <button data-days="30">30 天</button>
+        <button data-days="60">60 天</button>
+        <button data-days="90" aria-pressed="true">90 天</button>
+        <button data-days="0">全部</button>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <button class="linkish" id="toggleTable">显示数据表</button>
+  </div>
+
+  <!-- ============ 三方对比视图 ============ -->
+  <div id="compareApp" class="hidden">
+    <div class="tiles" id="cmpTiles" style="grid-template-columns:repeat(3,1fr)"></div>
+
+    <section class="card">
+      <div class="card-head">
+        <div>
+          <h2 class="card-title">三方运营对照</h2>
+          <p class="card-note" id="cmpNote"></p>
+        </div>
+      </div>
+      <div class="legend" id="cmpLegend"></div>
+      <div id="cmpPulse" style="width:100%;height:900px"></div>
+    </section>
+
+    <div class="row2">
+      <section class="card">
+        <div class="card-head"><h2 class="card-title">共同窗口对照</h2></div>
+        <p class="card-note" id="cmpWindowNote" style="margin-bottom:12px"></p>
+        <table id="cmpTable"><thead><tr>
+          <th>游戏</th>
+          <th class="num">窗口内评测</th>
+          <th class="num">日均</th>
+          <th class="num">窗口好评率</th>
+          <th class="num">当前在线</th>
+          <th class="num">版本</th>
+        </tr></thead><tbody></tbody></table>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h2 class="card-title">版本节奏</h2></div>
+        <p class="card-note" style="margin-bottom:12px">共同窗口内的版本更新间隔，取自各自 Steam 官方公告。</p>
+        <table id="cadenceTable"><thead><tr>
+          <th>游戏</th><th>窗口内版本</th><th class="num">平均间隔</th>
+        </tr></thead><tbody></tbody></table>
+      </section>
+    </div>
+
+    <section class="card">
+      <div class="card-head"><h2 class="card-title">对比口径限制</h2></div>
+      <div class="caveat" id="cmpCaveat" style="margin-top:12px"></div>
+    </section>
+  </div>
+
+  <!-- ============ 单游戏视图 ============ -->
+  <div id="app" class="hidden">
+    <div class="tiles" id="tiles"></div>
+
+    <section class="card">
+      <div class="card-head">
+        <div>
+          <h2 class="card-title">Operations Pulse</h2>
+          <p class="card-note" id="pulseNote">四条轨道共享同一日期轴；版本更新日为贯穿竖线。各轨道单位不同，分别独立计量，不共用纵轴。</p>
+        </div>
+      </div>
+      <div class="legend" id="legend"></div>
+      <div id="pulse"></div>
+    </section>
+
+    <div class="row2">
+      <section class="card">
+        <div class="card-head">
+          <h2 class="card-title">版本更新前后 7 天对比</h2>
+        </div>
+        <p class="card-note" style="margin-bottom:12px">以评测口径衡量版本声量与口碑变化。仅比较有完整前后窗口的版本。</p>
+        <table id="versionTable"><thead><tr>
+          <th>版本</th><th>更新日</th>
+          <th class="num">日均新增评测</th>
+          <th class="num">变化</th>
+          <th class="num">区间好评率</th>
+          <th class="num">变化</th>
+        </tr></thead><tbody></tbody></table>
+        <p class="card-note" id="versionNote" style="margin-top:14px; line-height:1.6"></p>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <h2 class="card-title">评测语言分布</h2>
+        </div>
+        <p class="card-note" style="margin-bottom:12px">回填期内全部评测的语言构成，反映 Steam 版本的实际玩家来源。</p>
+        <table id="langTable"><thead><tr>
+          <th>语言</th><th class="num">评测数</th><th style="width:44%">占比</th>
+        </tr></thead><tbody></tbody></table>
+      </section>
+    </div>
+
+    <section class="card hidden" id="tableCard">
+      <div class="card-head">
+        <h2 class="card-title">数据表视图</h2>
+      </div>
+      <p class="card-note" style="margin-bottom:12px">图表的等价表格，供无法依赖颜色区分的读者使用。</p>
+      <div style="max-height:420px; overflow:auto">
+        <table id="dataTable"><thead><tr>
+          <th>日期</th>
+          <th class="num">新增评测</th>
+          <th class="num">好评</th>
+          <th class="num">差评</th>
+          <th class="num">当日好评率</th>
+          <th class="num">累计好评率</th>
+          <th class="num">Steam 同时在线</th>
+          <th>事件</th>
+        </tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2 class="card-title">数据来源与口径</h2>
+      </div>
+      <div class="sources" id="sources" style="margin-top:12px"></div>
+      <div class="caveat" id="caveat"></div>
+    </section>
+  </div>
+
+  <div class="loading" id="loading">正在加载快照…</div>
+</div>
+
+<script src="app.js"></script>
+<script src="compare.js"></script>
+</body>
+</html>

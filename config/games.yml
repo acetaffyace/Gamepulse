@@ -1,0 +1,42 @@
+# 跟踪的游戏。
+#
+# 三款均为二次元开放世界/都市题材手游的 Steam 版本，同期在线量级可比，
+# 适合做版本节奏与口碑对照。
+#
+# steam_status 记录实测的字段可用性（详见 README 数据源表）：
+#   partial = 在线/评测/公告可用，appdetails 商店详情不可用
+# 三款均为免费游戏，价格与折扣轨道无内容，字段保留给后续付费游戏。
+
+games:
+  - game_id: wuthering_waves
+    display_name: 鸣潮
+    short_name: 鸣潮
+    steam_app_id: 3513350
+    steam_status: partial
+    steam_release: '2025-04-28'
+    developer: 库洛游戏
+    region: CN
+    currency: CNY
+    active: true
+
+  - game_id: zenless_zone_zero
+    display_name: 绝区零
+    short_name: 绝区零
+    steam_app_id: 4162040
+    steam_status: partial
+    steam_release: '2026-06-17'
+    developer: 米哈游
+    region: CN
+    currency: CNY
+    active: true
+
+  - game_id: neverness_to_everness
+    display_name: 异环
+    short_name: 异环
+    steam_app_id: 4508340
+    steam_status: partial
+    steam_release: '2026-07-08'
+    developer: 完美世界
+    region: CN
+    currency: CNY
+    active: true
