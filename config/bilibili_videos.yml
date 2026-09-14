@@ -1,0 +1,212 @@
+# B 站视频注册表 —— 三款游戏对照
+#
+# 核验方式：
+#   全部条目的 owner.mid 经官方 view / related 接口核验，必须等于该游戏
+#   official_accounts 中登记的 mid。发现渠道为公开的 archive/related 接口
+#   + mid 过滤，不调用有风控的搜索接口。
+#
+#   核验已剔除多个伪装度很高的非官方投稿，例如：
+#     BV1wULQ64EB9「先导演示丨蕾米埃尔」实为「哔哩哔哩游戏中心」(mid 1328260)
+#     BV1rAB8BjEpR / BV1iGB8BgEZ8 / BV1ejB8BqEzZ 实为「异环攻略组」搬运
+#
+# version_id / version_confirmed：
+#   只有标题自带版本号时才填写版本并标 confirmed: true（如「3.6版本PV」）。
+#   角色视频不臆测版本归属 —— 角色 PV 通常早于版本更新日 5-12 天发布，
+#   按日期机械归类会错。看板中角色视频的版本归属由其在版本竖线之间的
+#   位置体现，而不是由本文件断言。
+#
+# 收录范围：2026-06 起。三款游戏的共同可比窗口始于绝区零 Steam 上线
+#   (2026-06-17)，更早的视频播放量已接近饱和，日增量无分析价值。
+#
+# 核验日期: 2026-09-14
+
+official_accounts:
+  wuthering_waves:
+    mid: 1955897084
+    name: 鸣潮
+  zenless_zone_zero:
+    mid: 1636034895
+    name: 绝区零
+  neverness_to_everness:
+    mid: 3546636978489848
+    name: 异环
+
+videos:
+
+  # ==================== 鸣潮 ====================
+  - { bvid: BV1uMbg6SEnL, game_id: wuthering_waves, character_id: jingran,
+      character_name: 景燃, version_id: null, version_confirmed: false,
+      content_type: character_trailer, title: 《鸣潮》共鸣者「景燃」PV | “问神”,
+      pubdate: '2026-09-08', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1PTbL6REMT, game_id: wuthering_waves, character_id: jingran,
+      character_name: 景燃, version_id: null, version_confirmed: false,
+      content_type: character_demo, title: 《鸣潮》共鸣者战斗演示 | 景燃,
+      pubdate: '2026-09-06', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1GFbk6LEVm, game_id: wuthering_waves, character_id: qingxiao,
+      character_name: 清宵, version_id: null, version_confirmed: false,
+      content_type: character_trailer, title: 《鸣潮》共鸣者「清宵」PV | 修行,
+      pubdate: '2026-08-18', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1q2b86sEZz, game_id: wuthering_waves, character_id: qingxiao,
+      character_name: 清宵, version_id: null, version_confirmed: false,
+      content_type: character_demo, title: 《鸣潮》共鸣者战斗演示 | 清宵,
+      pubdate: '2026-08-17', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1Jcub6BEqB, game_id: wuthering_waves, character_id: null,
+      character_name: null, version_id: '3.6', version_confirmed: true,
+      content_type: version_trailer, title: 《鸣潮》3.6版本PV | 蜃云灯影，凡尘剑心,
+      pubdate: '2026-08-07', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1MQ3c62EVc, game_id: wuthering_waves, character_id: suisui,
+      character_name: 穗穗, version_id: null, version_confirmed: false,
+      content_type: character_trailer, title: 《鸣潮》共鸣者「穗穗」PV | 重明,
+      pubdate: '2026-07-28', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1hN3G6mEcB, game_id: wuthering_waves, character_id: suisui,
+      character_name: 穗穗, version_id: null, version_confirmed: false,
+      content_type: character_demo, title: 《鸣潮》共鸣者战斗演示 | 穗穗,
+      pubdate: '2026-07-26', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1ZKMe61Eth, game_id: wuthering_waves, character_id: yangyang_xuanling,
+      character_name: 秧秧·玄翎, version_id: null, version_confirmed: false,
+      content_type: character_trailer, title: 《鸣潮》共鸣者「秧秧·玄翎」PV | 噩梦,
+      pubdate: '2026-07-08', is_official_account: true, verified_at: '2026-09-14', active: true }
+
+  # ==================== 绝区零 ====================
+  - { bvid: BV1vRtA6gE5m, game_id: zenless_zone_zero, character_id: null,
+      character_name: null, version_id: '3.2', version_confirmed: true,
+      content_type: version_trailer, title: 《绝区零》3.2版本PV | 她与她的隐秘往事,
+      pubdate: '2026-08-28', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1wote6gEQ1, game_id: zenless_zone_zero, character_id: kelaray,
+      character_name: 克拉蕾, version_id: null, version_confirmed: false,
+      content_type: character_demo, title: 《绝区零》克拉蕾角色展示 | 不想培训，但攻略已写好,
+      pubdate: '2026-09-04', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1C9b76cEks, game_id: zenless_zone_zero, character_id: kelaray,
+      character_name: 克拉蕾, version_id: null, version_confirmed: false,
+      content_type: character_ep, title: 《绝区零》克拉蕾EP | Link Up 血火相连,
+      pubdate: '2026-09-06', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1uiNd69EYU, game_id: zenless_zone_zero, character_id: null,
+      character_name: null, version_id: '3.1', version_confirmed: true,
+      content_type: version_trailer, title: 《绝区零》3.1版本PV | 漫长的告别,
+      pubdate: '2026-07-17', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1QRKJ6ZEzC, game_id: zenless_zone_zero, character_id: null,
+      character_name: null, version_id: null, version_confirmed: false,
+      content_type: theme_mv, title: 《绝区零》二周年主题曲MV | 预言,
+      pubdate: '2026-07-17', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV11Aga6oENR, game_id: zenless_zone_zero, character_id: leimiaier,
+      character_name: 蕾米埃尔, version_id: null, version_confirmed: false,
+      content_type: character_demo, title: 《绝区零》蕾米埃尔角色展示 | 恰如往昔,
+      pubdate: '2026-07-24', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1fk3E61Eu5, game_id: zenless_zone_zero, character_id: leimiaier,
+      character_name: 蕾米埃尔, version_id: null, version_confirmed: false,
+      content_type: animation_short, title: 《绝区零》蕾米埃尔动画短片 | 静默之日,
+      pubdate: '2026-07-26', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1jhgf6pEJw, game_id: zenless_zone_zero, character_id: leimiaier,
+      character_name: 蕾米埃尔, version_id: null, version_confirmed: false,
+      content_type: character_ep, title: 《绝区零》蕾米埃尔EP | Two to Tango 交缠舞步,
+      pubdate: '2026-07-27', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1jm3r6rEif, game_id: zenless_zone_zero, character_id: leimiaier,
+      character_name: 蕾米埃尔, version_id: null, version_confirmed: false,
+      content_type: behind_the_scenes, title: ZTALK | 蕾米埃尔设计幕后,
+      pubdate: '2026-07-29', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1bWgA6SEnT, game_id: zenless_zone_zero, character_id: sigrid,
+      character_name: 希格莉德, version_id: null, version_confirmed: false,
+      content_type: character_demo, title: 《绝区零》希格莉德角色展示 | 好马识途,
+      pubdate: '2026-08-14', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1Qfb86LEC5, game_id: zenless_zone_zero, character_id: sigrid,
+      character_name: 希格莉德, version_id: null, version_confirmed: false,
+      content_type: character_trailer, title: 《绝区零》希格莉德角色PV | 小马希莉,
+      pubdate: '2026-08-17', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1x77Q6eE7o, game_id: zenless_zone_zero, character_id: null,
+      character_name: null, version_id: '3.0', version_confirmed: true,
+      content_type: version_trailer, title: 《绝区零》3.0版本PV | 某个梦游者的自白,
+      pubdate: '2026-06-06', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1FzEr6YExJ, game_id: zenless_zone_zero, character_id: verina,
+      character_name: 维琳娜, version_id: null, version_confirmed: false,
+      content_type: character_demo, title: 《绝区零》维琳娜角色展示 | 茶会一如既往,
+      pubdate: '2026-06-12', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1mrjN6qE4C, game_id: zenless_zone_zero, character_id: verina,
+      character_name: 维琳娜, version_id: null, version_confirmed: false,
+      content_type: character_trailer, title: 《绝区零》维琳娜角色PV | 拟剧论,
+      pubdate: '2026-06-16', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1W1Tp6xEhT, game_id: zenless_zone_zero, character_id: nuomu,
+      character_name: 诺姆, version_id: null, version_confirmed: false,
+      content_type: character_demo, title: 《绝区零》诺姆角色展示 | 大嗯呐假说,
+      pubdate: '2026-07-03', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1WdTS6eECV, game_id: zenless_zone_zero, character_id: nuomu,
+      character_name: 诺姆, version_id: null, version_confirmed: false,
+      content_type: character_ep, title: 《绝区零》诺姆EP｜chaos.exe,
+      pubdate: '2026-07-06', is_official_account: true, verified_at: '2026-09-14', active: true }
+
+  # ==================== 异环 ====================
+  - { bvid: BV1jVtt6LEjP, game_id: neverness_to_everness, character_id: lingke,
+      character_name: 灵可, version_id: null, version_confirmed: false,
+      content_type: character_trailer, title: 《异环》灵可角色PV丨宇宙的频段,
+      pubdate: '2026-09-02', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV18btt6NEJw, game_id: neverness_to_everness, character_id: lingke,
+      character_name: 灵可, version_id: null, version_confirmed: false,
+      content_type: character_ep, title: 《异环》灵可EP丨Frequency☆Finder,
+      pubdate: '2026-09-03', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1UU4C6kEam, game_id: neverness_to_everness, character_id: lingke,
+      character_name: 灵可, version_id: null, version_confirmed: false,
+      content_type: character_demo, title: 《异环》角色实机战斗丨灵可,
+      pubdate: '2026-08-30', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1y1uq6zEud, game_id: neverness_to_everness, character_id: canhong,
+      character_name: 残虹, version_id: null, version_confirmed: false,
+      content_type: character_trailer, title: 《异环》残虹角色PV丨惑心谲影,
+      pubdate: '2026-08-12', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1W1uq6zEdG, game_id: neverness_to_everness, character_id: canhong,
+      character_name: 残虹, version_id: null, version_confirmed: false,
+      content_type: character_ep, title: 《异环》残虹EP丨Seven Shades of Red,
+      pubdate: '2026-08-13', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1RgM16rEe6, game_id: neverness_to_everness, character_id: canhong,
+      character_name: 残虹, version_id: null, version_confirmed: false,
+      content_type: animation_short, title: 《异环》残虹角色短片丨灵魂的颜色,
+      pubdate: '2026-08-08', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV15gM16kE1g, game_id: neverness_to_everness, character_id: canhong,
+      character_name: 残虹, version_id: null, version_confirmed: false,
+      content_type: character_demo, title: 《异环》角色实机战斗丨残虹,
+      pubdate: '2026-08-10', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1egM16kE9D, game_id: neverness_to_everness, character_id: null,
+      character_name: null, version_id: '1.3', version_confirmed: true,
+      content_type: version_trailer, title: 《异环》1.3版本PV「雾中朔望星回」,
+      pubdate: '2026-08-09', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1VVKH6vEnH, game_id: neverness_to_everness, character_id: yiluoyi,
+      character_name: 伊洛伊, version_id: null, version_confirmed: false,
+      content_type: character_trailer, title: 《异环》伊洛伊角色PV丨想做什么梦？,
+      pubdate: '2026-07-22', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1YVKH6vEdg, game_id: neverness_to_everness, character_id: yiluoyi,
+      character_name: 伊洛伊, version_id: null, version_confirmed: false,
+      content_type: character_ep, title: 《异环》伊洛伊EP丨Lullaby,
+      pubdate: '2026-07-23', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1YLKH6PEPP, game_id: neverness_to_everness, character_id: yiluoyi,
+      character_name: 伊洛伊, version_id: null, version_confirmed: false,
+      content_type: character_demo, title: 《异环》角色实机战斗丨伊洛伊,
+      pubdate: '2026-07-19', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV12iKU6eEyj, game_id: neverness_to_everness, character_id: zhenhong,
+      character_name: 真红, version_id: null, version_confirmed: false,
+      content_type: character_trailer, title: 《异环》真红角色PV丨梦的边缘,
+      pubdate: '2026-07-01', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1xiKU6eED2, game_id: neverness_to_everness, character_id: zhenhong,
+      character_name: 真红, version_id: null, version_confirmed: false,
+      content_type: character_ep, title: 《异环》真红EP丨Whatever It Says,
+      pubdate: '2026-07-02', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV12BKU6AEW1, game_id: neverness_to_everness, character_id: zhenhong,
+      character_name: 真红, version_id: null, version_confirmed: false,
+      content_type: animation_short, title: 《异环》真红角色短片丨赤龙假日,
+      pubdate: '2026-06-30', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV11f7J6LEwU, game_id: neverness_to_everness, character_id: zhenhong,
+      character_name: 真红, version_id: null, version_confirmed: false,
+      content_type: character_demo, title: 《异环》角色实机战斗丨真红,
+      pubdate: '2026-06-28', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1Bo736yE99, game_id: neverness_to_everness, character_id: null,
+      character_name: null, version_id: '1.2', version_confirmed: true,
+      content_type: version_trailer, title: 《异环》1.2版本PV「九百九十九夜」,
+      pubdate: '2026-06-27', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV18dEr6DErw, game_id: neverness_to_everness, character_id: kaeisi,
+      character_name: 卡厄斯, version_id: null, version_confirmed: false,
+      content_type: character_trailer, title: 《异环》卡厄斯角色PV丨未尽的抉择,
+      pubdate: '2026-06-17', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1tcEk67EBB, game_id: neverness_to_everness, character_id: kaeisi,
+      character_name: 卡厄斯, version_id: null, version_confirmed: false,
+      content_type: character_ep, title: 《异环》卡厄斯EP丨Chains of the Dark,
+      pubdate: '2026-06-18', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1gdEr6QE1a, game_id: neverness_to_everness, character_id: kaeisi,
+      character_name: 卡厄斯, version_id: null, version_confirmed: false,
+      content_type: character_demo, title: 《异环》角色实机战斗丨卡厄斯,
+      pubdate: '2026-06-14', is_official_account: true, verified_at: '2026-09-14', active: true }

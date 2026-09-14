@@ -1,0 +1,2347 @@
+{
+  "snapshot_date": "2026-09-14",
+  "freshness_status": "live",
+  "is_demo": false,
+  "game": {
+    "game_id": "zenless_zone_zero",
+    "display_name": "绝区零",
+    "steam_app_id": 4162040,
+    "steam_status": "partial",
+    "region": "CN"
+  },
+  "coverage": {
+    "start": "2026-09-14",
+    "end": "2026-09-14",
+    "valid_days": 1,
+    "expected_days": 1,
+    "missing_days": 0
+  },
+  "online_series": [
+    {
+      "date_local": "2026-09-14",
+      "value": 10175,
+      "status": "observed"
+    }
+  ],
+  "review_series": [
+    {
+      "date_local": "2026-09-14",
+      "value": 87.75,
+      "total_reviews": 16215,
+      "status": "derived"
+    }
+  ],
+  "new_review_series": [
+    {
+      "date_local": "2026-09-14",
+      "value": null,
+      "span_days": null,
+      "status": "unavailable",
+      "note": "no_baseline"
+    }
+  ],
+  "review_history": [
+    {
+      "date_local": "2026-06-17",
+      "new_reviews": 2293,
+      "new_positive": 2029,
+      "new_negative": 264,
+      "cumulative_reviews": 2293,
+      "cumulative_positive": 2029,
+      "cumulative_review_rate": 88.49,
+      "daily_review_rate": 88.49,
+      "top_languages": {
+        "english": 1058,
+        "russian": 597,
+        "spanish": 126,
+        "latam": 103,
+        "brazilian": 86
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-06-18",
+      "new_reviews": 1611,
+      "new_positive": 1394,
+      "new_negative": 217,
+      "cumulative_reviews": 3904,
+      "cumulative_positive": 3423,
+      "cumulative_review_rate": 87.68,
+      "daily_review_rate": 86.53,
+      "top_languages": {
+        "english": 673,
+        "russian": 475,
+        "spanish": 106,
+        "brazilian": 85,
+        "latam": 56
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-06-19",
+      "new_reviews": 834,
+      "new_positive": 714,
+      "new_negative": 120,
+      "cumulative_reviews": 4738,
+      "cumulative_positive": 4137,
+      "cumulative_review_rate": 87.32,
+      "daily_review_rate": 85.61,
+      "top_languages": {
+        "english": 383,
+        "russian": 237,
+        "brazilian": 38,
+        "spanish": 38,
+        "latam": 29
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-06-20",
+      "new_reviews": 613,
+      "new_positive": 525,
+      "new_negative": 88,
+      "cumulative_reviews": 5351,
+      "cumulative_positive": 4662,
+      "cumulative_review_rate": 87.12,
+      "daily_review_rate": 85.64,
+      "top_languages": {
+        "english": 237,
+        "russian": 159,
+        "spanish": 43,
+        "brazilian": 39,
+        "latam": 25
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-06-21",
+      "new_reviews": 522,
+      "new_positive": 461,
+      "new_negative": 61,
+      "cumulative_reviews": 5873,
+      "cumulative_positive": 5123,
+      "cumulative_review_rate": 87.23,
+      "daily_review_rate": 88.31,
+      "top_languages": {
+        "english": 240,
+        "russian": 109,
+        "brazilian": 32,
+        "spanish": 31,
+        "latam": 24
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-06-22",
+      "new_reviews": 380,
+      "new_positive": 325,
+      "new_negative": 55,
+      "cumulative_reviews": 6253,
+      "cumulative_positive": 5448,
+      "cumulative_review_rate": 87.13,
+      "daily_review_rate": 85.53,
+      "top_languages": {
+        "english": 153,
+        "russian": 91,
+        "spanish": 30,
+        "brazilian": 24,
+        "latam": 14
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-06-23",
+      "new_reviews": 340,
+      "new_positive": 299,
+      "new_negative": 41,
+      "cumulative_reviews": 6593,
+      "cumulative_positive": 5747,
+      "cumulative_review_rate": 87.17,
+      "daily_review_rate": 87.94,
+      "top_languages": {
+        "english": 152,
+        "russian": 89,
+        "spanish": 26,
+        "brazilian": 16,
+        "latam": 11
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-06-24",
+      "new_reviews": 273,
+      "new_positive": 241,
+      "new_negative": 32,
+      "cumulative_reviews": 6866,
+      "cumulative_positive": 5988,
+      "cumulative_review_rate": 87.21,
+      "daily_review_rate": 88.28,
+      "top_languages": {
+        "english": 119,
+        "russian": 79,
+        "brazilian": 17,
+        "spanish": 12,
+        "koreana": 7
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-06-25",
+      "new_reviews": 247,
+      "new_positive": 212,
+      "new_negative": 35,
+      "cumulative_reviews": 7113,
+      "cumulative_positive": 6200,
+      "cumulative_review_rate": 87.16,
+      "daily_review_rate": 85.83,
+      "top_languages": {
+        "english": 100,
+        "russian": 68,
+        "spanish": 15,
+        "brazilian": 15,
+        "latam": 11
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-06-26",
+      "new_reviews": 220,
+      "new_positive": 201,
+      "new_negative": 19,
+      "cumulative_reviews": 7333,
+      "cumulative_positive": 6401,
+      "cumulative_review_rate": 87.29,
+      "daily_review_rate": 91.36,
+      "top_languages": {
+        "english": 105,
+        "russian": 52,
+        "spanish": 13,
+        "brazilian": 9,
+        "latam": 7
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-06-27",
+      "new_reviews": 198,
+      "new_positive": 168,
+      "new_negative": 30,
+      "cumulative_reviews": 7531,
+      "cumulative_positive": 6569,
+      "cumulative_review_rate": 87.23,
+      "daily_review_rate": 84.85,
+      "top_languages": {
+        "english": 91,
+        "russian": 46,
+        "spanish": 14,
+        "koreana": 9,
+        "brazilian": 8
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-06-28",
+      "new_reviews": 199,
+      "new_positive": 177,
+      "new_negative": 22,
+      "cumulative_reviews": 7730,
+      "cumulative_positive": 6746,
+      "cumulative_review_rate": 87.27,
+      "daily_review_rate": 88.94,
+      "top_languages": {
+        "english": 86,
+        "russian": 46,
+        "brazilian": 15,
+        "spanish": 13,
+        "tchinese": 11
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-06-29",
+      "new_reviews": 168,
+      "new_positive": 150,
+      "new_negative": 18,
+      "cumulative_reviews": 7898,
+      "cumulative_positive": 6896,
+      "cumulative_review_rate": 87.31,
+      "daily_review_rate": 89.29,
+      "top_languages": {
+        "english": 62,
+        "russian": 47,
+        "brazilian": 15,
+        "spanish": 14,
+        "koreana": 5
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-06-30",
+      "new_reviews": 116,
+      "new_positive": 101,
+      "new_negative": 15,
+      "cumulative_reviews": 8014,
+      "cumulative_positive": 6997,
+      "cumulative_review_rate": 87.31,
+      "daily_review_rate": 87.07,
+      "top_languages": {
+        "english": 51,
+        "russian": 28,
+        "spanish": 11,
+        "brazilian": 9,
+        "schinese": 3
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-01",
+      "new_reviews": 151,
+      "new_positive": 131,
+      "new_negative": 20,
+      "cumulative_reviews": 8165,
+      "cumulative_positive": 7128,
+      "cumulative_review_rate": 87.3,
+      "daily_review_rate": 86.75,
+      "top_languages": {
+        "english": 72,
+        "russian": 41,
+        "spanish": 9,
+        "brazilian": 8,
+        "koreana": 5
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-02",
+      "new_reviews": 131,
+      "new_positive": 124,
+      "new_negative": 7,
+      "cumulative_reviews": 8296,
+      "cumulative_positive": 7252,
+      "cumulative_review_rate": 87.42,
+      "daily_review_rate": 94.66,
+      "top_languages": {
+        "english": 62,
+        "russian": 32,
+        "brazilian": 6,
+        "latam": 6,
+        "schinese": 5
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-03",
+      "new_reviews": 133,
+      "new_positive": 118,
+      "new_negative": 15,
+      "cumulative_reviews": 8429,
+      "cumulative_positive": 7370,
+      "cumulative_review_rate": 87.44,
+      "daily_review_rate": 88.72,
+      "top_languages": {
+        "english": 55,
+        "russian": 36,
+        "spanish": 12,
+        "latam": 6,
+        "koreana": 5
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-04",
+      "new_reviews": 118,
+      "new_positive": 106,
+      "new_negative": 12,
+      "cumulative_reviews": 8547,
+      "cumulative_positive": 7476,
+      "cumulative_review_rate": 87.47,
+      "daily_review_rate": 89.83,
+      "top_languages": {
+        "english": 51,
+        "russian": 37,
+        "spanish": 6,
+        "tchinese": 6,
+        "latam": 5
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-05",
+      "new_reviews": 104,
+      "new_positive": 93,
+      "new_negative": 11,
+      "cumulative_reviews": 8651,
+      "cumulative_positive": 7569,
+      "cumulative_review_rate": 87.49,
+      "daily_review_rate": 89.42,
+      "top_languages": {
+        "english": 44,
+        "russian": 24,
+        "brazilian": 7,
+        "spanish": 6,
+        "schinese": 6
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-06",
+      "new_reviews": 117,
+      "new_positive": 107,
+      "new_negative": 10,
+      "cumulative_reviews": 8768,
+      "cumulative_positive": 7676,
+      "cumulative_review_rate": 87.55,
+      "daily_review_rate": 91.45,
+      "top_languages": {
+        "english": 40,
+        "russian": 38,
+        "spanish": 11,
+        "brazilian": 8,
+        "latam": 7
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-07",
+      "new_reviews": 131,
+      "new_positive": 114,
+      "new_negative": 17,
+      "cumulative_reviews": 8899,
+      "cumulative_positive": 7790,
+      "cumulative_review_rate": 87.54,
+      "daily_review_rate": 87.02,
+      "top_languages": {
+        "english": 46,
+        "russian": 34,
+        "spanish": 17,
+        "latam": 5,
+        "koreana": 5
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-08",
+      "new_reviews": 132,
+      "new_positive": 111,
+      "new_negative": 21,
+      "cumulative_reviews": 9031,
+      "cumulative_positive": 7901,
+      "cumulative_review_rate": 87.49,
+      "daily_review_rate": 84.09,
+      "top_languages": {
+        "english": 63,
+        "russian": 36,
+        "spanish": 8,
+        "tchinese": 6,
+        "polish": 3
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-09",
+      "new_reviews": 105,
+      "new_positive": 96,
+      "new_negative": 9,
+      "cumulative_reviews": 9136,
+      "cumulative_positive": 7997,
+      "cumulative_review_rate": 87.53,
+      "daily_review_rate": 91.43,
+      "top_languages": {
+        "english": 49,
+        "russian": 24,
+        "spanish": 7,
+        "japanese": 4,
+        "koreana": 4
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-10",
+      "new_reviews": 105,
+      "new_positive": 93,
+      "new_negative": 12,
+      "cumulative_reviews": 9241,
+      "cumulative_positive": 8090,
+      "cumulative_review_rate": 87.54,
+      "daily_review_rate": 88.57,
+      "top_languages": {
+        "english": 41,
+        "russian": 33,
+        "brazilian": 10,
+        "koreana": 7,
+        "spanish": 5
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-11",
+      "new_reviews": 81,
+      "new_positive": 66,
+      "new_negative": 15,
+      "cumulative_reviews": 9322,
+      "cumulative_positive": 8156,
+      "cumulative_review_rate": 87.49,
+      "daily_review_rate": 81.48,
+      "top_languages": {
+        "english": 31,
+        "russian": 27,
+        "polish": 4,
+        "spanish": 4,
+        "brazilian": 4
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-12",
+      "new_reviews": 85,
+      "new_positive": 74,
+      "new_negative": 11,
+      "cumulative_reviews": 9407,
+      "cumulative_positive": 8230,
+      "cumulative_review_rate": 87.49,
+      "daily_review_rate": 87.06,
+      "top_languages": {
+        "english": 30,
+        "russian": 21,
+        "spanish": 8,
+        "koreana": 7,
+        "schinese": 6
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-13",
+      "new_reviews": 95,
+      "new_positive": 90,
+      "new_negative": 5,
+      "cumulative_reviews": 9502,
+      "cumulative_positive": 8320,
+      "cumulative_review_rate": 87.56,
+      "daily_review_rate": 94.74,
+      "top_languages": {
+        "english": 35,
+        "russian": 31,
+        "spanish": 11,
+        "schinese": 5,
+        "brazilian": 4
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-14",
+      "new_reviews": 77,
+      "new_positive": 70,
+      "new_negative": 7,
+      "cumulative_reviews": 9579,
+      "cumulative_positive": 8390,
+      "cumulative_review_rate": 87.59,
+      "daily_review_rate": 90.91,
+      "top_languages": {
+        "english": 29,
+        "russian": 20,
+        "spanish": 8,
+        "brazilian": 5,
+        "schinese": 4
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-15",
+      "new_reviews": 79,
+      "new_positive": 72,
+      "new_negative": 7,
+      "cumulative_reviews": 9658,
+      "cumulative_positive": 8462,
+      "cumulative_review_rate": 87.62,
+      "daily_review_rate": 91.14,
+      "top_languages": {
+        "english": 32,
+        "russian": 19,
+        "spanish": 6,
+        "koreana": 5,
+        "latam": 5
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-16",
+      "new_reviews": 72,
+      "new_positive": 64,
+      "new_negative": 8,
+      "cumulative_reviews": 9730,
+      "cumulative_positive": 8526,
+      "cumulative_review_rate": 87.63,
+      "daily_review_rate": 88.89,
+      "top_languages": {
+        "english": 32,
+        "russian": 17,
+        "brazilian": 7,
+        "spanish": 5,
+        "koreana": 4
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-17",
+      "new_reviews": 79,
+      "new_positive": 66,
+      "new_negative": 13,
+      "cumulative_reviews": 9809,
+      "cumulative_positive": 8592,
+      "cumulative_review_rate": 87.59,
+      "daily_review_rate": 83.54,
+      "top_languages": {
+        "english": 34,
+        "russian": 27,
+        "brazilian": 3,
+        "french": 2,
+        "thai": 2
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-18",
+      "new_reviews": 118,
+      "new_positive": 107,
+      "new_negative": 11,
+      "cumulative_reviews": 9927,
+      "cumulative_positive": 8699,
+      "cumulative_review_rate": 87.63,
+      "daily_review_rate": 90.68,
+      "top_languages": {
+        "english": 46,
+        "russian": 29,
+        "spanish": 13,
+        "brazilian": 11,
+        "schinese": 6
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-19",
+      "new_reviews": 144,
+      "new_positive": 131,
+      "new_negative": 13,
+      "cumulative_reviews": 10071,
+      "cumulative_positive": 8830,
+      "cumulative_review_rate": 87.68,
+      "daily_review_rate": 90.97,
+      "top_languages": {
+        "english": 55,
+        "russian": 41,
+        "spanish": 11,
+        "brazilian": 10,
+        "latam": 6
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-20",
+      "new_reviews": 104,
+      "new_positive": 95,
+      "new_negative": 9,
+      "cumulative_reviews": 10175,
+      "cumulative_positive": 8925,
+      "cumulative_review_rate": 87.71,
+      "daily_review_rate": 91.35,
+      "top_languages": {
+        "english": 41,
+        "russian": 25,
+        "spanish": 8,
+        "koreana": 6,
+        "brazilian": 5
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-21",
+      "new_reviews": 97,
+      "new_positive": 84,
+      "new_negative": 13,
+      "cumulative_reviews": 10272,
+      "cumulative_positive": 9009,
+      "cumulative_review_rate": 87.7,
+      "daily_review_rate": 86.6,
+      "top_languages": {
+        "english": 42,
+        "russian": 22,
+        "koreana": 5,
+        "spanish": 5,
+        "brazilian": 5
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-22",
+      "new_reviews": 96,
+      "new_positive": 92,
+      "new_negative": 4,
+      "cumulative_reviews": 10368,
+      "cumulative_positive": 9101,
+      "cumulative_review_rate": 87.78,
+      "daily_review_rate": 95.83,
+      "top_languages": {
+        "english": 42,
+        "russian": 22,
+        "spanish": 8,
+        "latam": 5,
+        "koreana": 3
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-23",
+      "new_reviews": 106,
+      "new_positive": 97,
+      "new_negative": 9,
+      "cumulative_reviews": 10474,
+      "cumulative_positive": 9198,
+      "cumulative_review_rate": 87.82,
+      "daily_review_rate": 91.51,
+      "top_languages": {
+        "english": 49,
+        "russian": 26,
+        "koreana": 8,
+        "spanish": 7,
+        "brazilian": 5
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-24",
+      "new_reviews": 93,
+      "new_positive": 78,
+      "new_negative": 15,
+      "cumulative_reviews": 10567,
+      "cumulative_positive": 9276,
+      "cumulative_review_rate": 87.78,
+      "daily_review_rate": 83.87,
+      "top_languages": {
+        "english": 33,
+        "russian": 26,
+        "spanish": 9,
+        "brazilian": 6,
+        "koreana": 5
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-25",
+      "new_reviews": 82,
+      "new_positive": 78,
+      "new_negative": 4,
+      "cumulative_reviews": 10649,
+      "cumulative_positive": 9354,
+      "cumulative_review_rate": 87.84,
+      "daily_review_rate": 95.12,
+      "top_languages": {
+        "english": 31,
+        "russian": 20,
+        "spanish": 12,
+        "brazilian": 4,
+        "koreana": 3
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-26",
+      "new_reviews": 106,
+      "new_positive": 98,
+      "new_negative": 8,
+      "cumulative_reviews": 10755,
+      "cumulative_positive": 9452,
+      "cumulative_review_rate": 87.88,
+      "daily_review_rate": 92.45,
+      "top_languages": {
+        "english": 43,
+        "russian": 28,
+        "koreana": 8,
+        "spanish": 7,
+        "ukrainian": 5
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-27",
+      "new_reviews": 112,
+      "new_positive": 101,
+      "new_negative": 11,
+      "cumulative_reviews": 10867,
+      "cumulative_positive": 9553,
+      "cumulative_review_rate": 87.91,
+      "daily_review_rate": 90.18,
+      "top_languages": {
+        "english": 43,
+        "russian": 31,
+        "spanish": 12,
+        "brazilian": 12,
+        "latam": 5
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-28",
+      "new_reviews": 130,
+      "new_positive": 123,
+      "new_negative": 7,
+      "cumulative_reviews": 10997,
+      "cumulative_positive": 9676,
+      "cumulative_review_rate": 87.99,
+      "daily_review_rate": 94.62,
+      "top_languages": {
+        "english": 63,
+        "russian": 25,
+        "brazilian": 10,
+        "spanish": 10,
+        "koreana": 3
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-29",
+      "new_reviews": 334,
+      "new_positive": 303,
+      "new_negative": 31,
+      "cumulative_reviews": 11331,
+      "cumulative_positive": 9979,
+      "cumulative_review_rate": 88.07,
+      "daily_review_rate": 90.72,
+      "top_languages": {
+        "english": 131,
+        "russian": 83,
+        "spanish": 38,
+        "brazilian": 16,
+        "latam": 13
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-30",
+      "new_reviews": 249,
+      "new_positive": 211,
+      "new_negative": 38,
+      "cumulative_reviews": 11580,
+      "cumulative_positive": 10190,
+      "cumulative_review_rate": 88.0,
+      "daily_review_rate": 84.74,
+      "top_languages": {
+        "english": 102,
+        "russian": 66,
+        "spanish": 27,
+        "brazilian": 11,
+        "latam": 7
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-07-31",
+      "new_reviews": 218,
+      "new_positive": 181,
+      "new_negative": 37,
+      "cumulative_reviews": 11798,
+      "cumulative_positive": 10371,
+      "cumulative_review_rate": 87.9,
+      "daily_review_rate": 83.03,
+      "top_languages": {
+        "english": 95,
+        "russian": 62,
+        "spanish": 12,
+        "brazilian": 9,
+        "koreana": 7
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-01",
+      "new_reviews": 184,
+      "new_positive": 155,
+      "new_negative": 29,
+      "cumulative_reviews": 11982,
+      "cumulative_positive": 10526,
+      "cumulative_review_rate": 87.85,
+      "daily_review_rate": 84.24,
+      "top_languages": {
+        "english": 71,
+        "russian": 57,
+        "spanish": 17,
+        "brazilian": 10,
+        "schinese": 6
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-02",
+      "new_reviews": 175,
+      "new_positive": 159,
+      "new_negative": 16,
+      "cumulative_reviews": 12157,
+      "cumulative_positive": 10685,
+      "cumulative_review_rate": 87.89,
+      "daily_review_rate": 90.86,
+      "top_languages": {
+        "english": 69,
+        "russian": 45,
+        "spanish": 16,
+        "brazilian": 12,
+        "japanese": 8
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-03",
+      "new_reviews": 160,
+      "new_positive": 144,
+      "new_negative": 16,
+      "cumulative_reviews": 12317,
+      "cumulative_positive": 10829,
+      "cumulative_review_rate": 87.92,
+      "daily_review_rate": 90.0,
+      "top_languages": {
+        "english": 57,
+        "russian": 54,
+        "brazilian": 10,
+        "koreana": 9,
+        "spanish": 8
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-04",
+      "new_reviews": 143,
+      "new_positive": 131,
+      "new_negative": 12,
+      "cumulative_reviews": 12460,
+      "cumulative_positive": 10960,
+      "cumulative_review_rate": 87.96,
+      "daily_review_rate": 91.61,
+      "top_languages": {
+        "russian": 54,
+        "english": 54,
+        "spanish": 11,
+        "brazilian": 6,
+        "koreana": 3
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-05",
+      "new_reviews": 138,
+      "new_positive": 123,
+      "new_negative": 15,
+      "cumulative_reviews": 12598,
+      "cumulative_positive": 11083,
+      "cumulative_review_rate": 87.97,
+      "daily_review_rate": 89.13,
+      "top_languages": {
+        "english": 62,
+        "russian": 35,
+        "latam": 11,
+        "brazilian": 8,
+        "spanish": 5
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-06",
+      "new_reviews": 123,
+      "new_positive": 109,
+      "new_negative": 14,
+      "cumulative_reviews": 12721,
+      "cumulative_positive": 11192,
+      "cumulative_review_rate": 87.98,
+      "daily_review_rate": 88.62,
+      "top_languages": {
+        "english": 53,
+        "russian": 37,
+        "brazilian": 9,
+        "koreana": 5,
+        "polish": 2
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-07",
+      "new_reviews": 119,
+      "new_positive": 103,
+      "new_negative": 16,
+      "cumulative_reviews": 12840,
+      "cumulative_positive": 11295,
+      "cumulative_review_rate": 87.97,
+      "daily_review_rate": 86.55,
+      "top_languages": {
+        "english": 48,
+        "russian": 40,
+        "spanish": 11,
+        "brazilian": 10,
+        "koreana": 2
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-08",
+      "new_reviews": 125,
+      "new_positive": 110,
+      "new_negative": 15,
+      "cumulative_reviews": 12965,
+      "cumulative_positive": 11405,
+      "cumulative_review_rate": 87.97,
+      "daily_review_rate": 88.0,
+      "top_languages": {
+        "russian": 48,
+        "english": 46,
+        "turkish": 4,
+        "spanish": 4,
+        "latam": 4
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-09",
+      "new_reviews": 114,
+      "new_positive": 98,
+      "new_negative": 16,
+      "cumulative_reviews": 13079,
+      "cumulative_positive": 11503,
+      "cumulative_review_rate": 87.95,
+      "daily_review_rate": 85.96,
+      "top_languages": {
+        "english": 44,
+        "russian": 38,
+        "spanish": 13,
+        "brazilian": 5,
+        "schinese": 3
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-10",
+      "new_reviews": 109,
+      "new_positive": 97,
+      "new_negative": 12,
+      "cumulative_reviews": 13188,
+      "cumulative_positive": 11600,
+      "cumulative_review_rate": 87.96,
+      "daily_review_rate": 88.99,
+      "top_languages": {
+        "english": 51,
+        "russian": 25,
+        "spanish": 10,
+        "latam": 6,
+        "brazilian": 3
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-11",
+      "new_reviews": 115,
+      "new_positive": 97,
+      "new_negative": 18,
+      "cumulative_reviews": 13303,
+      "cumulative_positive": 11697,
+      "cumulative_review_rate": 87.93,
+      "daily_review_rate": 84.35,
+      "top_languages": {
+        "english": 45,
+        "russian": 33,
+        "spanish": 11,
+        "koreana": 9,
+        "brazilian": 4
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-12",
+      "new_reviews": 95,
+      "new_positive": 85,
+      "new_negative": 10,
+      "cumulative_reviews": 13398,
+      "cumulative_positive": 11782,
+      "cumulative_review_rate": 87.94,
+      "daily_review_rate": 89.47,
+      "top_languages": {
+        "english": 36,
+        "russian": 29,
+        "spanish": 5,
+        "brazilian": 4,
+        "turkish": 4
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-13",
+      "new_reviews": 85,
+      "new_positive": 73,
+      "new_negative": 12,
+      "cumulative_reviews": 13483,
+      "cumulative_positive": 11855,
+      "cumulative_review_rate": 87.93,
+      "daily_review_rate": 85.88,
+      "top_languages": {
+        "english": 28,
+        "russian": 24,
+        "spanish": 9,
+        "koreana": 8,
+        "brazilian": 6
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-14",
+      "new_reviews": 94,
+      "new_positive": 84,
+      "new_negative": 10,
+      "cumulative_reviews": 13577,
+      "cumulative_positive": 11939,
+      "cumulative_review_rate": 87.94,
+      "daily_review_rate": 89.36,
+      "top_languages": {
+        "english": 33,
+        "russian": 30,
+        "koreana": 7,
+        "spanish": 5,
+        "brazilian": 4
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-15",
+      "new_reviews": 118,
+      "new_positive": 104,
+      "new_negative": 14,
+      "cumulative_reviews": 13695,
+      "cumulative_positive": 12043,
+      "cumulative_review_rate": 87.94,
+      "daily_review_rate": 88.14,
+      "top_languages": {
+        "english": 50,
+        "russian": 30,
+        "brazilian": 9,
+        "spanish": 8,
+        "tchinese": 6
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-16",
+      "new_reviews": 109,
+      "new_positive": 99,
+      "new_negative": 10,
+      "cumulative_reviews": 13804,
+      "cumulative_positive": 12142,
+      "cumulative_review_rate": 87.96,
+      "daily_review_rate": 90.83,
+      "top_languages": {
+        "english": 42,
+        "russian": 21,
+        "brazilian": 13,
+        "spanish": 9,
+        "koreana": 7
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-17",
+      "new_reviews": 67,
+      "new_positive": 62,
+      "new_negative": 5,
+      "cumulative_reviews": 13871,
+      "cumulative_positive": 12204,
+      "cumulative_review_rate": 87.98,
+      "daily_review_rate": 92.54,
+      "top_languages": {
+        "english": 23,
+        "russian": 17,
+        "brazilian": 8,
+        "spanish": 6,
+        "koreana": 3
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-18",
+      "new_reviews": 87,
+      "new_positive": 82,
+      "new_negative": 5,
+      "cumulative_reviews": 13958,
+      "cumulative_positive": 12286,
+      "cumulative_review_rate": 88.02,
+      "daily_review_rate": 94.25,
+      "top_languages": {
+        "english": 34,
+        "russian": 23,
+        "spanish": 7,
+        "latam": 5,
+        "tchinese": 4
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-19",
+      "new_reviews": 76,
+      "new_positive": 65,
+      "new_negative": 11,
+      "cumulative_reviews": 14034,
+      "cumulative_positive": 12351,
+      "cumulative_review_rate": 88.01,
+      "daily_review_rate": 85.53,
+      "top_languages": {
+        "english": 31,
+        "russian": 21,
+        "brazilian": 8,
+        "spanish": 6,
+        "french": 3
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-20",
+      "new_reviews": 105,
+      "new_positive": 88,
+      "new_negative": 17,
+      "cumulative_reviews": 14139,
+      "cumulative_positive": 12439,
+      "cumulative_review_rate": 87.98,
+      "daily_review_rate": 83.81,
+      "top_languages": {
+        "english": 36,
+        "russian": 33,
+        "spanish": 9,
+        "latam": 4,
+        "schinese": 3
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-21",
+      "new_reviews": 93,
+      "new_positive": 83,
+      "new_negative": 10,
+      "cumulative_reviews": 14232,
+      "cumulative_positive": 12522,
+      "cumulative_review_rate": 87.98,
+      "daily_review_rate": 89.25,
+      "top_languages": {
+        "english": 39,
+        "russian": 27,
+        "spanish": 6,
+        "koreana": 4,
+        "latam": 4
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-22",
+      "new_reviews": 97,
+      "new_positive": 82,
+      "new_negative": 15,
+      "cumulative_reviews": 14329,
+      "cumulative_positive": 12604,
+      "cumulative_review_rate": 87.96,
+      "daily_review_rate": 84.54,
+      "top_languages": {
+        "english": 41,
+        "russian": 37,
+        "spanish": 5,
+        "koreana": 4,
+        "brazilian": 3
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-23",
+      "new_reviews": 89,
+      "new_positive": 78,
+      "new_negative": 11,
+      "cumulative_reviews": 14418,
+      "cumulative_positive": 12682,
+      "cumulative_review_rate": 87.96,
+      "daily_review_rate": 87.64,
+      "top_languages": {
+        "english": 37,
+        "russian": 21,
+        "spanish": 8,
+        "brazilian": 5,
+        "koreana": 4
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-24",
+      "new_reviews": 73,
+      "new_positive": 62,
+      "new_negative": 11,
+      "cumulative_reviews": 14491,
+      "cumulative_positive": 12744,
+      "cumulative_review_rate": 87.94,
+      "daily_review_rate": 84.93,
+      "top_languages": {
+        "english": 26,
+        "russian": 21,
+        "brazilian": 5,
+        "latam": 4,
+        "spanish": 4
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-25",
+      "new_reviews": 95,
+      "new_positive": 80,
+      "new_negative": 15,
+      "cumulative_reviews": 14586,
+      "cumulative_positive": 12824,
+      "cumulative_review_rate": 87.92,
+      "daily_review_rate": 84.21,
+      "top_languages": {
+        "english": 39,
+        "russian": 20,
+        "spanish": 11,
+        "latam": 7,
+        "brazilian": 4
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-26",
+      "new_reviews": 82,
+      "new_positive": 69,
+      "new_negative": 13,
+      "cumulative_reviews": 14668,
+      "cumulative_positive": 12893,
+      "cumulative_review_rate": 87.9,
+      "daily_review_rate": 84.15,
+      "top_languages": {
+        "english": 31,
+        "russian": 23,
+        "brazilian": 9,
+        "spanish": 9,
+        "schinese": 3
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-27",
+      "new_reviews": 81,
+      "new_positive": 65,
+      "new_negative": 16,
+      "cumulative_reviews": 14749,
+      "cumulative_positive": 12958,
+      "cumulative_review_rate": 87.86,
+      "daily_review_rate": 80.25,
+      "top_languages": {
+        "english": 36,
+        "russian": 21,
+        "brazilian": 6,
+        "spanish": 5,
+        "koreana": 3
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-28",
+      "new_reviews": 70,
+      "new_positive": 59,
+      "new_negative": 11,
+      "cumulative_reviews": 14819,
+      "cumulative_positive": 13017,
+      "cumulative_review_rate": 87.84,
+      "daily_review_rate": 84.29,
+      "top_languages": {
+        "english": 27,
+        "russian": 23,
+        "koreana": 5,
+        "tchinese": 4,
+        "spanish": 4
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-29",
+      "new_reviews": 90,
+      "new_positive": 77,
+      "new_negative": 13,
+      "cumulative_reviews": 14909,
+      "cumulative_positive": 13094,
+      "cumulative_review_rate": 87.83,
+      "daily_review_rate": 85.56,
+      "top_languages": {
+        "english": 29,
+        "russian": 26,
+        "brazilian": 10,
+        "spanish": 8,
+        "tchinese": 6
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-30",
+      "new_reviews": 87,
+      "new_positive": 73,
+      "new_negative": 14,
+      "cumulative_reviews": 14996,
+      "cumulative_positive": 13167,
+      "cumulative_review_rate": 87.8,
+      "daily_review_rate": 83.91,
+      "top_languages": {
+        "english": 37,
+        "russian": 20,
+        "spanish": 8,
+        "brazilian": 7,
+        "german": 4
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-08-31",
+      "new_reviews": 94,
+      "new_positive": 89,
+      "new_negative": 5,
+      "cumulative_reviews": 15090,
+      "cumulative_positive": 13256,
+      "cumulative_review_rate": 87.85,
+      "daily_review_rate": 94.68,
+      "top_languages": {
+        "english": 50,
+        "russian": 21,
+        "brazilian": 6,
+        "spanish": 4,
+        "latam": 3
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-09-01",
+      "new_reviews": 84,
+      "new_positive": 78,
+      "new_negative": 6,
+      "cumulative_reviews": 15174,
+      "cumulative_positive": 13334,
+      "cumulative_review_rate": 87.87,
+      "daily_review_rate": 92.86,
+      "top_languages": {
+        "english": 30,
+        "russian": 24,
+        "latam": 6,
+        "brazilian": 5,
+        "tchinese": 4
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-09-02",
+      "new_reviews": 73,
+      "new_positive": 66,
+      "new_negative": 7,
+      "cumulative_reviews": 15247,
+      "cumulative_positive": 13400,
+      "cumulative_review_rate": 87.89,
+      "daily_review_rate": 90.41,
+      "top_languages": {
+        "english": 32,
+        "russian": 17,
+        "spanish": 6,
+        "brazilian": 5,
+        "koreana": 4
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-09-03",
+      "new_reviews": 69,
+      "new_positive": 59,
+      "new_negative": 10,
+      "cumulative_reviews": 15316,
+      "cumulative_positive": 13459,
+      "cumulative_review_rate": 87.88,
+      "daily_review_rate": 85.51,
+      "top_languages": {
+        "english": 31,
+        "russian": 16,
+        "spanish": 9,
+        "brazilian": 3,
+        "koreana": 1
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-09-04",
+      "new_reviews": 67,
+      "new_positive": 57,
+      "new_negative": 10,
+      "cumulative_reviews": 15383,
+      "cumulative_positive": 13516,
+      "cumulative_review_rate": 87.86,
+      "daily_review_rate": 85.07,
+      "top_languages": {
+        "english": 25,
+        "russian": 18,
+        "spanish": 8,
+        "brazilian": 5,
+        "japanese": 2
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-09-05",
+      "new_reviews": 76,
+      "new_positive": 66,
+      "new_negative": 10,
+      "cumulative_reviews": 15459,
+      "cumulative_positive": 13582,
+      "cumulative_review_rate": 87.86,
+      "daily_review_rate": 86.84,
+      "top_languages": {
+        "english": 31,
+        "russian": 24,
+        "spanish": 4,
+        "koreana": 4,
+        "schinese": 3
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-09-06",
+      "new_reviews": 101,
+      "new_positive": 86,
+      "new_negative": 15,
+      "cumulative_reviews": 15560,
+      "cumulative_positive": 13668,
+      "cumulative_review_rate": 87.84,
+      "daily_review_rate": 85.15,
+      "top_languages": {
+        "english": 44,
+        "russian": 29,
+        "brazilian": 6,
+        "spanish": 5,
+        "koreana": 4
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-09-07",
+      "new_reviews": 71,
+      "new_positive": 60,
+      "new_negative": 11,
+      "cumulative_reviews": 15631,
+      "cumulative_positive": 13728,
+      "cumulative_review_rate": 87.83,
+      "daily_review_rate": 84.51,
+      "top_languages": {
+        "english": 29,
+        "russian": 17,
+        "spanish": 5,
+        "brazilian": 4,
+        "koreana": 4
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-09-08",
+      "new_reviews": 75,
+      "new_positive": 63,
+      "new_negative": 12,
+      "cumulative_reviews": 15706,
+      "cumulative_positive": 13791,
+      "cumulative_review_rate": 87.81,
+      "daily_review_rate": 84.0,
+      "top_languages": {
+        "english": 35,
+        "russian": 23,
+        "spanish": 4,
+        "brazilian": 4,
+        "schinese": 3
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-09-09",
+      "new_reviews": 131,
+      "new_positive": 111,
+      "new_negative": 20,
+      "cumulative_reviews": 15837,
+      "cumulative_positive": 13902,
+      "cumulative_review_rate": 87.78,
+      "daily_review_rate": 84.73,
+      "top_languages": {
+        "english": 59,
+        "russian": 23,
+        "spanish": 14,
+        "brazilian": 13,
+        "latam": 4
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-09-10",
+      "new_reviews": 78,
+      "new_positive": 65,
+      "new_negative": 13,
+      "cumulative_reviews": 15915,
+      "cumulative_positive": 13967,
+      "cumulative_review_rate": 87.76,
+      "daily_review_rate": 83.33,
+      "top_languages": {
+        "english": 36,
+        "russian": 19,
+        "latam": 4,
+        "polish": 2,
+        "german": 2
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-09-11",
+      "new_reviews": 72,
+      "new_positive": 60,
+      "new_negative": 12,
+      "cumulative_reviews": 15987,
+      "cumulative_positive": 14027,
+      "cumulative_review_rate": 87.74,
+      "daily_review_rate": 83.33,
+      "top_languages": {
+        "russian": 26,
+        "english": 26,
+        "spanish": 9,
+        "koreana": 2,
+        "thai": 1
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-09-12",
+      "new_reviews": 85,
+      "new_positive": 80,
+      "new_negative": 5,
+      "cumulative_reviews": 16072,
+      "cumulative_positive": 14107,
+      "cumulative_review_rate": 87.77,
+      "daily_review_rate": 94.12,
+      "top_languages": {
+        "english": 35,
+        "russian": 26,
+        "brazilian": 5,
+        "spanish": 4,
+        "koreana": 3
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-09-13",
+      "new_reviews": 75,
+      "new_positive": 64,
+      "new_negative": 11,
+      "cumulative_reviews": 16147,
+      "cumulative_positive": 14171,
+      "cumulative_review_rate": 87.76,
+      "daily_review_rate": 85.33,
+      "top_languages": {
+        "english": 32,
+        "russian": 21,
+        "brazilian": 9,
+        "spanish": 4,
+        "koreana": 2
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-09-14",
+      "new_reviews": 62,
+      "new_positive": 53,
+      "new_negative": 9,
+      "cumulative_reviews": 16209,
+      "cumulative_positive": 14224,
+      "cumulative_review_rate": 87.75,
+      "daily_review_rate": 85.48,
+      "top_languages": {
+        "english": 28,
+        "russian": 15,
+        "spanish": 8,
+        "ukrainian": 2,
+        "brazilian": 2
+      },
+      "status": "reconstructed"
+    }
+  ],
+  "review_history_coverage": {
+    "start": "2026-06-17",
+    "end": "2026-09-14",
+    "days": 90,
+    "method": "appreviews_backfill"
+  },
+  "price_series": [
+    {
+      "date_local": "2026-09-14",
+      "is_free": null,
+      "price_final": null,
+      "discount_percent": null,
+      "status": "unavailable",
+      "note": "appdetails_unavailable;storesearch_no_price_field"
+    }
+  ],
+  "events": [
+    {
+      "date_local": "2026-06-04",
+      "type": "version_preview",
+      "label": "3.0 前瞻节目",
+      "title": "Version 3.0 \"A Sleepwalker's Confession\" Special Program Announcement",
+      "version_id": "3.0",
+      "is_version_boundary": false,
+      "source": "steam_news",
+      "source_url": "https://steamstore-a.akamaihd.net/news/externalpost/steam_community_announcements/1834602721187193",
+      "evidence": "observed"
+    },
+    {
+      "date_local": "2026-06-06",
+      "type": "content",
+      "label": "3.0 版本PV",
+      "title": "《绝区零》3.0版本PV | 某个梦游者的自白",
+      "version_id": "3.0",
+      "version_confirmed": true,
+      "bvid": "BV1x77Q6eE7o",
+      "source": "bilibili",
+      "source_url": "https://www.bilibili.com/video/BV1x77Q6eE7o/",
+      "evidence": "manual"
+    },
+    {
+      "date_local": "2026-06-12",
+      "type": "content",
+      "label": "维琳娜 角色演示",
+      "title": "《绝区零》维琳娜角色展示 | 茶会一如既往",
+      "version_id": null,
+      "version_confirmed": false,
+      "bvid": "BV1FzEr6YExJ",
+      "source": "bilibili",
+      "source_url": "https://www.bilibili.com/video/BV1FzEr6YExJ/",
+      "evidence": "manual"
+    },
+    {
+      "date_local": "2026-06-16",
+      "type": "content",
+      "label": "维琳娜 角色PV",
+      "title": "《绝区零》维琳娜角色PV | 拟剧论",
+      "version_id": null,
+      "version_confirmed": false,
+      "bvid": "BV1mrjN6qE4C",
+      "source": "bilibili",
+      "source_url": "https://www.bilibili.com/video/BV1mrjN6qE4C/",
+      "evidence": "manual"
+    },
+    {
+      "date_local": "2026-06-17",
+      "type": "version_update",
+      "label": "3.0 版本更新",
+      "title": "Version 3.0 \"A Sleepwalker's Confession\" Update Announcement",
+      "version_id": "3.0",
+      "is_version_boundary": true,
+      "source": "steam_news",
+      "source_url": "https://steamstore-a.akamaihd.net/news/externalpost/steam_community_announcements/1835871199299000",
+      "evidence": "observed"
+    },
+    {
+      "date_local": "2026-07-03",
+      "type": "content",
+      "label": "诺姆 角色演示",
+      "title": "《绝区零》诺姆角色展示 | 大嗯呐假说",
+      "version_id": null,
+      "version_confirmed": false,
+      "bvid": "BV1W1Tp6xEhT",
+      "source": "bilibili",
+      "source_url": "https://www.bilibili.com/video/BV1W1Tp6xEhT/",
+      "evidence": "manual"
+    },
+    {
+      "date_local": "2026-07-06",
+      "type": "content",
+      "label": "诺姆 角色EP",
+      "title": "《绝区零》诺姆EP｜chaos.exe",
+      "version_id": null,
+      "version_confirmed": false,
+      "bvid": "BV1WdTS6eECV",
+      "source": "bilibili",
+      "source_url": "https://www.bilibili.com/video/BV1WdTS6eECV/",
+      "evidence": "manual"
+    },
+    {
+      "date_local": "2026-07-15",
+      "type": "version_preview",
+      "label": "3.1 前瞻节目",
+      "title": "Zenless Zone Zero Version 3.1 \"The Long Goodbye\" Special Program Announcement",
+      "version_id": "3.1",
+      "is_version_boundary": false,
+      "source": "steam_news",
+      "source_url": "https://steamstore-a.akamaihd.net/news/externalpost/steam_community_announcements/1838407329253942",
+      "evidence": "observed"
+    },
+    {
+      "date_local": "2026-07-17",
+      "type": "content",
+      "label": "3.1 版本PV",
+      "title": "《绝区零》3.1版本PV | 漫长的告别",
+      "version_id": "3.1",
+      "version_confirmed": true,
+      "bvid": "BV1uiNd69EYU",
+      "source": "bilibili",
+      "source_url": "https://www.bilibili.com/video/BV1uiNd69EYU/",
+      "evidence": "manual"
+    },
+    {
+      "date_local": "2026-07-17",
+      "type": "content",
+      "label": "官方视频",
+      "title": "《绝区零》二周年主题曲MV | 预言",
+      "version_id": null,
+      "version_confirmed": false,
+      "bvid": "BV1QRKJ6ZEzC",
+      "source": "bilibili",
+      "source_url": "https://www.bilibili.com/video/BV1QRKJ6ZEzC/",
+      "evidence": "manual"
+    },
+    {
+      "date_local": "2026-07-24",
+      "type": "content",
+      "label": "蕾米埃尔 角色演示",
+      "title": "《绝区零》蕾米埃尔角色展示 | 恰如往昔",
+      "version_id": null,
+      "version_confirmed": false,
+      "bvid": "BV11Aga6oENR",
+      "source": "bilibili",
+      "source_url": "https://www.bilibili.com/video/BV11Aga6oENR/",
+      "evidence": "manual"
+    },
+    {
+      "date_local": "2026-07-26",
+      "type": "content",
+      "label": "蕾米埃尔 官方视频",
+      "title": "《绝区零》蕾米埃尔动画短片 | 静默之日",
+      "version_id": null,
+      "version_confirmed": false,
+      "bvid": "BV1fk3E61Eu5",
+      "source": "bilibili",
+      "source_url": "https://www.bilibili.com/video/BV1fk3E61Eu5/",
+      "evidence": "manual"
+    },
+    {
+      "date_local": "2026-07-27",
+      "type": "content",
+      "label": "蕾米埃尔 角色EP",
+      "title": "《绝区零》蕾米埃尔EP | Two to Tango 交缠舞步",
+      "version_id": null,
+      "version_confirmed": false,
+      "bvid": "BV1jhgf6pEJw",
+      "source": "bilibili",
+      "source_url": "https://www.bilibili.com/video/BV1jhgf6pEJw/",
+      "evidence": "manual"
+    },
+    {
+      "date_local": "2026-07-28",
+      "type": "version_update",
+      "label": "3.1 版本更新",
+      "title": "Version 3.1 \"The Long Goodbye\" Update Announcement",
+      "version_id": "3.1",
+      "is_version_boundary": true,
+      "source": "steam_news",
+      "source_url": "https://steamstore-a.akamaihd.net/news/externalpost/steam_community_announcements/1839041357038306",
+      "evidence": "observed"
+    },
+    {
+      "date_local": "2026-07-29",
+      "type": "content",
+      "label": "蕾米埃尔 官方视频",
+      "title": "ZTALK | 蕾米埃尔设计幕后",
+      "version_id": null,
+      "version_confirmed": false,
+      "bvid": "BV1jm3r6rEif",
+      "source": "bilibili",
+      "source_url": "https://www.bilibili.com/video/BV1jm3r6rEif/",
+      "evidence": "manual"
+    },
+    {
+      "date_local": "2026-08-14",
+      "type": "content",
+      "label": "希格莉德 角色演示",
+      "title": "《绝区零》希格莉德角色展示 | 好马识途",
+      "version_id": null,
+      "version_confirmed": false,
+      "bvid": "BV1bWgA6SEnT",
+      "source": "bilibili",
+      "source_url": "https://www.bilibili.com/video/BV1bWgA6SEnT/",
+      "evidence": "manual"
+    },
+    {
+      "date_local": "2026-08-17",
+      "type": "content",
+      "label": "希格莉德 角色PV",
+      "title": "《绝区零》希格莉德角色PV | 小马希莉",
+      "version_id": null,
+      "version_confirmed": false,
+      "bvid": "BV1Qfb86LEC5",
+      "source": "bilibili",
+      "source_url": "https://www.bilibili.com/video/BV1Qfb86LEC5/",
+      "evidence": "manual"
+    },
+    {
+      "date_local": "2026-08-24",
+      "type": "version_preview",
+      "label": "3.2 前瞻节目",
+      "title": "Version 3.2 \"Their Secret Histories\" Special Program Announcement",
+      "version_id": "3.2",
+      "is_version_boundary": false,
+      "source": "steam_news",
+      "source_url": "https://steamstore-a.akamaihd.net/news/externalpost/steam_community_announcements/1841579228674764",
+      "evidence": "observed"
+    },
+    {
+      "date_local": "2026-08-28",
+      "type": "content",
+      "label": "3.2 版本PV",
+      "title": "《绝区零》3.2版本PV | 她与她的隐秘往事",
+      "version_id": "3.2",
+      "version_confirmed": true,
+      "bvid": "BV1vRtA6gE5m",
+      "source": "bilibili",
+      "source_url": "https://www.bilibili.com/video/BV1vRtA6gE5m/",
+      "evidence": "manual"
+    },
+    {
+      "date_local": "2026-09-04",
+      "type": "content",
+      "label": "克拉蕾 角色演示",
+      "title": "《绝区零》克拉蕾角色展示 | 不想培训，但攻略已写好",
+      "version_id": null,
+      "version_confirmed": false,
+      "bvid": "BV1wote6gEQ1",
+      "source": "bilibili",
+      "source_url": "https://www.bilibili.com/video/BV1wote6gEQ1/",
+      "evidence": "manual"
+    },
+    {
+      "date_local": "2026-09-06",
+      "type": "content",
+      "label": "克拉蕾 角色EP",
+      "title": "《绝区零》克拉蕾EP | Link Up 血火相连",
+      "version_id": null,
+      "version_confirmed": false,
+      "bvid": "BV1C9b76cEks",
+      "source": "bilibili",
+      "source_url": "https://www.bilibili.com/video/BV1C9b76cEks/",
+      "evidence": "manual"
+    },
+    {
+      "date_local": "2026-09-09",
+      "type": "version_update",
+      "label": "3.2 版本更新",
+      "title": "Version 3.2 \"Their Secret Histories\" Update Announcement",
+      "version_id": "3.2",
+      "is_version_boundary": true,
+      "source": "steam_news",
+      "source_url": "https://steamstore-a.akamaihd.net/news/externalpost/steam_community_announcements/1843481262687543",
+      "evidence": "observed"
+    }
+  ],
+  "character_videos": [
+    {
+      "bvid": "BV1vRtA6gE5m",
+      "title": "《绝区零》3.2版本PV | 她与她的隐秘往事",
+      "character_id": null,
+      "character_name": null,
+      "version_id": "3.2",
+      "version_confirmed": true,
+      "content_type": "version_trailer",
+      "owner_mid": 1636034895,
+      "pubdate": "2026-08-28",
+      "points": [
+        {
+          "date_local": "2026-09-14",
+          "view": 1547168,
+          "status": "observed",
+          "delta": null,
+          "span_days": null,
+          "delta_status": "unavailable"
+        }
+      ],
+      "latest_view": 1547168
+    },
+    {
+      "bvid": "BV1wote6gEQ1",
+      "title": "《绝区零》克拉蕾角色展示 | 不想培训，但攻略已写好",
+      "character_id": "kelaray",
+      "character_name": "克拉蕾",
+      "version_id": null,
+      "version_confirmed": false,
+      "content_type": "character_demo",
+      "owner_mid": 1636034895,
+      "pubdate": "2026-09-04",
+      "points": [
+        {
+          "date_local": "2026-09-14",
+          "view": 3174380,
+          "status": "observed",
+          "delta": null,
+          "span_days": null,
+          "delta_status": "unavailable"
+        }
+      ],
+      "latest_view": 3174380
+    },
+    {
+      "bvid": "BV1C9b76cEks",
+      "title": "《绝区零》克拉蕾EP | Link Up 血火相连",
+      "character_id": "kelaray",
+      "character_name": "克拉蕾",
+      "version_id": null,
+      "version_confirmed": false,
+      "content_type": "character_ep",
+      "owner_mid": 1636034895,
+      "pubdate": "2026-09-06",
+      "points": [
+        {
+          "date_local": "2026-09-14",
+          "view": 2693236,
+          "status": "observed",
+          "delta": null,
+          "span_days": null,
+          "delta_status": "unavailable"
+        }
+      ],
+      "latest_view": 2693236
+    },
+    {
+      "bvid": "BV1uiNd69EYU",
+      "title": "《绝区零》3.1版本PV | 漫长的告别",
+      "character_id": null,
+      "character_name": null,
+      "version_id": "3.1",
+      "version_confirmed": true,
+      "content_type": "version_trailer",
+      "owner_mid": 1636034895,
+      "pubdate": "2026-07-17",
+      "points": [
+        {
+          "date_local": "2026-09-14",
+          "view": 2212307,
+          "status": "observed",
+          "delta": null,
+          "span_days": null,
+          "delta_status": "unavailable"
+        }
+      ],
+      "latest_view": 2212307
+    },
+    {
+      "bvid": "BV1QRKJ6ZEzC",
+      "title": "《绝区零》二周年主题曲MV | 预言",
+      "character_id": null,
+      "character_name": null,
+      "version_id": null,
+      "version_confirmed": false,
+      "content_type": "theme_mv",
+      "owner_mid": 1636034895,
+      "pubdate": "2026-07-17",
+      "points": [
+        {
+          "date_local": "2026-09-14",
+          "view": 2817162,
+          "status": "observed",
+          "delta": null,
+          "span_days": null,
+          "delta_status": "unavailable"
+        }
+      ],
+      "latest_view": 2817162
+    },
+    {
+      "bvid": "BV11Aga6oENR",
+      "title": "《绝区零》蕾米埃尔角色展示 | 恰如往昔",
+      "character_id": "leimiaier",
+      "character_name": "蕾米埃尔",
+      "version_id": null,
+      "version_confirmed": false,
+      "content_type": "character_demo",
+      "owner_mid": 1636034895,
+      "pubdate": "2026-07-24",
+      "points": [
+        {
+          "date_local": "2026-09-14",
+          "view": 4178106,
+          "status": "observed",
+          "delta": null,
+          "span_days": null,
+          "delta_status": "unavailable"
+        }
+      ],
+      "latest_view": 4178106
+    },
+    {
+      "bvid": "BV1fk3E61Eu5",
+      "title": "《绝区零》蕾米埃尔动画短片 | 静默之日",
+      "character_id": "leimiaier",
+      "character_name": "蕾米埃尔",
+      "version_id": null,
+      "version_confirmed": false,
+      "content_type": "animation_short",
+      "owner_mid": 1636034895,
+      "pubdate": "2026-07-26",
+      "points": [
+        {
+          "date_local": "2026-09-14",
+          "view": 3570522,
+          "status": "observed",
+          "delta": null,
+          "span_days": null,
+          "delta_status": "unavailable"
+        }
+      ],
+      "latest_view": 3570522
+    },
+    {
+      "bvid": "BV1jhgf6pEJw",
+      "title": "《绝区零》蕾米埃尔EP | Two to Tango 交缠舞步",
+      "character_id": "leimiaier",
+      "character_name": "蕾米埃尔",
+      "version_id": null,
+      "version_confirmed": false,
+      "content_type": "character_ep",
+      "owner_mid": 1636034895,
+      "pubdate": "2026-07-27",
+      "points": [
+        {
+          "date_local": "2026-09-14",
+          "view": 4486459,
+          "status": "observed",
+          "delta": null,
+          "span_days": null,
+          "delta_status": "unavailable"
+        }
+      ],
+      "latest_view": 4486459
+    },
+    {
+      "bvid": "BV1jm3r6rEif",
+      "title": "ZTALK | 蕾米埃尔设计幕后",
+      "character_id": "leimiaier",
+      "character_name": "蕾米埃尔",
+      "version_id": null,
+      "version_confirmed": false,
+      "content_type": "behind_the_scenes",
+      "owner_mid": 1636034895,
+      "pubdate": "2026-07-29",
+      "points": [
+        {
+          "date_local": "2026-09-14",
+          "view": 984295,
+          "status": "observed",
+          "delta": null,
+          "span_days": null,
+          "delta_status": "unavailable"
+        }
+      ],
+      "latest_view": 984295
+    },
+    {
+      "bvid": "BV1bWgA6SEnT",
+      "title": "《绝区零》希格莉德角色展示 | 好马识途",
+      "character_id": "sigrid",
+      "character_name": "希格莉德",
+      "version_id": null,
+      "version_confirmed": false,
+      "content_type": "character_demo",
+      "owner_mid": 1636034895,
+      "pubdate": "2026-08-14",
+      "points": [
+        {
+          "date_local": "2026-09-14",
+          "view": 1752068,
+          "status": "observed",
+          "delta": null,
+          "span_days": null,
+          "delta_status": "unavailable"
+        }
+      ],
+      "latest_view": 1752068
+    },
+    {
+      "bvid": "BV1Qfb86LEC5",
+      "title": "《绝区零》希格莉德角色PV | 小马希莉",
+      "character_id": "sigrid",
+      "character_name": "希格莉德",
+      "version_id": null,
+      "version_confirmed": false,
+      "content_type": "character_trailer",
+      "owner_mid": 1636034895,
+      "pubdate": "2026-08-17",
+      "points": [
+        {
+          "date_local": "2026-09-14",
+          "view": 1536630,
+          "status": "observed",
+          "delta": null,
+          "span_days": null,
+          "delta_status": "unavailable"
+        }
+      ],
+      "latest_view": 1536630
+    },
+    {
+      "bvid": "BV1x77Q6eE7o",
+      "title": "《绝区零》3.0版本PV | 某个梦游者的自白",
+      "character_id": null,
+      "character_name": null,
+      "version_id": "3.0",
+      "version_confirmed": true,
+      "content_type": "version_trailer",
+      "owner_mid": 1636034895,
+      "pubdate": "2026-06-06",
+      "points": [
+        {
+          "date_local": "2026-09-14",
+          "view": 1812382,
+          "status": "observed",
+          "delta": null,
+          "span_days": null,
+          "delta_status": "unavailable"
+        }
+      ],
+      "latest_view": 1812382
+    },
+    {
+      "bvid": "BV1FzEr6YExJ",
+      "title": "《绝区零》维琳娜角色展示 | 茶会一如既往",
+      "character_id": "verina",
+      "character_name": "维琳娜",
+      "version_id": null,
+      "version_confirmed": false,
+      "content_type": "character_demo",
+      "owner_mid": 1636034895,
+      "pubdate": "2026-06-12",
+      "points": [
+        {
+          "date_local": "2026-09-14",
+          "view": 2605249,
+          "status": "observed",
+          "delta": null,
+          "span_days": null,
+          "delta_status": "unavailable"
+        }
+      ],
+      "latest_view": 2605249
+    },
+    {
+      "bvid": "BV1mrjN6qE4C",
+      "title": "《绝区零》维琳娜角色PV | 拟剧论",
+      "character_id": "verina",
+      "character_name": "维琳娜",
+      "version_id": null,
+      "version_confirmed": false,
+      "content_type": "character_trailer",
+      "owner_mid": 1636034895,
+      "pubdate": "2026-06-16",
+      "points": [
+        {
+          "date_local": "2026-09-14",
+          "view": 1582961,
+          "status": "observed",
+          "delta": null,
+          "span_days": null,
+          "delta_status": "unavailable"
+        }
+      ],
+      "latest_view": 1582961
+    },
+    {
+      "bvid": "BV1W1Tp6xEhT",
+      "title": "《绝区零》诺姆角色展示 | 大嗯呐假说",
+      "character_id": "nuomu",
+      "character_name": "诺姆",
+      "version_id": null,
+      "version_confirmed": false,
+      "content_type": "character_demo",
+      "owner_mid": 1636034895,
+      "pubdate": "2026-07-03",
+      "points": [
+        {
+          "date_local": "2026-09-14",
+          "view": 2816008,
+          "status": "observed",
+          "delta": null,
+          "span_days": null,
+          "delta_status": "unavailable"
+        }
+      ],
+      "latest_view": 2816008
+    },
+    {
+      "bvid": "BV1WdTS6eECV",
+      "title": "《绝区零》诺姆EP｜chaos.exe",
+      "character_id": "nuomu",
+      "character_name": "诺姆",
+      "version_id": null,
+      "version_confirmed": false,
+      "content_type": "character_ep",
+      "owner_mid": 1636034895,
+      "pubdate": "2026-07-06",
+      "points": [
+        {
+          "date_local": "2026-09-14",
+          "view": 3279229,
+          "status": "observed",
+          "delta": null,
+          "span_days": null,
+          "delta_status": "unavailable"
+        }
+      ],
+      "latest_view": 3279229
+    }
+  ],
+  "quality": {
+    "summary": {
+      "error": 0,
+      "warn": 1,
+      "info": 2
+    },
+    "issues": [
+      {
+        "level": "info",
+        "code": "short_coverage",
+        "message": "当前仅 1 天数据，不足 30 天，图表可展示但不宜作为趋势结论",
+        "valid_days": 1
+      },
+      {
+        "level": "warn",
+        "code": "field_always_unavailable:price_final",
+        "message": "价格 在全部 1 天均不可用",
+        "field": "price_final"
+      },
+      {
+        "level": "info",
+        "code": "reconstructed_review_history",
+        "message": "评测历史由 appreviews 回填重建，覆盖 2026-06-17 → 2026-09-14（90 天）。仅含今天仍存在的评测，越早的日期越可能低估。"
+      }
+    ]
+  },
+  "sources": [
+    {
+      "name": "Steam 当前在线人数",
+      "label": "observed",
+      "url": "https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/",
+      "note": "平台同时在线观测值，不是 DAU"
+    },
+    {
+      "name": "Steam 评测汇总",
+      "label": "observed",
+      "url": "https://store.steampowered.com/appreviews/4162040",
+      "note": "好评率为派生指标；新增评测为讨论热度代理"
+    },
+    {
+      "name": "Steam 官方公告",
+      "label": "observed",
+      "url": "https://api.steampowered.com/ISteamNews/GetNewsForApp/v2/",
+      "note": "版本事件时间节点来源"
+    },
+    {
+      "name": "B 站视频公开字段",
+      "label": "observed",
+      "url": "https://api.bilibili.com/x/web-interface/view",
+      "note": "仅登记视频的播放量，不是全站播放量或独立观众数"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.tmp
+*.jsonl.tmp
+.env
+.DS_Store
+Thumbs.db
+
+# 采集产生的大体积原始响应：评测回填单文件可达 10MB+，
+# 且可由 steam_reviews_backfill.py 随时重建，不进版本库。
+data/raw/backfill/
+data/raw/20*/
+
+# 时间序列与快照是项目的真实产出，必须入库（作品集需要真实采集天数）。
+# 不要在这里忽略 data/series/ 或 data/snapshot_*.json。
