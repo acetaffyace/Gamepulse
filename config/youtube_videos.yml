@@ -1,0 +1,44 @@
+# YouTube 官方频道与视频注册表
+#
+# 与 B 站注册表对称，但有一个关键差别：
+#   B 站的搜索接口有风控（实测 HTTP 412），官方视频只能靠 related 接口
+#   半自动发现 + 人工登记；
+#   YouTube Data API 可以直接列出频道的 uploads 播放列表，**新视频能自动发现**，
+#   因此 videos 段由 youtube_discover.py 追加，不需要手工抄 ID。
+#
+# channel_id 的填法：
+#   先只填 handle（形如 @ZenlessZoneZero），运行
+#       python collectors/youtube_discover.py --resolve
+#   由 API 解析出真实 channel_id、频道名与订阅数并回填。
+#   handle 是待验证的假设，channel_id 是接口给出的事实 ——
+#   两者不一致时以接口为准，并在这里留记录。
+#
+# 配额成本（免费层每天 10,000 units）：
+#   channels.list      1 unit   仅在解析 handle 时调用
+#   playlistItems.list 1 unit   每频道每次发现
+#   videos.list        1 unit   一次最多 50 个视频 ID
+#   => 3 款游戏 × 每日发现 + 200 个视频的统计 ≈ 每天 10 units 上下，
+#      用不到免费配额的 0.1%。绝不使用 search.list（100 units/次）。
+
+official_channels:
+  wuthering_waves:
+    handle: '@WutheringWaves'
+    channel_id: null
+    title: null
+    resolved_at: null
+
+  zenless_zone_zero:
+    handle: '@ZZZ_Official'
+    channel_id: null
+    title: null
+    resolved_at: null
+
+  neverness_to_everness:
+    handle: '@NevernesstoEverness'
+    channel_id: null
+    title: null
+    resolved_at: null
+
+# 由 youtube_discover.py --append 写入。字段与 B 站注册表保持一致，
+# 以便 pipeline 用同一套逻辑处理两个平台。
+videos: []

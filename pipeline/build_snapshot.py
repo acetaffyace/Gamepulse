@@ -20,8 +20,10 @@ from collectors.common import (  # noqa: E402
     read_series,
     today_local,
     write_json,
+    youtube_channel,
 )
-from pipeline import metrics, quality  # noqa: E402
+from collectors.steam_build import build_events as build_build_events  # noqa: E402
+from pipeline import metrics, quality, review_profile  # noqa: E402
 
 OBSERVED_LABEL = "observed"
 
@@ -101,7 +103,9 @@ def extract_version(title: str) -> str | None:
 
 
 def build_events(news_records: list[dict], price_points: list[dict],
-                 videos: dict[str, dict]) -> list[dict]:
+                 videos: dict[str, dict],
+                 yt_videos: dict[str, dict] | None = None,
+                 build_records: list[dict] | None = None) -> list[dict]:
     events: list[dict] = []
     seen_gids: set[str] = set()
 
@@ -144,10 +148,34 @@ def build_events(news_records: list[dict], price_points: list[dict],
             "version_id": slot.get("version_id"),
             "version_confirmed": slot.get("version_confirmed", False),
             "bvid": slot.get("bvid"),
+            "platform": "bilibili",
             "source": "bilibili",
             "source_url": f"https://www.bilibili.com/video/{slot.get('bvid')}/",
             "evidence": "manual",
         })
+
+    # 内容事件：来自 YouTube 官方频道发布日。与 B 站分开标 platform ——
+    # 同一支 PV 在两个平台的发布时间常常差几小时到一天，合并会丢掉这个差异。
+    for slot in (yt_videos or {}).values():
+        label_kind = CONTENT_TYPE_LABEL.get(slot.get("content_type"), "官方视频")
+        name = slot.get("character_name") or slot.get("version_id") or ""
+        events.append({
+            "date_local": slot.get("pubdate"),
+            "type": "content",
+            "label": f"{name} {label_kind}".strip(),
+            "title": slot.get("title"),
+            "version_id": slot.get("version_id"),
+            "version_confirmed": slot.get("version_confirmed", False),
+            "video_id": slot.get("video_id"),
+            "platform": "youtube",
+            "source": "youtube",
+            "source_url": f"https://www.youtube.com/watch?v={slot.get('video_id')}",
+            "evidence": "manual",
+        })
+
+    # 构建更新事件：来自 SteamCMD 的 public 分支 buildid 变化。
+    # 这是独立于公告措辞的第二条版本证据，标 third_party 与官方公告区分。
+    events.extend(build_build_events(build_records or []))
 
     # 折扣事件
     for ev in metrics.discount_events(price_points):
@@ -166,11 +194,22 @@ def build(game_id: str) -> dict:
     steam = read_series(game_id, "steam")
     news = read_series(game_id, "steam_news")
     bili = read_series(game_id, "bilibili")
+    youtube = read_series(game_id, "youtube")
+    online_hourly = read_series(game_id, "steam_online")
+    builds = read_series(game_id, "steam_build")
 
     review_history = read_series(game_id, "review_history")
     price_points = metrics.price_series(steam)
-    videos = metrics.video_view_series(bili)
+    videos = metrics.video_series(bili, platform="bilibili")
+    yt_videos = metrics.video_series(youtube, platform="youtube", id_key="video_id")
     issues = quality.check(steam, bili)
+
+    events = build_events(news, price_points, videos, yt_videos, builds)
+
+    # 版本前后对比用官方公告确认的版本更新日做基准。构建号事件不做基准：
+    # 一次版本更新会伴随多次热更构建，用它切窗口会把同一个版本切成好几段。
+    boundaries = [e for e in events if e.get("is_version_boundary")]
+    profile = review_profile.build(game_id, boundaries)
 
     # 回填的评测历史与逐日采集分开存放：前者是 reconstructed（只含今天仍存在
     # 的评测，早期日期偏低），后者是 observed。两者不可混成一条线。
@@ -196,9 +235,13 @@ def build(game_id: str) -> dict:
         },
         "coverage": metrics.coverage(steam),
         "online_series": metrics.online_series(steam),
+        # 小时级采样聚合出的日峰值/谷值/峰谷比。单点日采只能得到
+        # 「某一时刻的在线数」，分不出「盘子变大」和「采样撞上高峰」。
+        "online_daily": metrics.online_daily(online_hourly),
+        "online_hourly": online_hourly[-168:],   # 只带最近 7×24 个采样点进前端
         "review_series": metrics.review_rate_series(steam),
         "new_review_series": metrics.new_review_series(steam),
-        # 回填序列：90 天历史，标记 reconstructed
+        # 回填序列：标记 reconstructed
         "review_history": review_history,
         "review_history_coverage": ({
             "start": review_history[0]["date_local"],
@@ -206,9 +249,22 @@ def build(game_id: str) -> dict:
             "days": len(review_history),
             "method": "appreviews_backfill",
         } if review_history else None),
+        # 玩家结构：评测时长分布、语种构成变化、版本前后对比
+        "review_profile": profile,
         "price_series": price_points,
-        "events": build_events(news, price_points, videos),
+        "build_series": builds,
+        "events": events,
         "character_videos": list(videos.values()),
+        "bilibili": {
+            "videos": list(videos.values()),
+            "totals": metrics.video_totals(videos, "bilibili"),
+        },
+        "youtube": {
+            "available": bool(yt_videos),
+            "channel": youtube_channel(game_id),
+            "videos": list(yt_videos.values()),
+            "totals": metrics.video_totals(yt_videos, "youtube"),
+        },
         "quality": {"summary": quality.summarize(issues), "issues": issues},
         "sources": [
             {"name": "Steam 当前在线人数", "label": "observed",
@@ -222,7 +278,20 @@ def build(game_id: str) -> dict:
              "note": "版本事件时间节点来源"},
             {"name": "B 站视频公开字段", "label": "observed",
              "url": "https://api.bilibili.com/x/web-interface/view",
-             "note": "仅登记视频的播放量，不是全站播放量或独立观众数"},
+             "note": "播放/弹幕/评论/点赞/投币/收藏/分享七项；"
+                     "仅登记视频集合，不是全站播放量或独立观众数"},
+            {"name": "YouTube 视频公开统计", "label": "observed",
+             "url": "https://www.googleapis.com/youtube/v3/videos",
+             "note": "观看/点赞/评论三项；点踩数已被平台下线，"
+                     "点赞与评论可被创作者隐藏，隐藏时记 null 不记 0"},
+            {"name": "Steam 构建号", "label": "third_party",
+             "url": "https://api.steamcmd.net/v1/info/",
+             "note": "public 分支 buildid 与更新时间；"
+                     "第三方镜像，非 Valve 官方源，用作版本公告的旁证"},
+            {"name": "Steam 评测明细（玩家结构）", "label": "reconstructed",
+             "url": f"https://store.steampowered.com/appreviews/{game.get('steam_app_id')}",
+             "note": "评测时游戏时长、评测后游玩时长、语种、购买渠道；"
+                     "仅含今天仍存在的评测，且评测者不是玩家的随机样本"},
         ],
     }
     return snapshot
