@@ -1,0 +1,259 @@
+{
+  "palette": {
+    "slot1": "#2a78d6",
+    "slot2": "#eb6834",
+    "slot3": "#1baf7a",
+    "slot5": "#e87ba4",
+    "slot7": "#4a3aa7",
+    "neutral": "#898781"
+  },
+  "share_ramp": [
+    "#16365f",
+    "#1d4c86",
+    "#2a78d6",
+    "#4d97e2",
+    "#7ab5ea",
+    "#a3cdf2",
+    "#c6e0f8",
+    "#e0edfb"
+  ],
+  "share_other": "#c3c2b7",
+  "lanes": [
+    {
+      "id": "new_reviews",
+      "title": "每日新增评测",
+      "subtitle": "回填重建 · 讨论热度代理",
+      "adapter": "series",
+      "path": "review_history",
+      "field": "new_reviews",
+      "chart": "bar",
+      "color": "slot1",
+      "height": 140,
+      "unit": "count",
+      "enabled": true,
+      "caveat": "仅含今天仍存在的评测，越早的日期越可能低估"
+    },
+    {
+      "id": "review_rate",
+      "title": "好评率",
+      "subtitle": "当日 / 累计",
+      "adapter": "series",
+      "path": "review_history",
+      "chart": "line",
+      "height": 110,
+      "unit": "percent",
+      "enabled": true,
+      "series": [
+        {
+          "field": "daily_review_rate",
+          "name": "当日好评率",
+          "color": "slot2",
+          "width": 1.5,
+          "opacity": 0.75
+        },
+        {
+          "field": "cumulative_review_rate",
+          "name": "累计好评率",
+          "color": "slot3",
+          "width": 2.5,
+          "smooth": true,
+          "end_label": true
+        }
+      ]
+    },
+    {
+      "id": "online",
+      "title": "Steam 同时在线人数",
+      "subtitle": "逐日采集 · 平台同时在线，非 DAU",
+      "adapter": "series",
+      "path": "online_series",
+      "field": "value",
+      "chart": "line",
+      "color": "slot7",
+      "height": 110,
+      "unit": "count",
+      "enabled": true,
+      "symbol": true,
+      "caveat": "历史无法回填（SteamDB 不可程序化访问、SteamCharts 未收录），只能逐日积累"
+    },
+    {
+      "id": "online_band",
+      "title": "在线日峰谷",
+      "subtitle": "小时级采样 · 峰值与谷值",
+      "adapter": "series",
+      "path": "online_daily",
+      "chart": "line",
+      "height": 110,
+      "unit": "count",
+      "enabled": false,
+      "series": [
+        {
+          "field": "peak",
+          "name": "日峰值",
+          "color": "slot7",
+          "width": 2
+        },
+        {
+          "field": "trough",
+          "name": "日谷值",
+          "color": "slot7",
+          "width": 1,
+          "opacity": 0.45,
+          "dashed": true
+        }
+      ],
+      "caveat": "采样点少于 6 个的日期标 partial，半天的样本算不出真实日峰值"
+    },
+    {
+      "id": "playtime_median",
+      "title": "评测者中位游戏时长",
+      "subtitle": "写评测时已玩多久 · 小时",
+      "adapter": "series",
+      "path": "review_profile.daily",
+      "field": "playtime_at_review_median",
+      "chart": "line",
+      "color": "slot2",
+      "height": 110,
+      "unit": "minutes_as_hours",
+      "enabled": true,
+      "caveat": "评测者不是玩家的随机样本，只代表写评测的人"
+    },
+    {
+      "id": "short_play_share",
+      "title": "2 小时内评测占比",
+      "subtitle": "Steam 退款时长线以内就来评测的比例",
+      "adapter": "series",
+      "path": "review_profile.daily",
+      "field": "short_play_share",
+      "chart": "line",
+      "color": "slot1",
+      "height": 100,
+      "unit": "percent",
+      "enabled": false
+    },
+    {
+      "id": "heavy_play_share",
+      "title": "100 小时以上评测占比",
+      "subtitle": "重度玩家在评测者中的比例",
+      "adapter": "series",
+      "path": "review_profile.daily",
+      "field": "heavy_play_share",
+      "chart": "line",
+      "color": "slot3",
+      "height": 100,
+      "unit": "percent",
+      "enabled": false
+    },
+    {
+      "id": "language_share",
+      "title": "评测语种构成",
+      "subtitle": "7 天分桶 · 反映玩家来源结构变化",
+      "adapter": "stacked_share",
+      "path": "review_profile.language_share",
+      "chart": "stacked_area",
+      "height": 130,
+      "unit": "percent",
+      "enabled": false
+    },
+    {
+      "id": "bili_videos",
+      "title": "B 站官方视频",
+      "subtitle": "横轴为发布日 · 纵轴为当前累计播放量",
+      "adapter": "video_scatter",
+      "path": "bilibili.videos",
+      "field": "view",
+      "chart": "scatter",
+      "color": "slot5",
+      "height": 130,
+      "unit": "count",
+      "enabled": true,
+      "caveat": "仅登记视频集合，不是全站播放量，也不是独立观众数"
+    },
+    {
+      "id": "bili_view_delta",
+      "title": "B 站日增播放",
+      "subtitle": "全部登记视频的播放量日增量合计",
+      "adapter": "video_delta",
+      "path": "bilibili.videos",
+      "field": "view",
+      "chart": "bar",
+      "color": "slot5",
+      "height": 110,
+      "enabled": false
+    },
+    {
+      "id": "bili_engagement",
+      "title": "B 站互动率",
+      "subtitle": "（点赞+投币+收藏）/ 播放 · 按视频发布日定位",
+      "adapter": "video_scatter",
+      "path": "bilibili.videos",
+      "field": "engagement",
+      "from_rates": true,
+      "chart": "scatter",
+      "color": "slot3",
+      "height": 110,
+      "unit": "percent",
+      "enabled": false,
+      "caveat": "互动率跨视频可比，播放量不可比 —— 后者受推荐位影响极大"
+    },
+    {
+      "id": "yt_videos",
+      "title": "YouTube 官方视频",
+      "subtitle": "横轴为发布日 · 纵轴为当前累计观看数",
+      "adapter": "video_scatter",
+      "path": "youtube.videos",
+      "field": "view",
+      "chart": "scatter",
+      "color": "slot1",
+      "height": 120,
+      "unit": "count",
+      "enabled": false,
+      "caveat": "点赞与评论可被创作者隐藏，隐藏时记 null 不记 0"
+    }
+  ],
+  "presets": {
+    "default": {
+      "label": "默认",
+      "lanes": [
+        "new_reviews",
+        "review_rate",
+        "online",
+        "bili_videos"
+      ]
+    },
+    "player_profile": {
+      "label": "玩家结构",
+      "lanes": [
+        "new_reviews",
+        "playtime_median",
+        "short_play_share",
+        "heavy_play_share",
+        "language_share"
+      ]
+    },
+    "propagation": {
+      "label": "传播端",
+      "lanes": [
+        "bili_videos",
+        "bili_view_delta",
+        "bili_engagement",
+        "yt_videos"
+      ]
+    },
+    "online_focus": {
+      "label": "在线盘",
+      "lanes": [
+        "online",
+        "online_band",
+        "new_reviews",
+        "review_rate"
+      ]
+    }
+  },
+  "adapters": [
+    "series",
+    "stacked_share",
+    "video_delta",
+    "video_scatter"
+  ]
+}

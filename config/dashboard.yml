@@ -1,0 +1,233 @@
+# 看板轨道目录（L2 自定义的核心）
+#
+# 加一个指标 = 在这里加一条，不改任何图表代码。
+# build_dashboard_config.py 会把本文件编译成 data/dashboard_config.json，
+# 并**逐条验证 source/path/field 能在真实快照里取到值** ——
+# 写错字段名会在构建时报错，而不是在页面上默默渲染成一条空轨道。
+#
+# 颜色说明：
+#   颜色只在**轨道内部**区分系列。不同轨道可以复用同一个色位，
+#   因为轨道在垂直方向上是分开的、各有标题和独立纵轴，
+#   识别靠的是位置和标题，不是颜色。这样就不必为了凑轨道数量
+#   去发明一堆未经对比度校验的新颜色。
+#   slot1/2/3/5/7 来自已通过 validate_palette(light) 的调色板：
+#   色阶带 / 彩度下限 / 色盲分离度 / 常视力对比度四项全部 PASS。
+
+palette:
+  slot1: '#2a78d6'   # blue
+  slot2: '#eb6834'   # orange
+  slot3: '#1baf7a'   # aqua
+  slot5: '#e87ba4'   # magenta
+  slot7: '#4a3aa7'   # violet
+  neutral: '#898781' # 仅用于参考线与不承载数值的辅助元素
+
+# 堆叠构成图（语种占比）专用的顺序色阶。
+# 这类图不能用上面那 5 个分类色位轮换：语种有 9 个，色位只有 5 个，
+# 靠透明度区分中间几层在实际渲染里几乎看不出来。
+# 语种本身是按占比排序的，属于有序类别，顺序色阶才是对的形式 ——
+# 由深到浅正好对应由大到小，读者不查图例也能看懂谁是大头。
+share_ramp:
+  - '#16365f'
+  - '#1d4c86'
+  - '#2a78d6'
+  - '#4d97e2'
+  - '#7ab5ea'
+  - '#a3cdf2'
+  - '#c6e0f8'
+  - '#e0edfb'
+share_other: '#c3c2b7'   # 「其他」用中性灰，明确不属于色阶序列
+
+# adapter 决定「怎么从快照里取数」，是配置与代码之间唯一的契约。
+#   series        取 path 指向的数组，按 date_local 对齐，读 field
+#   video_scatter 取视频数组，x = 发布日，y = 最新的 field 值
+#   video_delta   取视频数组，按日期汇总全部视频的 field 日增量
+#   stacked_share 取语种分桶，堆叠面积
+#
+# 新增 adapter 需要动 dashboard/app.js 的 ADAPTERS 表；
+# 而在已有 adapter 上加指标只需要改本文件。
+
+lanes:
+  - id: new_reviews
+    title: 每日新增评测
+    subtitle: 回填重建 · 讨论热度代理
+    adapter: series
+    path: review_history
+    field: new_reviews
+    chart: bar
+    color: slot1
+    height: 140
+    unit: count
+    enabled: true
+    caveat: 仅含今天仍存在的评测，越早的日期越可能低估
+
+  - id: review_rate
+    title: 好评率
+    subtitle: 当日 / 累计
+    adapter: series
+    path: review_history
+    chart: line
+    height: 110
+    unit: percent
+    enabled: true
+    # 同一条轨道可以放多个系列，前提是单位相同、可以共用一个纵轴
+    series:
+      - field: daily_review_rate
+        name: 当日好评率
+        color: slot2
+        width: 1.5
+        opacity: 0.75
+      - field: cumulative_review_rate
+        name: 累计好评率
+        color: slot3
+        width: 2.5
+        smooth: true
+        end_label: true
+
+  - id: online
+    title: Steam 同时在线人数
+    subtitle: 逐日采集 · 平台同时在线，非 DAU
+    adapter: series
+    path: online_series
+    field: value
+    chart: line
+    color: slot7
+    height: 110
+    unit: count
+    enabled: true
+    symbol: true
+    caveat: 历史无法回填（SteamDB 不可程序化访问、SteamCharts 未收录），只能逐日积累
+
+  - id: online_band
+    title: 在线日峰谷
+    subtitle: 小时级采样 · 峰值与谷值
+    adapter: series
+    path: online_daily
+    chart: line
+    height: 110
+    unit: count
+    enabled: false
+    series:
+      - field: peak
+        name: 日峰值
+        color: slot7
+        width: 2
+      - field: trough
+        name: 日谷值
+        color: slot7
+        width: 1
+        opacity: 0.45
+        dashed: true
+    caveat: 采样点少于 6 个的日期标 partial，半天的样本算不出真实日峰值
+
+  - id: playtime_median
+    title: 评测者中位游戏时长
+    subtitle: 写评测时已玩多久 · 小时
+    adapter: series
+    path: review_profile.daily
+    field: playtime_at_review_median
+    chart: line
+    color: slot2
+    height: 110
+    unit: minutes_as_hours
+    enabled: true
+    caveat: 评测者不是玩家的随机样本，只代表写评测的人
+
+  - id: short_play_share
+    title: 2 小时内评测占比
+    subtitle: Steam 退款时长线以内就来评测的比例
+    adapter: series
+    path: review_profile.daily
+    field: short_play_share
+    chart: line
+    color: slot1
+    height: 100
+    unit: percent
+    enabled: false
+
+  - id: heavy_play_share
+    title: 100 小时以上评测占比
+    subtitle: 重度玩家在评测者中的比例
+    adapter: series
+    path: review_profile.daily
+    field: heavy_play_share
+    chart: line
+    color: slot3
+    height: 100
+    unit: percent
+    enabled: false
+
+  - id: language_share
+    title: 评测语种构成
+    subtitle: 7 天分桶 · 反映玩家来源结构变化
+    adapter: stacked_share
+    path: review_profile.language_share
+    chart: stacked_area
+    height: 130
+    unit: percent
+    enabled: false
+
+  - id: bili_videos
+    title: B 站官方视频
+    subtitle: 横轴为发布日 · 纵轴为当前累计播放量
+    adapter: video_scatter
+    path: bilibili.videos
+    field: view
+    chart: scatter
+    color: slot5
+    height: 130
+    unit: count
+    enabled: true
+    caveat: 仅登记视频集合，不是全站播放量，也不是独立观众数
+
+  - id: bili_view_delta
+    title: B 站日增播放
+    subtitle: 全部登记视频的播放量日增量合计
+    adapter: video_delta
+    path: bilibili.videos
+    field: view
+    chart: bar
+    color: slot5
+    height: 110
+    enabled: false
+
+  - id: bili_engagement
+    title: B 站互动率
+    subtitle: （点赞+投币+收藏）/ 播放 · 按视频发布日定位
+    adapter: video_scatter
+    path: bilibili.videos
+    field: engagement
+    from_rates: true
+    chart: scatter
+    color: slot3
+    height: 110
+    unit: percent
+    enabled: false
+    caveat: 互动率跨视频可比，播放量不可比 —— 后者受推荐位影响极大
+
+  - id: yt_videos
+    title: YouTube 官方视频
+    subtitle: 横轴为发布日 · 纵轴为当前累计观看数
+    adapter: video_scatter
+    path: youtube.videos
+    field: view
+    chart: scatter
+    color: slot1
+    height: 120
+    unit: count
+    enabled: false
+    caveat: 点赞与评论可被创作者隐藏，隐藏时记 null 不记 0
+
+# 预设视图：一键切换关注点。用户改动会覆盖预设并存进 localStorage。
+presets:
+  default:
+    label: 默认
+    lanes: [new_reviews, review_rate, online, bili_videos]
+  player_profile:
+    label: 玩家结构
+    lanes: [new_reviews, playtime_median, short_play_share, heavy_play_share, language_share]
+  propagation:
+    label: 传播端
+    lanes: [bili_videos, bili_view_delta, bili_engagement, yt_videos]
+  online_focus:
+    label: 在线盘
+    lanes: [online, online_band, new_reviews, review_rate]
