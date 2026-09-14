@@ -59,12 +59,22 @@ async function shoot(browser, preset, label) {
     });
   });
 
+  // 轨道标题是用 rich text 拼的，取数对象的字段名写错不会报错，
+  // 只会渲染出「undefined 每日…」这种标题。曾经因为改了 laneTitle 的签名
+  // 而没同步 compare.js 的调用方，对比视图的第一条轨道标题就变成了 undefined。
+  const titles = await page.evaluate(() => chart.getOption().title.map(t => t.text));
+  const badTitles = titles.filter(t => /undefined|null/.test(t));
+
   mkdirSync(OUT, { recursive: true });
   const file = `${OUT}/${label}.png`;
   await page.screenshot({ path: file, fullPage: true });
 
   console.log(`\n== ${label} ==`);
   let empty = 0;
+  if (badTitles.length) {
+    console.log('  标题渲染异常：');
+    badTitles.forEach(t => console.log('    ' + t));
+  }
   lanes.forEach(l => {
     l.series.forEach(s => {
       const flag = s.points === 0 ? '  <== 空轨道' : '';
@@ -79,7 +89,7 @@ async function shoot(browser, preset, label) {
   console.log(`  截图 → ${file}`);
 
   await page.close();
-  return { empty, errors: errors.length };
+  return { empty, errors: errors.length + badTitles.length };
 }
 
 const browser = await chromium.launch();
@@ -99,5 +109,5 @@ try {
   await browser.close();
 }
 
-console.log(`\n合计：空轨道 ${totals.empty} 条，控制台错误 ${totals.errors} 条`);
+console.log(`\n合计：空轨道 ${totals.empty} 条，错误（控制台 + 标题）${totals.errors} 条`);
 process.exit(totals.errors > 0 ? 1 : 0);
