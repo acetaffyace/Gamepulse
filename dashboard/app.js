@@ -1,222 +1,60 @@
-/* GamePulse dashboard —— 配置驱动的多轨道综合图
+/* GamePulse dashboard —— UI 接线层
  *
- * 设计约束：
- * - 浅色、桌面端、单图承载全部信息；
- * - 轨道共享同一日期轴，各自独立纵轴 —— 这是 small multiples，
- *   不是双轴图（双轴会凭空制造相关性）；
- * - 颜色只在轨道内部区分系列。不同轨道可复用同一色位，因为轨道在垂直方向
- *   分开、各有标题和独立纵轴，识别靠位置与标题，不靠颜色；
- * - reconstructed（回填）与 observed（逐日采集）分开呈现，不连成一条线。
+ * 引擎（对比对象、对齐、取数、绘图）在 engine.js。这里只负责
+ * 控件、指标卡、表格、导出和引导。
  *
- * 轨道不再硬编码在这个文件里，而是来自 data/dashboard_config.json
- * （由 config/dashboard.yml 编译并校验）。本文件只提供 ADAPTERS ——
- * 「怎么从快照里取数」的有限几种模式。加一个指标改 YAML，
- * 加一种取数模式才改这里。
+ * 只有一个视图。过去的「单游戏」和「三方对比」是同一件事的两个特例：
+ * 对比对象列表长度为 1 就是单游戏。因此轨道自定义、预设、导出、
+ * 数据表对两种情形一视同仁，不存在「这个功能只有某个视图才有」。
  */
 
-const FONT = 'system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif';
+const STORAGE_KEY = 'gamepulse.view.v3';
 
-const C = {
-  gridline:  '#e1e0d9',
-  baseline:  '#c3c2b7',
-  muted:     '#898781',
-  secondary: '#52514e',
-  primary:   '#0b0b0b',
-  surface:   '#fcfcfb',
-};
-
-const STORAGE_KEY = 'gamepulse.view.v2';
-
-let config = null;      // dashboard_config.json
-let snapshot = null;
+let config = null;            // dashboard_config.json
+let catalog = [];             // index.json 的 games，即对比对象目录
+const snapCache = new Map();  // game_id -> snapshot
 let chart = null;
+
+let subjects = [];            // 当前对比对象（长度 1 即单游戏）
+let align = 'calendar';       // calendar | day0
 let rangeDays = 90;
-let viewMode = 'single';       // single | compare，compare.js 读取
-let laneState = [];            // [{id, height, enabled}]，顺序即显示顺序
-let currentGame = null;
+let laneState = [];           // [{id, height, enabled}]，顺序即显示顺序
+let laneData = [];            // 最近一次渲染的轨道数据，供图例/数据表复用
 
-const fmt = n => (n === null || n === undefined) ? '—' : n.toLocaleString('zh-CN');
 const pct = n => (n === null || n === undefined) ? '—' : n.toFixed(2) + '%';
-
-/* 全程使用 UTC 构造日期：本地时间解析 + toISOString 会在 UTC+8 下退回一天，
-   使 addDays 永远返回同一天。 */
-function addDays(iso, n) {
-  const [y, m, d] = iso.split('-').map(Number);
-  const dt = new Date(Date.UTC(y, m - 1, d));
-  dt.setUTCDate(dt.getUTCDate() + n);
-  return dt.toISOString().slice(0, 10);
-}
-
-function daysBetween(aIso, bIso) {
-  const p = s => { const [y, m, d] = s.split('-').map(Number);
-                   return Date.UTC(y, m - 1, d); };
-  return Math.round((p(bIso) - p(aIso)) / 864e5);
-}
-
-function dateRange(start, end) {
-  const out = [];
-  let cur = start, guard = 0;
-  while (cur <= end && guard++ < 4000) { out.push(cur); cur = addDays(cur, 1); }
-  return out;
-}
-
-function resolve(obj, path) {
-  return path.split('.').reduce((n, k) => (n && typeof n === 'object') ? n[k] : undefined, obj);
-}
-
-/* ---------- 单位格式化 ---------- */
-
-/* 单位换算必须发生在**取数时**，不能只做在轴标签上。
-   把分钟原样喂给 ECharts、只在 formatter 里除以 60，会得到
-   「0.0h / 8.3h / 17h / 25h」这种刻度 —— 因为分档是按分钟算的。
-   先换算成小时，刻度才会落在整数上。 */
-const SCALES = {
-  minutes_as_hours: v => (v == null ? null : v / 60),
-};
-
-const UNITS = {
-  count: v => {
-    if (v == null) return '';
-    if (Math.abs(v) >= 1e4) return (v / 1e4).toFixed(Math.abs(v) >= 1e5 ? 0 : 1) + '万';
-    if (Math.abs(v) >= 1000) return (v / 1000).toFixed(1) + 'k';
-    return String(v);
-  },
-  percent: v => v == null ? '' : v + '%',
-  minutes_as_hours: v => v == null ? '' : v + 'h',
-};
-
-const TOOLTIP_UNITS = {
-  count: v => fmt(v),
-  percent: v => v == null ? '—' : v.toFixed(2) + '%',
-  minutes_as_hours: v => v == null ? '—' : v.toFixed(1) + ' 小时',
-};
-
-const unitFmt = u => UNITS[u] || UNITS.count;
-const tipFmt = u => TOOLTIP_UNITS[u] || TOOLTIP_UNITS.count;
-const scaleOf = u => SCALES[u] || (v => v);
 
 function color(slot) {
   return (config.palette && config.palette[slot]) || C.muted;
 }
 
-/* ---------- ADAPTERS：配置与代码之间唯一的契约 ----------
- *
- * 每个 adapter 接收 (lane, snapshot, axis)，返回统一结构：
- *   { series: [...], empty: bool, note: string }
- * series 里的每一项描述一条可绘制的线/柱/点，绘制细节由 buildLaneSeries 统一处理。
- * 新增 adapter 需要在 pipeline/build_dashboard_config.py 的 ADAPTER_SHAPES 同步登记，
- * 否则配置校验会拒绝使用它。
- */
-
-const ADAPTERS = {
-  /* 按 date_local 对齐的普通序列。lane.series 可声明多条共用纵轴的线。 */
-  series(lane, snap, axis) {
-    const rows = resolve(snap, lane.path) || [];
-    const by = new Map(rows.map(r => [r.date_local, r]));
-    const scale = scaleOf(lane.unit);
-    const defs = lane.series || [{
-      field: lane.field, name: lane.title, color: lane.color,
-      width: 2, smooth: false,
-    }];
-    return {
-      series: defs.map(def => ({
-        name: def.name || lane.title,
-        kind: lane.chart === 'bar' ? 'bar' : 'line',
-        color: color(def.color || lane.color),
-        width: def.width, opacity: def.opacity, smooth: def.smooth,
-        dashed: def.dashed, endLabel: def.end_label,
-        symbol: lane.symbol,
-        values: axis.map(d => {
-          const r = by.get(d);
-          const v = r ? r[def.field] : null;
-          return (v === undefined) ? null : scale(v);
-        }),
-      })),
-      empty: rows.length === 0,
-    };
-  },
-
-  /* 视频散点：x = 发布日，y = 该视频最新的某个统计值或互动率。
-     纵轴是「当前累计值」而不是当日值 —— 接口只返回当前累计，没有历史曲线。 */
-  video_scatter(lane, snap, axis) {
-    const videos = resolve(snap, lane.path) || [];
-    const inAxis = new Set(axis);
-    const bag = lane.from_rates ? 'rates' : 'stats';
-    const points = videos
-      .filter(v => v.pubdate && inAxis.has(v.pubdate) && v.latest)
-      .map(v => {
-        const value = (v.latest[bag] || {})[lane.field];
-        return (value == null) ? null : { date: v.pubdate, value, meta: v };
-      })
-      .filter(Boolean);
-    return {
-      series: [{ name: lane.title, kind: 'scatter', color: color(lane.color), points }],
-      empty: videos.length === 0,
-    };
-  },
-
-  /* 全部登记视频的日增量合计。跨天的增量会被记在结束日，
-     因此 span_days > 1 的点标记出来，不假装是单日增量。 */
-  video_delta(lane, snap, axis) {
-    const videos = resolve(snap, lane.path) || [];
-    const sums = new Map();
-    const spans = new Map();
-    videos.forEach(v => (v.points || []).forEach(p => {
-      const d = (p.deltas || {})[lane.field];
-      if (d == null) return;
-      sums.set(p.date_local, (sums.get(p.date_local) || 0) + d);
-      if ((p.span_days || 1) > 1) spans.set(p.date_local, p.span_days);
-    }));
-    return {
-      series: [{
-        name: lane.title, kind: 'bar', color: color(lane.color),
-        values: axis.map(d => sums.has(d) ? sums.get(d) : null),
-        spans,
-      }],
-      empty: sums.size === 0,
-    };
-  },
-
-  /* 语种构成堆叠面积。分桶是 7 天日历窗口，把桶内每一天都填成该桶的占比，
-     因此这条轨道呈现的是阶梯而不是逐日曲线 —— 日粒度的语种占比在低评测量
-     的日期噪声极大，算不出有意义的数字。 */
-  stacked_share(lane, snap, axis) {
-    const share = resolve(snap, lane.path);
-    if (!share || !share.buckets || !share.buckets.length) {
-      return { series: [], empty: true };
-    }
-    const byDate = new Map();
-    share.buckets.forEach(b => {
-      dateRange(b.start, b.end).forEach(d => byDate.set(d, b.shares));
-    });
-    const langs = share.languages || [];
-    // 顺序色阶：语种已按占比排序，由深到浅对应由大到小。
-    // 「其他」固定用中性灰，明确它不是色阶里的一档。
-    const ramp = config.share_ramp || [];
-    const rampFor = (lang, i) => {
-      if (lang === 'other') return config.share_other || C.baseline;
-      const span = langs.filter(l => l !== 'other').length || 1;
-      const idx = Math.round(i / Math.max(span - 1, 1) * (ramp.length - 1));
-      return ramp[Math.min(idx, ramp.length - 1)] || color('slot1');
-    };
-    return {
-      series: langs.map((lang, i) => ({
-        name: LANG_LABEL[lang] || lang,
-        kind: 'line', stack: 'lang', area: true,
-        color: rampFor(lang, i),
-        opacity: 1,
-        width: 0,
-        values: axis.map(d => {
-          const s = byDate.get(d);
-          return s ? (s[lang] ?? null) : null;
-        }),
-      })),
-      empty: false,
-    };
-  },
+const LANG_LABEL = {
+  english: 'English', russian: 'Русский', schinese: '简体中文', tchinese: '繁體中文',
+  japanese: '日本語', koreana: '한국어', spanish: 'Español', latam: 'Español (LATAM)',
+  brazilian: 'Português (BR)', german: 'Deutsch', french: 'Français',
+  thai: 'ไทย', vietnamese: 'Tiếng Việt', indonesian: 'Indonesia',
+  polish: 'Polski', turkish: 'Türkçe', italian: 'Italiano', ukrainian: 'Українська',
+  other: '其他',
 };
 
-/* ---------- 视图状态：URL → localStorage → 配置默认值 ---------- */
+/* ---------- 快照加载 ---------- */
+
+async function snapshotOf(gameId) {
+  if (!snapCache.has(gameId)) {
+    const res = await fetch(`../data/snapshot_${gameId}.json`);
+    snapCache.set(gameId, await res.json());
+  }
+  return snapCache.get(gameId);
+}
+
+/* 对象本身只有元信息，快照按需挂上去 —— 三份快照合计 1.3MB，
+   只有真正被加进对比列表的游戏才值得下载。 */
+async function hydrate(list) {
+  await Promise.all([...new Set(list.map(s => s.gameId))].map(snapshotOf));
+  list.forEach(s => { s.snap = snapCache.get(s.gameId); });
+  return list;
+}
+
+/* ---------- 视图状态 ---------- */
 
 function defaultLaneState() {
   return config.lanes.map(l => ({
@@ -239,15 +77,15 @@ function applyPreset(name) {
 }
 
 function serializeView() {
-  const on = laneState.filter(l => l.enabled)
-    .map(l => `${l.id}.${l.height}`).join(',');
-  return `g=${currentGame}&r=${rangeDays}&l=${on}`;
+  const on = laneState.filter(l => l.enabled).map(l => `${l.id}.${l.height}`).join(',');
+  return `s=${subjects.map(s => s.key).join('|')}&a=${align}&r=${rangeDays}&l=${on}`;
 }
 
 function parseView(str) {
   const params = new URLSearchParams(str);
   const out = {};
-  if (params.get('g')) out.game = params.get('g');
+  if (params.get('s')) out.subjectKeys = params.get('s').split('|').filter(Boolean);
+  if (params.get('a')) out.align = params.get('a') === 'day0' ? 'day0' : 'calendar';
   if (params.get('r') !== null) out.range = Number(params.get('r'));
   const l = params.get('l');
   if (l) {
@@ -280,7 +118,8 @@ function restoreView() {
   }
   if (restored.lanes) laneState = restored.lanes;
   if (restored.range !== undefined) rangeDays = restored.range;
-  return restored.game || null;
+  if (restored.align) align = restored.align;
+  return restored.subjectKeys || null;
 }
 
 function persistView() {
@@ -288,24 +127,7 @@ function persistView() {
   history.replaceState(null, '', '#' + serializeView());
 }
 
-/* ---------- 数据装配 ---------- */
-
-function buildAxis(snap) {
-  const dates = [];
-  const push = d => { if (d) dates.push(d); };
-
-  (snap.review_history || []).forEach(r => push(r.date_local));
-  (snap.online_series || []).forEach(r => push(r.date_local));
-  (snap.online_daily || []).forEach(r => push(r.date_local));
-  ((snap.review_profile || {}).daily || []).forEach(r => push(r.date_local));
-  (((snap.bilibili || {}).videos) || []).forEach(v => push(v.pubdate));
-  (((snap.youtube || {}).videos) || []).forEach(v => push(v.pubdate));
-  push(snap.snapshot_date);
-
-  if (!dates.length) return [];
-  dates.sort();
-  return dateRange(dates[0], dates[dates.length - 1]);
-}
+/* ---------- 渲染总入口 ---------- */
 
 function activeLanes() {
   const byId = new Map(config.lanes.map(l => [l.id, l]));
@@ -314,114 +136,26 @@ function activeLanes() {
     .map(s => ({ ...byId.get(s.id), height: s.height }));
 }
 
-function slice(axis) {
-  if (!rangeDays) return { from: 0, to: axis.length - 1 };
-  const to = axis.length - 1;
-  return { from: Math.max(0, to - rangeDays + 1), to };
-}
-
-/* ---------- 图表 ---------- */
-
-const LANE_GAP = 46;     // 轨道之间的留白，需容纳轨道标题
-const CHART_TOP = 44;
-const CHART_BOTTOM = 42;
-
-function laneTitle(lane, top, note) {
-  const sub = [lane.subtitle, note].filter(Boolean).join(' · ');
+function buildCtx() {
   return {
-    text: `{h|${lane.title}}` + (sub ? `  {s|${sub}}` : ''),
-    left: 2, top: top - 30,
-    textStyle: {
-      fontFamily: FONT,
-      rich: {
-        h: { fontSize: 12.5, fontWeight: 600, color: C.primary, fontFamily: FONT },
-        s: { fontSize: 11.5, color: C.muted, fontFamily: FONT },
-      },
-    },
+    axis: buildAxis(subjects, align, rangeDays),
+    subjects,
+    multi: subjects.length > 1,
   };
 }
 
-function boundaryMarkLine(boundaries, withLabel) {
-  return {
-    silent: true, symbol: 'none',
-    lineStyle: { color: C.baseline, width: 1 },
-    label: withLabel ? {
-      show: true, position: 'start', distance: 6,
-      formatter: p => p.name, fontSize: 11, color: C.secondary,
-      fontFamily: FONT, fontWeight: 500,
-      backgroundColor: C.surface, padding: [2, 5], borderRadius: 3,
-    } : { show: false },
-    data: boundaries.map(b => ({
-      xAxis: b.date_local, name: (b.version_id || '') + ' 上线',
-    })),
-  };
-}
-
-function buildLaneSeries(def, laneIndex, axisSlice, boundaries, isFirst) {
-  const base = {
-    xAxisIndex: laneIndex, yAxisIndex: laneIndex,
-    name: def.name,
-    markLine: boundaryMarkLine(boundaries, isFirst),
-  };
-
-  if (def.kind === 'scatter') {
-    return {
-      ...base, type: 'scatter',
-      data: (def.points || []).map(p => ({ value: [p.date, p.value], meta: p.meta })),
-      symbolSize: d => {
-        const v = Math.abs(d[1]) || 0;
-        // 面积随数值开方增长：直接用数值做直径会让大视频吞掉整条轨道
-        return Math.max(9, Math.min(26, 9 + Math.sqrt(v) / 160));
-      },
-      itemStyle: { color: def.color, opacity: .85,
-                   borderColor: C.surface, borderWidth: 2 },
-    };
-  }
-
-  if (def.kind === 'bar') {
-    return {
-      ...base, type: 'bar',
-      data: def.values,
-      itemStyle: { color: def.color, borderRadius: [3, 3, 0, 0] },
-      barMaxWidth: 9,
-    };
-  }
-
-  return {
-    ...base, type: 'line',
-    data: def.values,
-    stack: def.stack,
-    showSymbol: !!def.symbol,
-    symbolSize: 8,
-    smooth: !!def.smooth,
-    connectNulls: false,
-    areaStyle: def.area ? { opacity: def.opacity ?? .85 } : undefined,
-    lineStyle: {
-      color: def.color,
-      width: def.width === 0 ? 0 : (def.width || 2),
-      opacity: def.opacity ?? 1,
-      type: def.dashed ? 'dashed' : 'solid',
-    },
-    itemStyle: { color: def.color, borderColor: C.surface,
-                 borderWidth: def.symbol ? 2 : 0 },
-    endLabel: def.endLabel ? {
-      show: true, fontFamily: FONT, fontSize: 11.5, fontWeight: 600,
-      color: def.color, distance: 6,
-      formatter: p => p.value != null ? p.value.toFixed(2) + '%' : '',
-    } : { show: false },
-  };
-}
-
-function render() {
-  const axisFull = buildAxis(snapshot);
-  if (!axisFull.length) return;
-  const { from, to } = slice(axisFull);
-  const axis = axisFull.slice(from, to + 1);
-
+function renderAll() {
+  const ctx = buildCtx();
   const lanes = activeLanes();
-  const boundaries = (snapshot.events || []).filter(e => e.is_version_boundary);
-
   const el = document.getElementById('pulse');
+
+  if (!subjects.length) {
+    chart.clear();
+    el.style.height = '120px';
+    document.getElementById('legend').innerHTML =
+      '<span class="muted">还没有选择对比对象。用上方的「＋ 添加对象」挑一个游戏或版本。</span>';
+    return;
+  }
   if (!lanes.length) {
     chart.clear();
     el.style.height = '120px';
@@ -430,144 +164,97 @@ function render() {
     return;
   }
 
-  // 轨道高度可调，因此容器高度必须跟着算，不能写死
-  const totalHeight = CHART_TOP + CHART_BOTTOM
-    + lanes.reduce((s, l) => s + l.height, 0) + LANE_GAP * (lanes.length - 1);
-  el.style.height = totalHeight + 'px';
-
-  const grids = [], xAxes = [], yAxes = [], series = [], titles = [];
-  const laneData = [];
-  let top = CHART_TOP;
-
-  lanes.forEach((lane, i) => {
-    const adapter = ADAPTERS[lane.adapter];
-    const built = adapter ? adapter(lane, snapshot, axis)
-                          : { series: [], empty: true, note: '未知 adapter' };
-    laneData.push({ lane, built });
-
-    grids.push({ left: 64, right: 80, top, height: lane.height });
-
-    const isLast = i === lanes.length - 1;
-    xAxes.push({
-      gridIndex: i, type: 'category', data: axis,
-      boundaryGap: lane.chart === 'bar',
-      axisLine: { lineStyle: { color: C.baseline } },
-      axisTick: { show: false },
-      axisLabel: isLast ? {
-        color: C.muted, fontSize: 11, fontFamily: FONT, margin: 12,
-        formatter: v => v.slice(5), hideOverlap: true,
-      } : { show: false },
-      splitLine: { show: false },
-      axisPointer: { label: { show: isLast, formatter: p => p.value,
-                              backgroundColor: C.primary, fontFamily: FONT } },
-    });
-
-    const isShare = lane.adapter === 'stacked_share';
-    yAxes.push({
-      gridIndex: i,
-      axisLine: { show: false }, axisTick: { show: false },
-      splitLine: { lineStyle: { color: C.gridline, width: 1 } },
-      axisLabel: { color: C.muted, fontSize: 11, fontFamily: FONT,
-                   formatter: unitFmt(lane.unit) },
-      max: isShare ? 100 : undefined,
-      // 好评率这类高位窄幅指标，从 0 起会把全部变化压成一条直线
-      min: (lane.unit === 'percent' && !isShare)
-        ? (v => Math.max(0, Math.floor(v.min - 4))) : undefined,
-    });
-
-    const note = built.empty ? '暂无数据' : built.note;
-    titles.push(laneTitle(lane, top, note));
-
-    built.series.forEach(def => {
-      series.push(buildLaneSeries(def, i, axis, boundaries, i === 0));
-    });
-
-    top += lane.height + LANE_GAP;
-  });
-
-  chart.setOption({
-    animationDuration: 380,
-    backgroundColor: 'transparent',
-    textStyle: { fontFamily: FONT },
-    title: titles,
-    grid: grids, xAxis: xAxes, yAxis: yAxes,
-    axisPointer: {
-      link: [{ xAxisIndex: 'all' }],
-      lineStyle: { color: C.baseline, width: 1 },
-      label: { backgroundColor: C.primary, fontFamily: FONT },
-    },
-    tooltip: {
-      trigger: 'axis',
-      backgroundColor: '#fff',
-      borderColor: 'rgba(11,11,11,0.12)', borderWidth: 1,
-      padding: [10, 12],
-      textStyle: { color: C.primary, fontSize: 12.5, fontFamily: FONT },
-      extraCssText: 'box-shadow:0 6px 22px rgba(11,11,11,0.10);border-radius:9px;',
-      formatter: params => buildTooltip(params, axis, laneData, boundaries),
-    },
-    series,
-  }, true);
-
-  renderLegend(laneData);
+  laneData = renderPulse(chart, el, lanes, ctx);
+  renderLegend(ctx);
+  renderPulseNote(ctx);
+  renderTiles(ctx);
+  renderWindowTable(ctx);
+  renderCadenceTable(ctx);
+  renderVersionTable(ctx);
+  renderLangSection(ctx);
+  renderDataTable(ctx);
+  renderSources(ctx);
+  persistView();
 }
 
-function buildTooltip(params, axis, laneData, boundaries) {
-  if (!params.length) return '';
-  const date = params[0].axisValueLabel || params[0].axisValue;
-  const at = axis.indexOf(date);
-  if (at < 0) return '';
-
-  const row = (c, label, value, extra) =>
-    `<div style="display:flex;align-items:center;gap:7px;margin:3px 0">
-       <span style="width:8px;height:8px;border-radius:2px;background:${c};flex:none"></span>
-       <span style="color:${C.secondary}">${label}</span>
-       <span style="margin-left:auto;font-weight:600;font-variant-numeric:tabular-nums">${value}</span>
-     </div>` + (extra ? `<div style="margin-left:15px;color:${C.muted};font-size:11px">${extra}</div>` : '');
-
-  let s = `<div style="font-weight:600;margin-bottom:6px">${date}</div>`;
-  let any = false;
-
-  laneData.forEach(({ lane, built }) => {
-    const toText = tipFmt(lane.unit);
-    built.series.forEach(def => {
-      if (def.points) {
-        def.points.filter(p => p.date === date).forEach(p => {
-          any = true;
-          const m = p.meta || {};
-          s += row(def.color, def.name, toText(p.value),
-            `${(m.title || '').slice(0, 42)}${m.version_id ? ' · ' + m.version_id + ' 版本' : ''}`);
-        });
-        return;
-      }
-      const v = def.values ? def.values[at] : null;
-      if (v == null) return;
-      any = true;
-      const span = def.spans && def.spans.get(date);
-      s += row(def.color, def.name, toText(v),
-               span ? `跨 ${span} 天的增量，不是单日值` : '');
-    });
-  });
-
-  if (!any) s += `<div style="color:${C.muted}">该日无数据</div>`;
-
-  const b = boundaries.find(x => x.date_local === date);
-  if (b) s += `<div style="margin-top:7px;padding-top:7px;border-top:1px solid ${C.gridline};
-                 color:${C.primary};font-weight:600">★ ${b.version_id} 版本更新</div>`;
-  const p = (snapshot.events || []).find(
-    x => x.date_local === date && x.type === 'version_preview');
-  if (p) s += `<div style="margin-top:6px;color:${C.muted}">${p.version_id} 前瞻节目</div>`;
-  const bu = (snapshot.events || []).find(
-    x => x.date_local === date && x.type === 'build_update');
-  if (bu) s += `<div style="margin-top:6px;color:${C.muted}">构建 ${bu.buildid}（third-party 旁证）</div>`;
-  return s;
+function renderPulseNote(ctx) {
+  const parts = [];
+  parts.push(ctx.axis.align === 'day0'
+    ? `横轴是「各自起点后的第 N 天」：游戏从上线日起算，版本从该版本更新日起算。`
+    : `轨道共享同一日历日期轴。`);
+  if (ctx.axis.align === 'day0' && ctx.multi) {
+    parts.push(`窗口长度不齐，已统一截断到最短的 ${ctx.axis.truncatedTo} 天。`);
+  }
+  parts.push('各轨道单位不同，分别独立计量，不共用纵轴。');
+  parts.push(ctx.multi
+    ? '颜色代表对比对象；同一游戏的多个版本共用基色、以明度区分。'
+    : '颜色在轨道内部区分指标系列。');
+  parts.push('轨道由 config/dashboard.yml 定义，可在右上角「自定义轨道」中增删、排序与调整高度。');
+  document.getElementById('pulseNote').textContent = parts.join(' ');
 }
 
-/* ---------- 图例：显示当前轨道的系列与口径提示 ---------- */
+/* ---------- 对比对象控件 ---------- */
 
-function renderLegend(laneData) {
+function renderSubjectBar() {
+  const chips = document.getElementById('subjectChips');
+  chips.innerHTML = subjects.map(s => `
+    <span class="subject-chip" data-key="${s.key}" title="${s.sublabel}">
+      <span class="mark" style="background:${s.color}"></span>
+      <span class="sc-label">${s.label}</span>
+      <button class="sc-x" data-remove="${s.key}" title="移除">×</button>
+    </span>`).join('') ||
+    '<span class="muted" style="font-size:12px">未选择对象</span>';
+
+  chips.querySelectorAll('[data-remove]').forEach(btn => {
+    btn.onclick = async () => {
+      subjects = subjects.filter(s => s.key !== btn.dataset.remove);
+      paintSubjects(subjects.map(s => rebase(s)));
+      await refresh();
+    };
+  });
+
+  const chosen = new Set(subjects.map(s => s.key));
+  const sel = document.getElementById('subjectAdd');
+  const groups = catalog.map(g => {
+    const opts = [`<option value="${g.game_id}" ${chosen.has(g.game_id) ? 'disabled' : ''}>整段 · ${g.short_name}</option>`];
+    (g.versions || []).slice().reverse().forEach(v => {
+      const key = `${g.game_id}@${v.key}`;
+      const tail = v.open_ended ? '进行中' : `${v.days} 天`;
+      opts.push(`<option value="${key}" ${chosen.has(key) ? 'disabled' : ''}>${g.short_name} ${v.version_id} · ${v.date_local} · ${tail}</option>`);
+    });
+    return `<optgroup label="${g.short_name}">${opts.join('')}</optgroup>`;
+  }).join('');
+  sel.innerHTML = `<option value="">＋ 添加对象</option>${groups}`;
+}
+
+/* 移除对象后其余对象要换回自己的基色，否则上一次的明度偏移会留在身上。 */
+function rebase(s) {
+  const entry = catalog.find(g => g.game_id === s.gameId);
+  return entry ? { ...s, color: entry.color } : s;
+}
+
+async function refresh() {
+  await hydrate(subjects);
+  renderSubjectBar();
+  renderAll();
+}
+
+/* ---------- 图例 ---------- */
+
+function renderLegend(ctx) {
   const el = document.getElementById('legend');
+  if (ctx.multi) {
+    // 多对象时图例的主体是对象本身，点击可临时隐藏
+    el.innerHTML = subjects.map(s => `
+      <div class="legend-item" data-subject="${s.key}">
+        <span class="mark" style="background:${s.color}"></span>
+        <span style="font-weight:500">${s.label}</span>
+        <span style="color:${C.muted}">· ${s.sublabel}</span>
+      </div>`).join('');
+    return;
+  }
   el.innerHTML = laneData.map(({ lane, built }) => {
-    const marks = built.series.map(def => {
+    const marks = built.series.slice(0, 8).map(def => {
       const shape = def.kind === 'scatter' ? 'mark dot'
                   : def.kind === 'bar' ? 'mark bar' : 'mark';
       return `<span class="${shape}" style="background:${def.color}"></span>
@@ -577,6 +264,313 @@ function renderLegend(laneData) {
       ? `<span style="color:${C.muted}">· ${lane.caveat}</span>` : '';
     return `<div class="legend-item" style="cursor:default">${marks}${caveat}</div>`;
   }).join('');
+}
+
+/* ---------- 窗口统计 ---------- */
+
+function windowStats(subject) {
+  const w = subject.window;
+  const rows = (subject.snap.review_history || [])
+    .filter(r => r.date_local >= w.start && r.date_local <= w.end);
+  const reviews = rows.reduce((s, r) => s + (r.new_reviews || 0), 0);
+  const positive = rows.reduce((s, r) => s + (r.new_positive || 0), 0);
+  // 在线人数只有「现在」这一个观测值，无法回溯。已经结束的版本窗口
+  // 拿当前在线来代表，会让两个历史版本显示出同一个数 —— 那不是它们
+  // 各自窗口里的在线，只是今天的在线。所以窗口已结束时一律留空。
+  const live = subject.kind !== 'version' || subject.openEnded;
+  const online = live
+    ? (subject.snap.online_series || []).filter(o => o.value != null) : [];
+  const versions = (subject.snap.events || []).filter(
+    e => e.is_version_boundary && e.date_local >= w.start && e.date_local <= w.end);
+
+  const last7 = rows.slice(-7), prev7 = rows.slice(-14, -7);
+  const avg = a => a.length ? a.reduce((s, r) => s + (r.new_reviews || 0), 0) / a.length : null;
+  const a7 = avg(last7), p7 = avg(prev7);
+
+  return {
+    days: rows.length,
+    reviews,
+    dailyAvg: rows.length ? reviews / rows.length : null,
+    rate: reviews ? positive / reviews * 100 : null,
+    cumRate: rows.length ? rows[rows.length - 1].cumulative_review_rate : null,
+    totalReviews: rows.length ? rows[rows.length - 1].cumulative_reviews : null,
+    online: online.length ? online[online.length - 1].value : null,
+    onlinePoints: online.length,
+    onlineLive: live,
+    versions: versions.length,
+    versionList: versions,
+    avg7: a7,
+    delta7: (a7 != null && p7) ? (a7 - p7) / p7 * 100 : null,
+  };
+}
+
+const deltaHtml = d => d == null ? ''
+  : `<span class="${d >= 0 ? 'good' : 'bad'}">${d >= 0 ? '+' : ''}${d.toFixed(1)}%</span>`;
+
+/* ---------- 指标卡 ---------- */
+
+function renderTiles(ctx) {
+  const box = document.getElementById('tiles');
+
+  // 单个游戏对象：保留原来那组更细的指标卡
+  if (!ctx.multi && subjects[0].kind === 'game') {
+    box.style.gridTemplateColumns = '';
+    box.innerHTML = singleGameTiles(subjects[0]);
+    return;
+  }
+
+  box.style.gridTemplateColumns = `repeat(${Math.min(subjects.length, 4)},1fr)`;
+  box.innerHTML = subjects.map(s => {
+    const w = windowStats(s);
+    const onlineNote = !w.onlineLive ? '窗口已结束 · 在线无法回溯'
+      : w.onlinePoints ? `${fmt(w.online)} 在线 · ${w.onlinePoints} 个采集点`
+      : '在线尚未采集';
+    return `<div class="tile">
+      <div class="k"><span class="swatch" style="background:${s.color}"></span>${s.label}</div>
+      <div class="v">${w.dailyAvg != null ? w.dailyAvg.toFixed(1) : '—'}<span class="unit">条/日</span></div>
+      <div class="n">${deltaHtml(w.delta7)} ${w.delta7 != null ? '近 7 日对比前 7 日' : '窗口内日均新增评测'}</div>
+      <div class="n" style="margin-top:2px">窗口好评率 ${pct(w.rate)} · ${fmt(w.reviews)} 条 / ${w.days} 天</div>
+      <div class="n" style="margin-top:2px">${onlineNote}</div>
+    </div>`;
+  }).join('');
+}
+
+function singleGameTiles(subject) {
+  const snap = subject.snap;
+  const w = windowStats(subject);
+  const bili = (snap.bilibili || {}).totals || {};
+  const bounds = (snap.events || []).filter(e => e.is_version_boundary);
+  const current = bounds[bounds.length - 1];
+  const profile = (snap.review_profile || {}).daily || [];
+  const daysSince = current ? daysBetween(current.date_local, snap.snapshot_date) : null;
+
+  // 中位时长取最近 14 天里有值的那些天，单日样本量太小
+  const recent = profile.slice(-14).map(r => r.playtime_at_review_median).filter(v => v != null);
+  const medianPlaytime = recent.length
+    ? recent.sort((a, b) => a - b)[Math.floor(recent.length / 2)] : null;
+
+  const tiles = [
+    { k: 'Steam 同时在线', swatch: color('slot7'),
+      v: w.onlinePoints ? fmt(w.online) : '—',
+      n: w.onlinePoints ? `${w.onlinePoints} 个采集点 · 历史不可回填` : '尚未采集' },
+    { k: '累计好评率', swatch: color('slot3'),
+      v: w.cumRate != null ? w.cumRate.toFixed(2) : '—', unit: '%',
+      n: w.totalReviews != null ? `${fmt(w.totalReviews)} 条评测` : '—' },
+    { k: '近 7 日均新增评测', swatch: color('slot1'),
+      v: w.avg7 != null ? w.avg7.toFixed(1) : '—',
+      n: w.delta7 != null ? `${deltaHtml(w.delta7)} 对比前 7 日` : '—' },
+    { k: '评测者中位时长', swatch: color('slot2'),
+      v: medianPlaytime != null ? (medianPlaytime / 60).toFixed(1) : '—', unit: 'h',
+      n: '近 14 天 · 写评测时已玩时长' },
+    { k: 'B 站互动率', swatch: color('slot5'),
+      v: bili.rates && bili.rates.engagement != null
+        ? bili.rates.engagement.toFixed(2) : '—', unit: '%',
+      n: bili.videos ? `${bili.videos} 支官方视频 · 点赞+投币+收藏` : '—' },
+    { k: '当前版本',
+      v: current ? current.version_id : '—',
+      n: daysSince != null ? `上线 ${daysSince} 天 · ${current.date_local}` : '—' },
+  ];
+
+  return tiles.map(t => `
+    <div class="tile">
+      <div class="k">${t.swatch ? `<span class="swatch" style="background:${t.swatch}"></span>` : ''}${t.k}</div>
+      <div class="v">${t.v}${t.unit ? `<span class="unit">${t.unit}</span>` : ''}</div>
+      <div class="n">${t.n}</div>
+    </div>`).join('');
+}
+
+/* ---------- 窗口对照表 ---------- */
+
+function renderWindowTable(ctx) {
+  const note = ctx.axis.align === 'day0'
+    ? `各对象按自己的起点对齐，统一截断到最短窗口的 ${ctx.axis.truncatedTo} 天。下表统计的是各对象**自己的完整窗口**，不受截断影响。`
+    : `下表统计的是各对象自己的完整窗口。窗口之外该游戏可能已在运营，不代表数值为 0。`;
+  document.getElementById('cmpWindowNote').textContent = note;
+
+  document.querySelector('#cmpTable tbody').innerHTML = subjects.map(s => {
+    const w = windowStats(s);
+    return `<tr>
+      <td><span class="swatch" style="display:inline-block;width:8px;height:8px;
+           border-radius:2px;background:${s.color};margin-right:6px"></span>${s.label}
+          <div class="muted" style="font-size:11px">${s.window.start} → ${s.window.end}</div></td>
+      <td class="num">${fmt(w.reviews)}</td>
+      <td class="num"><b>${w.dailyAvg != null ? w.dailyAvg.toFixed(1) : '—'}</b></td>
+      <td class="num">${pct(w.rate)}</td>
+      <td class="num">${w.onlinePoints ? fmt(w.online)
+        : `<span class="muted" title="${w.onlineLive ? '尚未采集' : '窗口已结束，在线人数无法回溯'}">—</span>`}</td>
+      <td class="num">${w.versions}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ---------- 版本节奏表 ---------- */
+
+function renderCadenceTable(ctx) {
+  const games = [...new Set(subjects.map(s => s.gameId))];
+  document.querySelector('#cadenceTable tbody').innerHTML = games.map(gid => {
+    const entry = catalog.find(g => g.game_id === gid);
+    const snap = snapCache.get(gid);
+    const bounds = (snap.events || []).filter(e => e.is_version_boundary);
+    const recent = bounds.slice(-6);
+    let gap = '—';
+    if (recent.length >= 2) {
+      const days = [];
+      for (let i = 1; i < recent.length; i++) {
+        days.push(daysBetween(recent[i - 1].date_local, recent[i].date_local));
+      }
+      gap = Math.round(days.reduce((a, b) => a + b, 0) / days.length) + ' 天';
+    }
+    const list = recent.length
+      ? recent.map(b => `<span class="chip">${b.version_id}</span>`).join(' ')
+      : '<span class="muted">无版本记录</span>';
+    return `<tr>
+      <td><span class="swatch" style="display:inline-block;width:8px;height:8px;
+           border-radius:2px;background:${entry.color};margin-right:6px"></span>${entry.short_name}</td>
+      <td>${list}</td>
+      <td class="num">${gap}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ---------- 版本前后 7 天对比表（pipeline 算好的结果） ---------- */
+
+function renderVersionTable(ctx) {
+  const games = [...new Set(subjects.map(s => s.gameId))];
+  // 选了具体版本时只列这些版本，否则列该游戏全部有完整窗口的版本
+  const pinned = new Set(subjects.filter(s => s.kind === 'version').map(s => s.versionKey));
+
+  const rows = [];
+  let fields = null;
+  games.forEach(gid => {
+    const entry = catalog.find(g => g.game_id === gid);
+    const snap = snapCache.get(gid);
+    ((snap.review_profile || {}).version_windows || [])
+      .filter(w => w.complete)
+      .filter(w => !pinned.size || pinned.has(w.date_local))
+      .forEach(w => {
+        fields = fields || w.comparisons;
+        rows.push({ entry, w, multi: games.length > 1 });
+      });
+  });
+
+  const tb = document.querySelector('#versionTable tbody');
+  const head = document.querySelector('#versionTable thead tr');
+
+  if (!rows.length) {
+    head.innerHTML = '<th>版本</th><th>更新日</th>';
+    tb.innerHTML = `<tr><td colspan="8" class="muted">所选对象没有具备完整前后 7 天窗口的版本</td></tr>`;
+    document.getElementById('versionNote').textContent =
+      '版本更新会同时带来新玩家涌入与老玩家回流，评测量变化同时包含两者，不能单独归因于内容质量。';
+    return;
+  }
+
+  head.innerHTML = `<th>版本</th><th>更新日</th>` +
+    fields.map(c => `<th class="num">${c.label}</th>`).join('');
+
+  const cell = c => {
+    if (c.before == null || c.after == null) return `<td class="num muted">—</td>`;
+    const unit = c.change_kind === 'pp' ? '%' : '';
+    const arrow = `<span class="muted">${c.before}${unit} →</span> <b>${c.after}${unit}</b>`;
+    if (c.change == null) {
+      const why = c.confounded ? ` title="${c.note}"` : '';
+      return `<td class="num"${why}>${arrow}<br><span class="muted" style="font-size:11px">不可比</span></td>`;
+    }
+    const cls = c.change >= 0 ? 'pos' : 'neg';
+    const sign = c.change >= 0 ? '+' : '';
+    const suffix = c.change_kind === 'pp' ? 'pp' : '%';
+    return `<td class="num">${arrow}<br>
+            <span class="${cls}" style="font-size:11px">${sign}${c.change}${suffix}</span></td>`;
+  };
+
+  tb.innerHTML = rows.map(({ entry, w, multi }) => `
+    <tr>
+      <td>${multi ? `<span class="swatch" style="display:inline-block;width:8px;height:8px;
+             border-radius:2px;background:${entry.color};margin-right:6px"></span>` : ''}
+          <span class="chip">${w.version_id}</span></td>
+      <td class="muted">${w.date_local}</td>
+      ${w.comparisons.map(cell).join('')}
+    </tr>`).join('');
+
+  const notes = [];
+  if (pinned.size) notes.push('已按所选版本筛选。');
+  notes.push(`留存类指标不出现在本表：它依赖「今天的累计游玩时长」快照，
+    更新日之后的窗口离今天更近、观测时间必然更短，前后差值是窗口差而不是留存差。`);
+  notes.push(`版本更新会同时带来新玩家涌入与老玩家回流，评测量变化同时包含两者，
+    不能单独归因于内容质量。`);
+  document.getElementById('versionNote').textContent = notes.join(' ');
+}
+
+/* ---------- 语种 ---------- */
+
+function renderLangSection(ctx) {
+  const head = document.querySelector('#langTable thead tr');
+  const body = document.querySelector('#langTable tbody');
+
+  if (ctx.multi) {
+    // 多对象：行是语种，列是对象，直接看结构差异
+    const shares = subjects.map(s => ({ s, share: languageShareFor(s) }));
+    const langs = [...new Set(shares.flatMap(x => x.share.languages || []))]
+      .filter(l => l !== 'other').slice(0, 10);
+    head.innerHTML = `<th>语言</th>` + shares.map(x =>
+      `<th class="num"><span class="swatch" style="display:inline-block;width:8px;height:8px;
+        border-radius:2px;background:${x.s.color};margin-right:5px"></span>${x.s.label}</th>`).join('');
+    body.innerHTML = langs.map(lang => `<tr>
+      <td>${LANG_LABEL[lang] || lang}</td>
+      ${shares.map(x => {
+        const total = x.share.overall_total || 0;
+        const v = (x.share.overall || {})[lang];
+        return `<td class="num">${(v != null && total) ? (v / total * 100).toFixed(1) + '%' : '—'}</td>`;
+      }).join('')}
+    </tr>`).join('');
+    const windowed = shares.some(x => x.share.windowed);
+    document.getElementById('langNote').textContent =
+      '各对象窗口内评测的语言构成，按 7 天分桶汇总。' +
+      (windowed ? '版本对象只统计落在该版本窗口内的分桶，因此两列是各自的结构，不是同一个全局值。'
+                : '不同对象的回填起点不同，占比反映的是各自窗口内的结构，不是同一时间段的对照。');
+    return;
+  }
+
+  const subject = subjects[0];
+  const share = languageShareFor(subject);
+  const overall = share.overall || {};
+  const total = share.overall_total || 0;
+  const rows = Object.entries(overall).sort((a, b) => b[1] - a[1]);
+  const max = rows.length ? rows[0][1] : 1;
+
+  // 首尾两桶的占比差：说明玩家来源结构是否在变
+  const buckets = share.buckets || [];
+  const trend = new Map();
+  if (buckets.length >= 2) {
+    const first = buckets[0].shares, lastB = buckets[buckets.length - 1].shares;
+    Object.keys(overall).forEach(k => {
+      if (first[k] != null && lastB[k] != null) trend.set(k, lastB[k] - first[k]);
+    });
+  }
+
+  head.innerHTML = `<th>语言</th><th class="num">评测数</th><th style="width:40%">占比</th>
+                    <th class="num">首尾桶变化</th>`;
+  body.innerHTML = rows.map(([k, v]) => {
+    const t = trend.get(k);
+    const tText = t == null ? '' :
+      `<span class="${Math.abs(t) < 0.5 ? 'muted' : (t > 0 ? 'pos' : 'neg')}"
+             style="font-size:11px">${t > 0 ? '+' : ''}${t.toFixed(1)}pp</span>`;
+    return `<tr>
+      <td>${LANG_LABEL[k] || k}</td>
+      <td class="num">${fmt(v)}</td>
+      <td>
+        <div class="bar-cell">
+          <div class="bar-track"><div class="bar-fill"
+            style="width:${(v / max * 100).toFixed(1)}%;background:${color('slot1')}"></div></div>
+          <span style="min-width:44px;text-align:right;font-variant-numeric:tabular-nums">
+            ${total ? (v / total * 100).toFixed(1) : '—'}%</span>
+        </div>
+      </td>
+      <td class="num">${tText}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('langNote').textContent =
+    '回填期内全部评测的语言构成，反映 Steam 版本的实际玩家来源。末列为首个 7 天桶与最后一个 7 天桶的占比差；' +
+    '想看结构随时间怎么变，在「自定义轨道」里打开「评测语种结构变化」轨道。';
 }
 
 /* ---------- 自定义面板 ---------- */
@@ -589,14 +583,14 @@ function renderPanel() {
   const rowHtml = (state, idx, list, isOn) => {
     const lane = byId.get(state.id);
     if (!lane) return '';
-    const swatch = lane.color
-      ? `<span class="swatch" style="background:${color(lane.color)}"></span>`
-      : `<span class="swatch" style="background:${C.muted}"></span>`;
+    const swatch = `<span class="swatch" style="background:${lane.color ? color(lane.color) : C.muted}"></span>`;
+    const solo = lane.single_only
+      ? `<span class="chip" style="font-size:10px">仅单对象</span>` : '';
     return `
       <div class="lane-row" data-off="${isOn ? 'false' : 'true'}">
         <input type="checkbox" data-toggle="${state.id}" ${isOn ? 'checked' : ''}>
         ${swatch}
-        <div class="lane-name">${lane.title}<span>${lane.subtitle || ''}</span></div>
+        <div class="lane-name">${lane.title} ${solo}<span>${lane.subtitle || ''}</span></div>
         ${isOn ? `
           <button class="icon-btn" data-move="up" data-id="${state.id}"
                   ${idx === 0 ? 'disabled' : ''} title="上移">↑</button>
@@ -628,8 +622,7 @@ function renderPanel() {
       if (entry.enabled) {
         // 新启用的轨道放到已启用列表末尾，而不是停在原来的位置
         laneState = laneState.filter(s => s !== entry);
-        const lastOn = laneState.reduce(
-          (acc, s, i) => s.enabled ? i : acc, -1);
+        const lastOn = laneState.reduce((acc, s, i) => s.enabled ? i : acc, -1);
         laneState.splice(lastOn + 1, 0, entry);
       }
       afterLaneChange();
@@ -654,7 +647,7 @@ function renderPanel() {
       const entry = laneState.find(s => s.id === slider.dataset.height);
       entry.height = Number(slider.value);
       slider.parentElement.querySelector('.val').textContent = slider.value;
-      render();
+      renderAll();
     };
     slider.onchange = () => persistView();
   });
@@ -662,214 +655,58 @@ function renderPanel() {
 
 function afterLaneChange() {
   renderPanel();
-  render();
-  renderDataTable();
-  persistView();
+  renderAll();
   // 手工改过之后就不再对应任何预设
   document.getElementById('presetSelect').value = '';
 }
 
-/* ---------- 指标卡 ---------- */
+/* ---------- 数据表 ---------- */
 
-function renderTiles() {
-  const hist = snapshot.review_history || [];
-  const last = hist[hist.length - 1];
-  const online = (snapshot.online_series || []).filter(o => o.value != null);
-  const bili = (snapshot.bilibili || {}).totals || {};
-  const boundaries = (snapshot.events || []).filter(e => e.is_version_boundary);
-  const current = boundaries[boundaries.length - 1];
-  const profile = (snapshot.review_profile || {}).daily || [];
-
-  const last7 = hist.slice(-7), prev7 = hist.slice(-14, -7);
-  const avg = a => a.length ? a.reduce((s, r) => s + r.new_reviews, 0) / a.length : null;
-  const a7 = avg(last7), p7 = avg(prev7);
-  const delta = (a7 != null && p7) ? (a7 - p7) / p7 * 100 : null;
-  const daysSince = current ? daysBetween(current.date_local, snapshot.snapshot_date) : null;
-
-  // 中位时长取最近 14 天里有值的那些天，单日样本量太小
-  const recentMedians = profile.slice(-14)
-    .map(r => r.playtime_at_review_median).filter(v => v != null);
-  const medianPlaytime = recentMedians.length
-    ? recentMedians.sort((a, b) => a - b)[Math.floor(recentMedians.length / 2)]
-    : null;
-
-  const tiles = [
-    { k: 'Steam 同时在线', swatch: color('slot7'),
-      v: online.length ? fmt(online[online.length - 1].value) : '—',
-      n: online.length ? `${online.length} 个采集点 · 历史不可回填` : '尚未采集' },
-    { k: '累计好评率', swatch: color('slot3'),
-      v: last ? last.cumulative_review_rate.toFixed(2) : '—', unit: '%',
-      n: last ? `${fmt(last.cumulative_reviews)} 条评测` : '—' },
-    { k: '近 7 日均新增评测', swatch: color('slot1'),
-      v: a7 != null ? a7.toFixed(1) : '—',
-      n: delta != null
-        ? `<span class="${delta >= 0 ? 'good' : 'bad'}">${delta >= 0 ? '+' : ''}${delta.toFixed(1)}%</span> 对比前 7 日`
-        : '—' },
-    { k: '评测者中位时长', swatch: color('slot2'),
-      v: medianPlaytime != null ? (medianPlaytime / 60).toFixed(1) : '—', unit: 'h',
-      n: '近 14 天 · 写评测时已玩时长' },
-    { k: 'B 站互动率', swatch: color('slot5'),
-      v: bili.rates && bili.rates.engagement != null
-        ? bili.rates.engagement.toFixed(2) : '—', unit: '%',
-      n: bili.videos ? `${bili.videos} 支官方视频 · 点赞+投币+收藏` : '—' },
-    { k: '当前版本',
-      v: current ? current.version_id : '—',
-      n: daysSince != null ? `上线 ${daysSince} 天 · ${current.date_local}` : '—' },
-  ];
-
-  document.getElementById('tiles').innerHTML = tiles.map(t => `
-    <div class="tile">
-      <div class="k">${t.swatch ? `<span class="swatch" style="background:${t.swatch}"></span>` : ''}${t.k}</div>
-      <div class="v">${t.v}${t.unit ? `<span class="unit">${t.unit}</span>` : ''}</div>
-      <div class="n">${t.n}</div>
-    </div>`).join('');
-}
-
-/* ---------- 版本前后对比表（直接读 pipeline 算好的结果） ---------- */
-
-function renderVersionTable() {
-  const windows = ((snapshot.review_profile || {}).version_windows || [])
-    .filter(w => w.complete);
-  const tb = document.querySelector('#versionTable tbody');
-  const head = document.querySelector('#versionTable thead tr');
-
-  if (!windows.length) {
-    tb.innerHTML = `<tr><td colspan="8" class="muted">暂无具备完整前后 7 天窗口的版本</td></tr>`;
-    document.getElementById('versionNote').innerHTML =
-      '版本更新会同时带来新玩家涌入与老玩家回流，评测量变化同时包含两者，不能单独归因于内容质量。';
-    return;
-  }
-
-  const fields = windows[0].comparisons;
-  head.innerHTML = `<th>版本</th><th>更新日</th>` +
-    fields.map(c => `<th class="num">${c.label}</th>`).join('');
-
-  const cell = c => {
-    if (c.before == null || c.after == null) return `<td class="num muted">—</td>`;
-    const unit = c.change_kind === 'pp' ? '%' : '';
-    const arrow = `${c.before}${unit} → <b>${c.after}${unit}</b>`;
-    if (c.change == null) {
-      const why = c.confounded ? ` title="${c.note}"` : '';
-      return `<td class="num"${why}>${arrow}<br><span class="muted" style="font-size:11px">不可比</span></td>`;
-    }
-    const cls = c.change >= 0 ? 'pos' : 'neg';
-    const sign = c.change >= 0 ? '+' : '';
-    const suffix = c.change_kind === 'pp' ? 'pp' : '%';
-    return `<td class="num">${arrow}<br>
-            <span class="${cls}" style="font-size:11px">${sign}${c.change}${suffix}</span></td>`;
-  };
-
-  tb.innerHTML = windows.map(w => `
-    <tr>
-      <td><span class="chip">${w.version_id}</span></td>
-      <td class="muted">${w.date_local}</td>
-      ${w.comparisons.map(cell).join('')}
-    </tr>`).join('');
-
-  const incomplete = ((snapshot.review_profile || {}).version_windows || [])
-    .filter(w => !w.complete).map(w => w.version_id);
-  const notes = [];
-  if (incomplete.length) {
-    notes.push(`${incomplete.join('、')} 无完整前后窗口，已排除。`);
-  }
-  notes.push(`留存类指标不出现在本表：它依赖「今天的累计游玩时长」快照，
-    更新日之后的窗口离今天更近、观测时间必然更短，前后差值是窗口差而不是留存差。`);
-  notes.push(`版本更新会同时带来新玩家涌入与老玩家回流，评测量变化同时包含两者，
-    不能单独归因于内容质量。`);
-  document.getElementById('versionNote').innerHTML = notes.join(' ');
-}
-
-const LANG_LABEL = {
-  english: 'English', russian: 'Русский', schinese: '简体中文', tchinese: '繁體中文',
-  japanese: '日本語', koreana: '한국어', spanish: 'Español', latam: 'Español (LATAM)',
-  brazilian: 'Português (BR)', german: 'Deutsch', french: 'Français',
-  thai: 'ไทย', vietnamese: 'Tiếng Việt', indonesian: 'Indonesia',
-  polish: 'Polski', turkish: 'Türkçe', italian: 'Italiano', ukrainian: 'Українська',
-  other: '其他',
-};
-
-function renderLangTable() {
-  const share = (snapshot.review_profile || {}).language_share;
-  const overall = (share && share.overall) || {};
-  const total = (share && share.overall_total) || 0;
-  const rows = Object.entries(overall).sort((a, b) => b[1] - a[1]);
-  const max = rows.length ? rows[0][1] : 1;
-
-  // 首尾两桶的占比差：说明玩家来源结构是否在变
-  const buckets = (share && share.buckets) || [];
-  const trend = new Map();
-  if (buckets.length >= 2) {
-    const first = buckets[0].shares, lastB = buckets[buckets.length - 1].shares;
-    Object.keys(overall).forEach(k => {
-      if (first[k] != null && lastB[k] != null) trend.set(k, lastB[k] - first[k]);
-    });
-  }
-
-  document.querySelector('#langTable tbody').innerHTML = rows.map(([k, v]) => {
-    const t = trend.get(k);
-    const tText = t == null ? '' :
-      `<span class="${Math.abs(t) < 0.5 ? 'muted' : (t > 0 ? 'pos' : 'neg')}"
-             style="font-size:11px">${t > 0 ? '+' : ''}${t.toFixed(1)}pp</span>`;
-    return `
-    <tr>
-      <td>${LANG_LABEL[k] || k}</td>
-      <td class="num">${fmt(v)}</td>
-      <td>
-        <div class="bar-cell">
-          <div class="bar-track"><div class="bar-fill"
-            style="width:${(v / max * 100).toFixed(1)}%;background:${color('slot1')}"></div></div>
-          <span style="min-width:44px;text-align:right;font-variant-numeric:tabular-nums">
-            ${total ? (v / total * 100).toFixed(1) : '—'}%</span>
-        </div>
-      </td>
-      <td class="num">${tText}</td>
-    </tr>`;
-  }).join('');
-}
-
-/* ---------- 数据表：列跟随当前启用的轨道 ---------- */
-
-function datedColumns() {
-  const axisFull = buildAxis(snapshot);
-  const { from, to } = slice(axisFull);
-  const axis = axisFull.slice(from, to + 1);
+function datedColumns(ctx) {
   const cols = [];
   activeLanes().forEach(lane => {
-    if (!['series', 'video_delta'].includes(lane.adapter)) return;
-    const built = ADAPTERS[lane.adapter](lane, snapshot, axis);
+    if (!['series', 'video_delta', 'share_delta'].includes(lane.adapter)) return;
+    const built = ADAPTERS[lane.adapter](lane, ctx);
     built.series.forEach(def => {
       if (!def.values) return;
       cols.push({ name: def.name, unit: lane.unit, values: def.values });
     });
   });
-  return { axis, cols };
+  return cols;
 }
 
-function renderDataTable() {
-  const { axis, cols } = datedColumns();
-  const evByDate = new Map();
-  (snapshot.events || []).forEach(e => {
-    const arr = evByDate.get(e.date_local) || [];
-    if (e.is_version_boundary) arr.push(`★ ${e.version_id} 版本更新`);
-    else if (e.type === 'version_preview') arr.push(`${e.version_id} 前瞻`);
-    else if (e.type === 'build_update') arr.push(`构建 ${e.buildid}`);
-    else if (e.type === 'content') arr.push(e.label);
-    evByDate.set(e.date_local, arr);
-  });
+function renderDataTable(ctx) {
+  const cols = datedColumns(ctx);
+  const axis = ctx.axis.keys;
 
+  const evByKey = new Map();
+  if (!ctx.multi) {
+    (subjects[0].snap.events || []).forEach(e => {
+      const k = axisKeyOf(e.date_local, subjects[0], ctx.axis.align);
+      if (k === null) return;
+      const arr = evByKey.get(k) || [];
+      if (e.is_version_boundary) arr.push(`★ ${e.version_id} 版本更新`);
+      else if (e.type === 'version_preview') arr.push(`${e.version_id} 前瞻`);
+      else if (e.type === 'build_update') arr.push(`构建 ${e.buildid}`);
+      else if (e.type === 'content') arr.push(e.label);
+      evByKey.set(k, arr);
+    });
+  }
+
+  const label = ctx.axis.align === 'day0' ? '起点后天数' : '日期';
   document.querySelector('#dataTable thead tr').innerHTML =
-    `<th>日期</th>` + cols.map(c => `<th class="num">${c.name}</th>`).join('')
+    `<th>${label}</th>` + cols.map(c => `<th class="num">${c.name}</th>`).join('')
     + `<th>事件</th>`;
 
   const rows = [];
   for (let i = axis.length - 1; i >= 0; i--) {
-    const d = axis[i];
+    const k = axis[i];
     const cells = cols.map(c => {
       const v = c.values[i];
       return `<td class="num">${v == null ? '—' : tipFmt(c.unit)(v)}</td>`;
     }).join('');
-    rows.push(`<tr><td>${d}</td>${cells}
-               <td class="muted">${(evByDate.get(d) || []).join('、')}</td></tr>`);
+    rows.push(`<tr><td>${ctx.axis.align === 'day0' ? k + ' 天' : k}</td>${cells}
+               <td class="muted">${(evByKey.get(k) || []).join('、')}</td></tr>`);
   }
   document.querySelector('#dataTable tbody').innerHTML = rows.join('');
 }
@@ -891,61 +728,58 @@ function csvEscape(v) {
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
-function exportCsv() {
-  const { axis, cols } = datedColumns();
-  const evByDate = new Map();
-  (snapshot.events || []).forEach(e => {
-    const arr = evByDate.get(e.date_local) || [];
-    arr.push(e.label || e.title || e.type);
-    evByDate.set(e.date_local, arr);
-  });
+const exportSlug = () => subjects.map(s => s.key.replace('@', '_')).join('+') || 'empty';
 
-  const header = ['date', ...cols.map(c => c.name), 'events'];
+function exportCsv() {
+  const ctx = buildCtx();
+  const cols = datedColumns(ctx);
+  const header = [ctx.axis.align === 'day0' ? 'day' : 'date', ...cols.map(c => c.name)];
   const lines = [header.map(csvEscape).join(',')];
-  axis.forEach((d, i) => {
-    lines.push([d, ...cols.map(c => c.values[i] ?? ''),
-                (evByDate.get(d) || []).join(' / ')].map(csvEscape).join(','));
+  ctx.axis.keys.forEach((k, i) => {
+    lines.push([k, ...cols.map(c => c.values[i] ?? '')].map(csvEscape).join(','));
   });
   // BOM 让 Excel 正确识别 UTF-8，否则中文列名会乱码
-  downloadBlob(`gamepulse_${currentGame}_${axis[0]}_${axis[axis.length - 1]}.csv`,
-               '﻿' + lines.join('\n'), 'text/csv;charset=utf-8');
+  downloadBlob(`gamepulse_${exportSlug()}.csv`, '﻿' + lines.join('\n'),
+               'text/csv;charset=utf-8');
 }
 
 function exportVideosCsv() {
   const rows = [];
-  const push = (platform, videos, idKey) => (videos || []).forEach(v => {
-    const stats = (v.latest || {}).stats || {};
-    const rates = (v.latest || {}).rates || {};
-    rows.push({
-      platform, id: v[idKey], title: v.title, pubdate: v.pubdate,
-      character: v.character_name, version: v.version_id,
-      content_type: v.content_type,
-      view: stats.view, like: stats.like, coin: stats.coin,
-      favorite: stats.favorite, reply: stats.reply ?? stats.comment,
-      danmaku: stats.danmaku, share: stats.share,
-      engagement_rate: rates.engagement,
-      captured: (v.latest || {}).date_local,
-      ramp_available: (v.ramp || {}).available,
+  subjects.forEach(s => {
+    const push = (platform, videos, idKey) => (videos || []).forEach(v => {
+      const stats = (v.latest || {}).stats || {};
+      const rates = (v.latest || {}).rates || {};
+      rows.push({
+        subject: s.label, platform, id: v[idKey], title: v.title, pubdate: v.pubdate,
+        character: v.character_name, version: v.version_id,
+        content_type: v.content_type,
+        view: stats.view, like: stats.like, coin: stats.coin,
+        favorite: stats.favorite, reply: stats.reply ?? stats.comment,
+        danmaku: stats.danmaku, share: stats.share,
+        engagement_rate: rates.engagement,
+        captured: (v.latest || {}).date_local,
+        days_since_pub: (v.latest || {}).days_since_pub,
+        ramp_available: (v.ramp || {}).available,
+        ramp_first_day: (v.ramp || {}).first_capture_days_since_pub,
+      });
     });
+    push('bilibili', (s.snap.bilibili || {}).videos, 'bvid');
+    push('youtube', (s.snap.youtube || {}).videos, 'video_id');
   });
-  push('bilibili', (snapshot.bilibili || {}).videos, 'bvid');
-  push('youtube', (snapshot.youtube || {}).videos, 'video_id');
 
-  if (!rows.length) { alert('当前游戏没有登记视频。'); return; }
+  if (!rows.length) { alert('所选对象没有登记视频。'); return; }
   const header = Object.keys(rows[0]);
   const lines = [header.join(',')].concat(
     rows.map(r => header.map(h => csvEscape(r[h])).join(',')));
-  downloadBlob(`gamepulse_${currentGame}_videos.csv`,
-               '﻿' + lines.join('\n'), 'text/csv;charset=utf-8');
+  downloadBlob(`gamepulse_${exportSlug()}_videos.csv`, '﻿' + lines.join('\n'),
+               'text/csv;charset=utf-8');
 }
 
 function exportPng() {
-  const url = chart.getDataURL({
-    type: 'png', pixelRatio: 2, backgroundColor: '#fcfcfb',
-  });
+  const url = chart.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: '#fcfcfb' });
   const a = document.createElement('a');
   a.href = url;
-  a.download = `gamepulse_${currentGame}_${snapshot.snapshot_date}.png`;
+  a.download = `gamepulse_${exportSlug()}.png`;
   a.click();
 }
 
@@ -969,60 +803,52 @@ function flash(msg) {
 
 /* ---------- 来源与口径 ---------- */
 
-function renderSources() {
+function renderSources(ctx) {
+  const snap = subjects[0].snap;
   document.getElementById('sources').innerHTML =
-    (snapshot.sources || []).map(s => `
+    (snap.sources || []).map(s => `
       <div class="source">
         <span class="tag">${s.label}</span>
         <div class="t">${s.name}</div>
         <div class="d">${s.note}</div>
       </div>`).join('');
 
-  const cov = snapshot.review_history_coverage;
-  const online = (snapshot.online_series || []).filter(o => o.value != null).length;
-  const hourly = (snapshot.online_daily || []).length;
-  const yt = (snapshot.youtube || {}).available;
+  const onlinePts = subjects.map(s =>
+    (s.snap.online_series || []).filter(o => o.value != null).length);
+  const ramps = subjects.flatMap(s => ((s.snap.bilibili || {}).videos || []));
+  const rampReady = ramps.filter(v => (v.ramp || {}).available).length;
+
+  // 版本对象要报它自己那段窗口，不是整个游戏的回填覆盖 ——
+  // 否则「鸣潮 3.5」和「鸣潮 3.6」会并排显示同一个 444 天
+  const covLines = subjects.map(s => {
+    if (s.kind === 'version') {
+      return `${s.label} ${s.days} 天（${s.window.start} 起）`;
+    }
+    const cov = s.snap.review_history_coverage;
+    return `${s.label} ${cov ? cov.days + ' 天（' + cov.start + ' 起）' : '—'}`;
+  }).join('、');
 
   document.getElementById('caveat').innerHTML = `
     <b>口径限制</b>
-    评测历史由 Steam appreviews 游标翻页回填重建（${cov ? cov.days + ' 天，' + cov.start + ' 起' : '—'}），
+    评测历史由 Steam appreviews 游标翻页回填重建（${covLines}），
     只含<b>今天仍然存在</b>的评测，被删除或隐藏的不会出现，因此越早的日期越可能低估当日真实值。
     玩家结构指标同样基于这批评测，且<b>评测者不是玩家的随机样本</b>。
-    「评测后仍在玩」依赖今天的累计时长快照，观测窗口不足 14 天的日期一律留空，
-    并已排除在版本前后对比之外 —— 更新日之后的窗口必然更短，前后差值是窗口差不是留存差。
     Steam 同时在线人数<b>无法回填</b>（SteamDB 不可程序化访问、SteamCharts 未收录该 App），
-    目前有 ${online} 个逐日采集点、${hourly} 天小时级采样，需持续积累。
-    B 站与 YouTube 接口只返回<b>当前</b>累计值，没有历史曲线，散点表示"发布日 × 当前累计值"。
-    ${yt ? '' : 'YouTube 尚未配置 API Key，该平台数据为空。'}
+    目前各对象分别有 ${onlinePts.join(' / ')} 个逐日采集点，需持续积累。
+    B 站与 YouTube 接口只返回<b>当前</b>累计值，没有历史曲线：散点轨道画的是
+    「发布日 × 当前累计值」，跨发布时间不可比；「发布后播放曲线」只能从开始采集那天往后长，
+    ${ramps.length} 支视频中有 ${rampReady} 支覆盖了完整起跑段，其余用虚线标出缺口。
+    跨视频比较请优先看互动率 —— 播放量受推荐位影响极大，互动率不受。
+    ${ctx.multi ? '不同对象的窗口长度与回填起点不同，绝对量不可直接相比，日均与比率才可比。' : ''}
     版本更新竖线取自 Steam 官方公告，构建号事件来自 SteamCMD 第三方镜像，仅作旁证。
     所有事件仅表示时间节点，<b>不自动表示因果关系</b>。`;
 }
 
 /* ---------- 引导 ---------- */
 
-async function loadGame(gameId) {
-  currentGame = gameId;
-  const res = await fetch(`../data/snapshot_${gameId}.json`);
-  snapshot = await res.json();
-
-  document.getElementById('metaDate').textContent = snapshot.snapshot_date;
-  const cov = snapshot.review_history_coverage;
-  document.getElementById('metaBadges').innerHTML =
-    `<span class="badge live"><span class="dot"></span>逐日采集 observed</span>
-     ${cov ? `<span class="badge recon" style="margin-left:6px"><span class="dot"></span>评测历史 reconstructed ${cov.days} 天</span>` : ''}`;
-
-  renderTiles();
-  render();
-  renderPanel();
-  renderVersionTable();
-  renderLangTable();
-  renderDataTable();
-  renderSources();
-  persistView();
-
-  document.getElementById('loading').classList.add('hidden');
-  document.getElementById('app').classList.remove('hidden');
-  chart.resize();
+function pressOnly(selector, btn) {
+  document.querySelectorAll(selector).forEach(b => b.setAttribute('aria-pressed', 'false'));
+  btn.setAttribute('aria-pressed', 'true');
 }
 
 async function boot() {
@@ -1037,18 +863,40 @@ async function boot() {
   }
 
   const idx = await fetch('../data/index.json').then(r => r.json()).catch(() => null);
-  const games = (idx && idx.games) || [];
-  if (!games.length) {
+  catalog = (idx && idx.games) || [];
+  if (!catalog.length) {
     loading.textContent = '没有可用快照。请先运行 python pipeline/build_snapshot.py';
     return;
   }
 
-  const wantedGame = restoreView();
+  const wantedKeys = restoreView();
+  const keys = (wantedKeys && wantedKeys.length) ? wantedKeys : [catalog[0].game_id];
+  subjects = paintSubjects(keys.map(k => subjectFromKey(catalog, k)).filter(Boolean));
+  if (!subjects.length) subjects = [makeGameSubject(catalog[0])];
 
-  const sel = document.getElementById('gameSelect');
-  sel.innerHTML = games.map(g =>
-    `<option value="${g.game_id}">${g.display_name}</option>`).join('');
-  sel.onchange = () => loadGame(sel.value);
+  document.getElementById('metaDate').textContent = idx.generated_at;
+  document.getElementById('metaBadges').innerHTML =
+    `<span class="badge live"><span class="dot"></span>逐日采集 observed</span>
+     <span class="badge recon" style="margin-left:6px"><span class="dot"></span>评测历史 reconstructed</span>`;
+
+  // 添加对比对象
+  const addSel = document.getElementById('subjectAdd');
+  addSel.onchange = async () => {
+    const key = addSel.value;
+    addSel.value = '';
+    if (!key || subjects.some(s => s.key === key)) return;
+    const s = subjectFromKey(catalog, key);
+    if (!s) return;
+    subjects = paintSubjects(subjects.map(rebase).concat(s));
+    // 加入版本对象时自动切到起点对齐 —— 按日历排开的两个版本窗口不重叠，
+    // 并排画出来只会各占横轴的一段，没有可比性
+    if (s.kind === 'version' && align === 'calendar' && subjects.length > 1) {
+      align = 'day0';
+      document.querySelectorAll('#alignSeg button').forEach(b =>
+        b.setAttribute('aria-pressed', String(b.dataset.align === 'day0')));
+    }
+    await refresh();
+  };
 
   const presetSel = document.getElementById('presetSelect');
   presetSel.innerHTML = `<option value="">自定义</option>` +
@@ -1057,12 +905,7 @@ async function boot() {
   presetSel.onchange = () => {
     if (!presetSel.value) return;
     applyPreset(presetSel.value);
-    renderPanel(); render(); renderDataTable(); persistView();
-  };
-
-  const pressOnly = (selector, btn) => {
-    document.querySelectorAll(selector).forEach(b => b.setAttribute('aria-pressed', 'false'));
-    btn.setAttribute('aria-pressed', 'true');
+    renderPanel(); renderAll();
   };
 
   document.querySelectorAll('#rangeSeg button').forEach(btn => {
@@ -1070,51 +913,35 @@ async function boot() {
     btn.onclick = () => {
       pressOnly('#rangeSeg button', btn);
       rangeDays = Number(btn.dataset.days);
-      if (viewMode === 'compare') { renderCompare(); }
-      else { render(); renderDataTable(); persistView(); }
-    };
-  });
-
-  document.querySelectorAll('#viewSeg button').forEach(btn => {
-    btn.onclick = async () => {
-      pressOnly('#viewSeg button', btn);
-      viewMode = btn.dataset.view;
-      const compare = viewMode === 'compare';
-      document.getElementById('app').classList.toggle('hidden', compare);
-      document.getElementById('compareApp').classList.toggle('hidden', !compare);
-      document.getElementById('gameGroup').classList.toggle('hidden', compare);
-      document.getElementById('presetGroup').classList.toggle('hidden', compare);
-      document.getElementById('alignGroup').classList.toggle('hidden', !compare);
-      document.getElementById('toggleTable').classList.toggle('hidden', compare);
-      document.getElementById('openPanel').classList.toggle('hidden', compare);
-      if (compare) await loadCompare();
-      else { chart.resize(); render(); }
+      renderAll();
     };
   });
 
   document.querySelectorAll('#alignSeg button').forEach(btn => {
+    btn.setAttribute('aria-pressed', String(btn.dataset.align === align));
     btn.onclick = () => {
       pressOnly('#alignSeg button', btn);
-      alignMode = btn.dataset.align;
-      renderCompare();
+      align = btn.dataset.align;
+      renderAll();
     };
   });
 
   // 自定义面板
   const panel = document.getElementById('lanePanel');
   const scrim = document.getElementById('panelScrim');
-  const openPanel = () => { panel.classList.add('open'); scrim.classList.add('open'); };
   const closePanel = () => {
     panel.classList.remove('open'); scrim.classList.remove('open');
     chart.resize();
   };
-  document.getElementById('openPanel').onclick = openPanel;
+  document.getElementById('openPanel').onclick = () => {
+    panel.classList.add('open'); scrim.classList.add('open');
+  };
   document.getElementById('closePanel').onclick = closePanel;
   scrim.onclick = closePanel;
   document.getElementById('resetLanes').onclick = () => {
     laneState = defaultLaneState();
     presetSel.value = '';
-    renderPanel(); render(); renderDataTable(); persistView();
+    renderPanel(); renderAll();
   };
 
   // 导出菜单
@@ -1141,10 +968,14 @@ async function boot() {
     tbtn.textContent = show ? '隐藏数据表' : '显示数据表';
   };
 
-  const initial = games.some(g => g.game_id === wantedGame)
-    ? wantedGame : games[0].game_id;
-  sel.value = initial;
-  await loadGame(initial);
+  await hydrate(subjects);
+  renderSubjectBar();
+  renderPanel();
+  renderAll();
+
+  loading.classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  chart.resize();
 }
 
 boot();

@@ -223,6 +223,18 @@
   .menu button:hover { background: rgba(11,11,11,0.05); }
   .menu .menu-note { color: var(--text-muted); font-size: 11px;
                      padding: 4px 10px 7px; line-height: 1.45; }
+
+  /* 对比对象 chip：颜色块 = 该对象在图上的颜色，所以控件与图例是同一套语义 */
+  .subject-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .subject-chip { display: inline-flex; align-items: center; gap: 6px;
+                  border: 1px solid #e1e0d9; border-radius: 999px;
+                  padding: 3px 4px 3px 9px; background: #fff; font-size: 12px; }
+  .subject-chip .mark { width: 9px; height: 9px; border-radius: 2px; flex: none; }
+  .subject-chip .sc-label { font-weight: 500; }
+  .subject-chip .sc-x { border: 0; background: none; cursor: pointer;
+                        color: #898781; font-size: 14px; line-height: 1;
+                        padding: 2px 5px; border-radius: 999px; }
+  .subject-chip .sc-x:hover { background: #f1f0ea; color: #0b0b0b; }
 </style>
 </head>
 <body class="viz-root">
@@ -240,22 +252,16 @@
   </header>
 
   <div class="filters">
-    <div class="filter-group">
-      <span class="filter-label">视图</span>
-      <div class="segmented" id="viewSeg">
-        <button data-view="single" aria-pressed="true">单游戏</button>
-        <button data-view="compare">三方对比</button>
-      </div>
+    <div class="filter-group" style="flex:1 1 auto; min-width:360px">
+      <span class="filter-label">对比对象</span>
+      <div id="subjectChips" class="subject-chips"></div>
+      <select id="subjectAdd" style="min-width:150px"></select>
     </div>
-    <div class="filter-group" id="gameGroup">
-      <span class="filter-label">游戏</span>
-      <select id="gameSelect"></select>
-    </div>
-    <div class="filter-group hidden" id="alignGroup">
-      <span class="filter-label">对齐方式</span>
+    <div class="filter-group" id="alignGroup">
+      <span class="filter-label">对齐</span>
       <div class="segmented" id="alignSeg">
-        <button data-align="absolute" aria-pressed="true">日历日期</button>
-        <button data-align="relative">上线后天数</button>
+        <button data-align="calendar" aria-pressed="true">日历日期</button>
+        <button data-align="day0" title="游戏从上线日起算，版本从该版本更新日起算">各自起点</button>
       </div>
     </div>
     <div class="filter-group">
@@ -304,51 +310,6 @@
     <div id="laneListOff"></div>
   </aside>
 
-  <!-- ============ 三方对比视图 ============ -->
-  <div id="compareApp" class="hidden">
-    <div class="tiles" id="cmpTiles" style="grid-template-columns:repeat(3,1fr)"></div>
-
-    <section class="card">
-      <div class="card-head">
-        <div>
-          <h2 class="card-title">三方运营对照</h2>
-          <p class="card-note" id="cmpNote"></p>
-        </div>
-      </div>
-      <div class="legend" id="cmpLegend"></div>
-      <div id="cmpPulse" style="width:100%;height:900px"></div>
-    </section>
-
-    <div class="row2">
-      <section class="card">
-        <div class="card-head"><h2 class="card-title">共同窗口对照</h2></div>
-        <p class="card-note" id="cmpWindowNote" style="margin-bottom:12px"></p>
-        <table id="cmpTable"><thead><tr>
-          <th>游戏</th>
-          <th class="num">窗口内评测</th>
-          <th class="num">日均</th>
-          <th class="num">窗口好评率</th>
-          <th class="num">当前在线</th>
-          <th class="num">版本</th>
-        </tr></thead><tbody></tbody></table>
-      </section>
-
-      <section class="card">
-        <div class="card-head"><h2 class="card-title">版本节奏</h2></div>
-        <p class="card-note" style="margin-bottom:12px">共同窗口内的版本更新间隔，取自各自 Steam 官方公告。</p>
-        <table id="cadenceTable"><thead><tr>
-          <th>游戏</th><th>窗口内版本</th><th class="num">平均间隔</th>
-        </tr></thead><tbody></tbody></table>
-      </section>
-    </div>
-
-    <section class="card">
-      <div class="card-head"><h2 class="card-title">对比口径限制</h2></div>
-      <div class="caveat" id="cmpCaveat" style="margin-top:12px"></div>
-    </section>
-  </div>
-
-  <!-- ============ 单游戏视图 ============ -->
   <div id="app" class="hidden">
     <div class="tiles" id="tiles"></div>
 
@@ -365,16 +326,35 @@
 
     <div class="row2">
       <section class="card">
+        <div class="card-head"><h2 class="card-title">窗口对照</h2></div>
+        <p class="card-note" id="cmpWindowNote" style="margin-bottom:12px"></p>
+        <table id="cmpTable"><thead><tr>
+          <th>对比对象</th>
+          <th class="num">窗口内评测</th>
+          <th class="num">日均</th>
+          <th class="num">窗口好评率</th>
+          <th class="num">当前在线</th>
+          <th class="num">版本</th>
+        </tr></thead><tbody></tbody></table>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h2 class="card-title">版本节奏</h2></div>
+        <p class="card-note" style="margin-bottom:12px">最近 6 个版本的更新间隔，取自各自 Steam 官方公告。</p>
+        <table id="cadenceTable"><thead><tr>
+          <th>游戏</th><th>最近版本</th><th class="num">平均间隔</th>
+        </tr></thead><tbody></tbody></table>
+      </section>
+    </div>
+
+    <div class="row2">
+      <section class="card">
         <div class="card-head">
           <h2 class="card-title">版本更新前后 7 天对比</h2>
         </div>
         <p class="card-note" style="margin-bottom:12px">以评测口径衡量版本的声量、口碑与玩家结构变化。仅比较有完整前后窗口的版本。</p>
         <table id="versionTable"><thead><tr>
           <th>版本</th><th>更新日</th>
-          <th class="num">日均新增评测</th>
-          <th class="num">变化</th>
-          <th class="num">区间好评率</th>
-          <th class="num">变化</th>
         </tr></thead><tbody></tbody></table>
         <p class="card-note" id="versionNote" style="margin-top:14px; line-height:1.6"></p>
       </section>
@@ -383,11 +363,8 @@
         <div class="card-head">
           <h2 class="card-title">评测语言分布</h2>
         </div>
-        <p class="card-note" style="margin-bottom:12px">回填期内全部评测的语言构成，反映 Steam 版本的实际玩家来源。末列为首个 7 天桶与最后一个 7 天桶的占比差，用于看来源结构是否在变。</p>
-        <table id="langTable"><thead><tr>
-          <th>语言</th><th class="num">评测数</th><th style="width:40%">占比</th>
-          <th class="num">首尾桶变化</th>
-        </tr></thead><tbody></tbody></table>
+        <p class="card-note" id="langNote" style="margin-bottom:12px"></p>
+        <table id="langTable"><thead><tr></tr></thead><tbody></tbody></table>
       </section>
     </div>
 
@@ -422,7 +399,7 @@
   <div class="loading" id="loading">正在加载快照…</div>
 </div>
 
+<script src="engine.js"></script>
 <script src="app.js"></script>
-<script src="compare.js"></script>
 </body>
 </html>

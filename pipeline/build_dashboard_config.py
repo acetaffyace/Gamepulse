@@ -40,7 +40,16 @@ ADAPTER_SHAPES = {
     "series": "list_of_dated_records",
     "video_scatter": "list_of_videos",
     "video_delta": "list_of_videos",
+    "video_ramp": "list_of_videos",
+    "version_marks": "list_of_events",
     "stacked_share": "language_share_object",
+    "share_delta": "language_share_object",
+}
+
+# 视频的 content_type 取值域。写错一个值不会报错，只会让轨道无声地筛空，
+# 所以在这里对 lane.content_types 做一次白名单校验。
+CONTENT_TYPES = {
+    "version_trailer", "character_trailer", "character_demo", "ep", "other",
 }
 
 
@@ -75,13 +84,23 @@ def verify_lane(lane: dict, snapshot: dict) -> list[str]:
         problems.append(f"path «{lane['path']}» 在快照里不存在")
         return problems
 
-    if adapter == "stacked_share":
+    if adapter in ("stacked_share", "share_delta"):
         if not isinstance(node, dict) or "buckets" not in node:
             problems.append(f"path «{lane['path']}» 不是语种分桶结构")
         return problems
 
     if not isinstance(node, list):
         problems.append(f"path «{lane['path']}» 不是数组（adapter={adapter} 需要数组）")
+        return problems
+
+    unknown_types = set(lane.get("content_types") or []) - CONTENT_TYPES
+    if unknown_types:
+        problems.append(f"content_types 含未知取值 {sorted(unknown_types)}，"
+                        f"可用：{', '.join(sorted(CONTENT_TYPES))}")
+
+    if adapter == "version_marks":
+        if not any(e.get("is_version_boundary") for e in node):
+            problems.append(f"«{lane['path']}» 里没有 is_version_boundary 事件")
         return problems
 
     if not node:
@@ -97,6 +116,16 @@ def verify_lane(lane: dict, snapshot: dict) -> list[str]:
             if field not in keys:
                 problems.append(f"字段 «{field}» 不在 {lane['path']} 的元素里"
                                 f"（该元素有：{', '.join(sorted(keys))[:120]}）")
+
+    elif adapter == "video_ramp":
+        sample = node[0]
+        if "ramp" not in sample:
+            problems.append(f"«{lane['path']}» 的元素缺少 ramp（发布后逐日曲线）")
+        elif lane.get("field") and sample["ramp"].get("points"):
+            pt = sample["ramp"]["points"][0]
+            if lane["field"] not in pt:
+                problems.append(f"字段 «{lane['field']}» 不在 ramp.points 里"
+                                f"（有：{', '.join(sorted(pt))}）")
 
     elif adapter in ("video_scatter", "video_delta"):
         sample = node[0]

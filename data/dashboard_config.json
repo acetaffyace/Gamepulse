@@ -105,6 +105,17 @@
       "caveat": "采样点少于 6 个的日期标 partial，半天的样本算不出真实日峰值"
     },
     {
+      "id": "version_marks",
+      "title": "版本节奏",
+      "subtitle": "每个对比对象一行 · 取自各自 Steam 官方公告",
+      "adapter": "version_marks",
+      "path": "events",
+      "chart": "marks",
+      "height": 74,
+      "enabled": false,
+      "caveat": "多对象对照时版本线画在本轨道内，不贯穿全图 —— 各自的版本不是同一个事件"
+    },
+    {
       "id": "playtime_median",
       "title": "评测者中位游戏时长",
       "subtitle": "写评测时已玩多久 · 小时",
@@ -145,15 +156,31 @@
       "enabled": false
     },
     {
+      "id": "language_delta",
+      "title": "评测语种结构变化",
+      "subtitle": "相对首个 7 天桶的百分点差 · 0 为基线",
+      "adapter": "share_delta",
+      "path": "review_profile.language_share",
+      "chart": "line",
+      "height": 130,
+      "unit": "pp",
+      "top_n": 5,
+      "enabled": false,
+      "single_only": true,
+      "caveat": "只画变化幅度最大的几个语种，尾部语种的占比本来就在噪声量级"
+    },
+    {
       "id": "language_share",
       "title": "评测语种构成",
-      "subtitle": "7 天分桶 · 反映玩家来源结构变化",
+      "subtitle": "7 天分桶 · 绝对占比",
       "adapter": "stacked_share",
       "path": "review_profile.language_share",
       "chart": "stacked_area",
       "height": 130,
       "unit": "percent",
-      "enabled": false
+      "enabled": false,
+      "single_only": true,
+      "caveat": "100% 堆叠的中间层没有稳定基线，看结构变化请用「语种结构变化」轨道"
     },
     {
       "id": "bili_videos",
@@ -168,6 +195,73 @@
       "unit": "count",
       "enabled": true,
       "caveat": "仅登记视频集合，不是全站播放量，也不是独立观众数"
+    },
+    {
+      "id": "bili_version_pv",
+      "title": "B 站版本 PV",
+      "subtitle": "只含版本 PV · 发布日 × 当前累计播放",
+      "adapter": "video_scatter",
+      "path": "bilibili.videos",
+      "field": "view",
+      "content_types": [
+        "version_trailer"
+      ],
+      "chart": "scatter",
+      "color": "slot7",
+      "height": 110,
+      "unit": "count",
+      "enabled": false,
+      "caveat": "版本 PV 与角色 PV 的发布节奏和推荐位待遇不同，混在一起比没有意义"
+    },
+    {
+      "id": "bili_character_pv",
+      "title": "B 站角色 PV / 演示",
+      "subtitle": "只含角色 PV 与战斗演示 · 发布日 × 当前累计播放",
+      "adapter": "video_scatter",
+      "path": "bilibili.videos",
+      "field": "view",
+      "content_types": [
+        "character_trailer",
+        "character_demo",
+        "ep"
+      ],
+      "chart": "scatter",
+      "color": "slot5",
+      "height": 110,
+      "unit": "count",
+      "enabled": false,
+      "caveat": "角色 PV 通常早于版本更新日 5-12 天发布，位置不等于版本归属"
+    },
+    {
+      "id": "bili_ramp",
+      "title": "B 站发布后播放曲线",
+      "subtitle": "一支视频一条线 · 横轴为发布后第 N 天",
+      "adapter": "video_ramp",
+      "path": "bilibili.videos",
+      "field": "view",
+      "chart": "line",
+      "color": "slot5",
+      "height": 150,
+      "unit": "count",
+      "enabled": false,
+      "caveat": "接口只返回当前累计值，曲线只能从开始采集那天往后长；虚线表示缺起跑段"
+    },
+    {
+      "id": "bili_version_ramp",
+      "title": "B 站版本 PV 播放曲线",
+      "subtitle": "只含版本 PV · 横轴为发布后第 N 天",
+      "adapter": "video_ramp",
+      "path": "bilibili.videos",
+      "field": "view",
+      "content_types": [
+        "version_trailer"
+      ],
+      "chart": "line",
+      "color": "slot7",
+      "height": 130,
+      "unit": "count",
+      "enabled": false,
+      "caveat": "同类内容按发布后天数对齐，这是唯一跨视频公平的播放量比较方式"
     },
     {
       "id": "bili_view_delta",
@@ -221,6 +315,24 @@
         "bili_videos"
       ]
     },
+    "compare": {
+      "label": "多对象对照",
+      "lanes": [
+        "new_reviews",
+        "review_rate",
+        "version_marks",
+        "bili_engagement"
+      ]
+    },
+    "versions": {
+      "label": "版本对照",
+      "lanes": [
+        "new_reviews",
+        "review_rate",
+        "playtime_median",
+        "bili_version_ramp"
+      ]
+    },
     "player_profile": {
       "label": "玩家结构",
       "lanes": [
@@ -228,16 +340,16 @@
         "playtime_median",
         "short_play_share",
         "heavy_play_share",
-        "language_share"
+        "language_delta"
       ]
     },
     "propagation": {
       "label": "传播端",
       "lanes": [
-        "bili_videos",
-        "bili_view_delta",
+        "bili_version_pv",
+        "bili_character_pv",
         "bili_engagement",
-        "yt_videos"
+        "bili_ramp"
       ]
     },
     "online_focus": {
@@ -252,8 +364,11 @@
   },
   "adapters": [
     "series",
+    "share_delta",
     "stacked_share",
+    "version_marks",
     "video_delta",
+    "video_ramp",
     "video_scatter"
   ]
 }
