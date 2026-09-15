@@ -112,3 +112,15 @@ collected_at	source	game_id	date_local	status	detail
 2026-09-15T08:06:36+00:00	steam_online	wuthering_waves	2026-09-15	insert	hour=16;players=None
 2026-09-15T08:08:46+00:00	steam_online	zenless_zone_zero	2026-09-15	insert	hour=16;players=None
 2026-09-15T08:10:56+00:00	steam_online	neverness_to_everness	2026-09-15	insert	hour=16;players=None
+2026-09-15T09:06:55+00:00	steam_online	wuthering_waves	2026-09-15	insert	hour=17;players=None
+2026-09-15T09:08:13+00:00	steam_online	zenless_zone_zero	2026-09-15	insert	hour=17;players=5664
+2026-09-15T09:08:14+00:00	steam_online	neverness_to_everness	2026-09-15	insert	hour=17;players=2552
+2026-09-15T09:54:07+00:00	youtube	wuthering_waves	2026-09-15	insert	observed=421/421;by_locale=global=100/100 ja=111/111 ko=106/106 zh-tw=104/104;flagged=0;quota_units=9
+2026-09-15T09:54:18+00:00	youtube	zenless_zone_zero	2026-09-15	insert	observed=315/315;by_locale=global=74/74 ja=82/82 ko=85/85 zh-tw=74/74;flagged=0;quota_units=7
+2026-09-15T09:54:29+00:00	youtube	neverness_to_everness	2026-09-15	insert	observed=436/436;by_locale=global=107/107 ja=112/112 ko=111/111 zh-tw=106/106;flagged=0;quota_units=9
+2026-09-15T10:06:55+00:00	steam_online	wuthering_waves	2026-09-15	insert	hour=18;players=None
+2026-09-15T10:08:28+00:00	steam_online	zenless_zone_zero	2026-09-15	insert	hour=18;players=6128
+2026-09-15T10:08:29+00:00	steam_online	neverness_to_everness	2026-09-15	insert	hour=18;players=2809
+2026-09-15T11:06:55+00:00	steam_online	wuthering_waves	2026-09-15	insert	hour=19;players=None
+2026-09-15T11:08:46+00:00	steam_online	zenless_zone_zero	2026-09-15	insert	hour=19;players=None
+2026-09-15T11:10:57+00:00	steam_online	neverness_to_everness	2026-09-15	insert	hour=19;players=None

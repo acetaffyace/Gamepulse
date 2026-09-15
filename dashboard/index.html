@@ -2,7 +2,7 @@
 <html lang="zh-CN" data-theme="light">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=1440">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>GamePulse · 游戏长线运营情报雷达</title>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 <style>
@@ -16,9 +16,14 @@
     --page:           #f9f9f7;
     --text-primary:   #0b0b0b;
     --text-secondary: #52514e;
-    --text-muted:     #898781;
+    /* 口径说明、指标卡注解、表头全部走这个色，是本页信息密度最高的文字。
+       原值 #898781 对 --surface-1 只有 3.50:1，未达 WCAG AA 正文 4.5:1；
+       #6f6d68 是 5.10:1（对更暗的 --page 底也有 4.99:1），保留同一个暖灰色相。 */
+    --text-muted:     #6f6d68;
     --gridline:       #e1e0d9;
     --baseline:       #c3c2b7;
+    /* 版本更新竖线承载信息，不能和纯装饰的网格线一样淡 */
+    --marker:         #9a978c;
     --border:         rgba(11,11,11,0.10);
 
     --series-new-reviews: #2a78d6;  /* slot 1 blue    每日新增评测 */
@@ -43,7 +48,7 @@
     line-height: 1.5;
   }
 
-  .shell { width: 1440px; margin: 0 auto; padding: 32px 40px 64px; }
+  .shell { width: 100%; max-width: 1440px; margin: 0 auto; padding: 32px 40px 64px; }
 
   /* ---------- header ---------- */
   header { display: flex; align-items: flex-end; justify-content: space-between;
@@ -61,11 +66,18 @@
   .badge.live .dot { background: var(--status-good); }
   .badge.recon .dot { background: var(--status-warning); }
 
-  /* ---------- filter row (one row above everything it scopes) ---------- */
-  .filters { display: flex; align-items: center; gap: 24px;
-             margin: 20px 0 24px; }
-  .filter-group { display: flex; align-items: center; gap: 8px; }
-  .filter-label { color: var(--text-muted); font-size: 12px; }
+  /* ---------- filter row (one row above everything it scopes) ----------
+     必须 flex-wrap：对比对象 chip 的数量是用户决定的，不换行时它会把右侧
+     每一组都压到无处可缩，「日历日期」会被挤成竖排的一列单字。
+     标签与按钮一律 nowrap，让压力全部释放到换行上而不是字内折行。 */
+  .filters { display: flex; align-items: center; flex-wrap: wrap;
+             gap: 14px 22px; margin: 20px 0 24px; }
+  .filter-group { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .filter-label { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+  /* 右侧动作组用 margin-left:auto 而不是一个 .spacer 元素：换行时
+     spacer 会独占一整行，margin-left:auto 则自然贴到当前行尾。 */
+  .filter-actions { display: flex; align-items: center; gap: 8px;
+                    margin-left: auto; }
   select {
     font: inherit; font-size: 13px; padding: 6px 10px; border-radius: 7px;
     border: 1px solid var(--border); background: var(--surface-1);
@@ -82,17 +94,29 @@
   .segmented button[aria-pressed="true"] {
     background: var(--text-primary); color: #fff; font-weight: 500;
   }
-  .spacer { flex: 1; }
   .linkish {
     font: inherit; font-size: 12.5px; border: 1px solid var(--border);
     background: var(--surface-1); color: var(--text-secondary);
     padding: 6px 12px; border-radius: 7px; cursor: pointer;
+    white-space: nowrap;
   }
   .linkish:hover { background: rgba(11,11,11,0.04); }
 
-  /* ---------- stat tiles ---------- */
-  .tiles { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px;
-           margin-bottom: 24px; }
+  /* 键盘可达性：整页原本完全没有 focus 样式，Tab 过去看不出停在哪 */
+  :where(button, select, input, [tabindex]):focus-visible {
+    outline: 2px solid var(--series-new-reviews);
+    outline-offset: 2px;
+  }
+
+  /* 对比对象组是唯一会被内容撑大的一组，让它优先占据剩余空间并率先换行 */
+  .subject-group { flex: 1 1 340px; min-width: 260px; }
+  .subject-group select { min-width: 132px; }
+
+  /* ---------- stat tiles ----------
+     auto-fit 而不是 JS 写死列数：列数既取决于对象个数（1 个游戏 6 张卡，
+     N 个对象 N 张卡），也取决于视口宽度。交给 CSS 一次算清，JS 不再插手。 */
+  .tiles { display: grid; gap: 12px; margin-bottom: 24px;
+           grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
   .tile { background: var(--surface-1); border: 1px solid var(--border);
           border-radius: 11px; padding: 15px 16px 14px; }
   .tile .k { color: var(--text-muted); font-size: 11.5px; margin-bottom: 7px;
@@ -114,20 +138,32 @@
   .card-title { font-size: 15px; font-weight: 600; margin: 0; }
   .card-note { color: var(--text-muted); font-size: 12px; margin: 3px 0 0; }
 
-  .legend { display: flex; flex-wrap: wrap; gap: 16px; margin: 12px 0 2px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px 16px; margin: 12px 0 2px; }
+  .legend:empty { display: none; }
+  /* 图例项是真按钮（点击可隐藏对象），所以要把 button 的默认外观清掉 */
   .legend-item { display: inline-flex; align-items: center; gap: 6px;
-                 font-size: 12px; color: var(--text-secondary); cursor: pointer;
-                 user-select: none; }
+                 font: inherit; font-size: 12px; color: var(--text-secondary);
+                 cursor: pointer; user-select: none;
+                 border: 1px solid transparent; border-radius: 7px;
+                 background: none; padding: 3px 7px; text-align: left;
+                 transition: background .12s, opacity .12s; }
+  .legend-item:hover { background: rgba(11,11,11,0.04); }
   .legend-item .mark { width: 11px; height: 3px; border-radius: 2px; flex: none; }
   .legend-item .mark.dot { width: 9px; height: 9px; border-radius: 50%; }
   .legend-item .mark.bar { width: 9px; height: 11px; border-radius: 2px; }
-  .legend-item[data-off="true"] { opacity: .38; }
+  .legend-item[data-off="true"] { opacity: .4; }
+  .legend-item[data-off="true"] .mark { background: var(--baseline) !important; }
   .legend-sep { width: 1px; background: var(--border); margin: 1px 2px; }
 
   #pulse { width: 100%; height: 760px; }
 
-  /* ---------- lower grid ---------- */
-  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  /* ---------- lower grid ----------
+     必须是 minmax(0,1fr) 而不是 1fr：1fr 轨道的自动最小尺寸是 min-content，
+     而版本对比表有 8 列、声明了 min-width，于是窄屏下轨道被表格顶开，
+     整页跟着横向溢出（实测 1024px 溢出 194px）。minmax(0,…) 允许轨道
+     小于内容，把滚动压回 .table-wrap 内部。 */
+  .row2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+          gap: 20px; }
 
   table { width: 100%; border-collapse: collapse; font-size: 12.5px;
           font-variant-numeric: tabular-nums; }
@@ -165,6 +201,77 @@
             border: 1px solid rgba(250,178,25,0.3);
             color: var(--text-secondary); font-size: 12.5px; line-height: 1.55; }
   .caveat b { color: var(--text-primary); font-weight: 600; }
+  .caveat ul { margin: 10px 0 0; padding-left: 18px; }
+  .caveat li { margin-bottom: 6px; }
+  .caveat li:last-child { margin-bottom: 0; }
+
+  /* ---------- 结论层 ----------
+     原来整页只有数字没有判断：读者要自己在 60 个「旧值→新值/增幅」
+     格子里做归纳。这一条把已经算出来的结论直接说出来。 */
+  .readout { background: var(--surface-1); border: 1px solid var(--border);
+             border-left: 3px solid var(--text-primary);
+             border-radius: 11px; padding: 14px 18px; margin-bottom: 20px; }
+  .readout p { margin: 0 0 6px; font-size: 13.5px; line-height: 1.6;
+               color: var(--text-primary); }
+  .readout p:last-child { margin-bottom: 0; }
+  .readout .rank { color: var(--text-secondary); }
+  .readout b { font-weight: 600; }
+  .readout .up   { color: #006300; font-weight: 600; }
+  .readout .down { color: var(--status-critical); font-weight: 600; }
+  .readout .flat { color: var(--text-secondary); font-weight: 600; }
+
+  .lead { margin: 0 0 12px; font-size: 13px; line-height: 1.6;
+          color: var(--text-primary); }
+  .lead:empty { display: none; }
+
+  /* ---------- 渐进披露 ----------
+     口径说明原本是底部一堵 400 字的墙，全页最难读的排版承载最该读的内容。
+     拆成：就近的 ⓘ（单个指标的口径）+ 可折叠的完整版。 */
+  details.fine-print { margin-top: 14px; }
+  details.fine-print summary {
+    cursor: pointer; font-size: 12px; color: var(--text-muted);
+    list-style: none; display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 0; user-select: none;
+  }
+  details.fine-print summary::-webkit-details-marker { display: none; }
+  details.fine-print summary::before { content: '▸'; font-size: 10px; }
+  details.fine-print[open] summary::before { content: '▾'; }
+  details.fine-print summary:hover { color: var(--text-secondary); }
+  details.fine-print p { margin: 8px 0 0; font-size: 12px; line-height: 1.65;
+                         color: var(--text-secondary); }
+
+  .info {
+    border: 0; background: none; padding: 0 0 0 4px; cursor: pointer;
+    color: var(--text-muted); font-size: 11px; line-height: 1;
+    vertical-align: middle;
+  }
+  .info:hover { color: var(--text-primary); }
+  .popover {
+    position: absolute; z-index: 60; max-width: 300px;
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 9px; padding: 10px 12px;
+    box-shadow: 0 8px 26px rgba(11,11,11,0.14);
+    font-size: 12px; line-height: 1.6; color: var(--text-secondary);
+  }
+  .popover b { color: var(--text-primary); display: block; margin-bottom: 4px;
+               font-size: 12.5px; }
+
+  /* 数据还在积累的轨道：与「这个指标是 0」明确区分开 */
+  .lane-thin { color: var(--status-warning); }
+
+  /* 页面替用户改了控件时的提示。不用 alert：它会打断操作，
+     而这里要说的只是「我刚替你做了什么、为什么」。 */
+  .toast {
+    position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 12px);
+    z-index: 80; max-width: min(520px, calc(100vw - 32px));
+    background: var(--text-primary); color: #fff;
+    font-size: 12.5px; line-height: 1.55;
+    padding: 10px 16px; border-radius: 9px;
+    box-shadow: 0 10px 30px rgba(11,11,11,0.22);
+    opacity: 0; pointer-events: none;
+    transition: opacity .18s, transform .18s;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
   .hidden { display: none !important; }
   .loading { padding: 80px; text-align: center; color: var(--text-muted); }
@@ -179,9 +286,20 @@
     background: var(--surface-1); border-left: 1px solid var(--border);
     box-shadow: -10px 0 40px rgba(11,11,11,0.10);
     padding: 22px 22px 40px; overflow-y: auto;
-    transform: translateX(100%); transition: transform .18s ease;
+    transform: translateX(100%);
+    /* 仅靠 translateX 移出视口，面板里的控件仍然在 Tab 顺序里 ——
+       键盘用户会「掉进」一个看不见的面板。visibility 才真正把它摘出去。
+
+       visibility 不能参与补间：关闭时要等滑出动画放完再隐藏（0s 延迟 .18s），
+       打开时必须立刻可见（0s 无延迟）—— 否则刚加上 .open 的那一帧
+       计算值还是 hidden，紧接着的 focus() 会静默失败。 */
+    visibility: hidden;
+    transition: transform .18s ease, visibility 0s linear .18s;
   }
-  .panel.open { transform: none; }
+  .panel.open {
+    transform: none; visibility: visible;
+    transition: transform .18s ease, visibility 0s linear 0s;
+  }
   .panel h3 { font-size: 15px; font-weight: 600; margin: 0 0 4px; }
   .panel .hint { color: var(--text-muted); font-size: 11.5px; line-height: 1.5;
                  margin: 0 0 16px; }
@@ -203,6 +321,12 @@
               padding: 0; flex: none; }
   .icon-btn:hover:not(:disabled) { background: rgba(11,11,11,0.05); }
   .icon-btn:disabled { opacity: .3; cursor: default; }
+
+  /* 某些轨道的纵轴不止一种读法（语区播放量：绝对对数 vs 相对本语区中位数），
+     开关跟着那条轨道走，而不是放进全局筛选条 —— 它只对这一条轨道有意义。 */
+  .scale-row { display: flex; align-items: center; gap: 8px;
+               margin: 0 0 10px 10px; flex-wrap: wrap; }
+  .scale-row .segmented button { font-size: 11.5px; padding: 4px 9px; }
 
   .height-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
   .height-row input[type=range] { flex: 1; accent-color: var(--text-primary); }
@@ -235,6 +359,38 @@
                         color: #898781; font-size: 14px; line-height: 1;
                         padding: 2px 5px; border-radius: 999px; }
   .subject-chip .sc-x:hover { background: #f1f0ea; color: #0b0b0b; }
+
+  /* ---------- 响应式 ----------
+     原来页面是死的 1440px：1366 的笔记本要横向拖 74px，手机要拖 1050px。
+     下面按内容自己的断点收拢，而不是照搬设备尺寸。 */
+
+  /* 宽列表格（版本对比有 8 列）在窄列里必须能横滑，否则单元格会被压烂 */
+  .table-wrap { overflow-x: auto; }
+  .table-wrap table { min-width: 460px; }
+
+  @media (max-width: 1180px) {
+    .shell { padding: 28px 28px 56px; }
+    .sources { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 960px) {
+    /* 左右并排的两块在这个宽度以下各自都太窄了，改上下堆叠 */
+    .row2 { grid-template-columns: minmax(0, 1fr); }
+    header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .meta { text-align: left; }
+  }
+
+  @media (max-width: 720px) {
+    .shell { padding: 20px 16px 48px; }
+    h1 { font-size: 19px; }
+    .card { padding: 16px 14px 12px; border-radius: 10px; }
+    .sources { grid-template-columns: 1fr; }
+    .tiles { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+    /* 动作组在窄屏不再贴右，跟着正常流走，避免和上一组挤在同一行尾 */
+    .filter-actions { margin-left: 0; width: 100%; }
+    .panel { width: 100%; }
+    .legend { gap: 8px 12px; }
+  }
 </style>
 </head>
 <body class="viz-root">
@@ -252,20 +408,23 @@
   </header>
 
   <div class="filters">
-    <div class="filter-group" style="flex:1 1 auto; min-width:360px">
-      <span class="filter-label">对比对象</span>
+    <div class="filter-group subject-group">
+      <span class="filter-label" id="subjectLabel">对比对象</span>
       <div id="subjectChips" class="subject-chips"></div>
-      <select id="subjectAdd" style="min-width:150px"></select>
+      <select id="subjectAdd" aria-labelledby="subjectLabel"></select>
     </div>
-    <div class="filter-group" id="alignGroup">
-      <span class="filter-label">对齐</span>
+    <div class="filter-group" id="alignGroup" role="group" aria-labelledby="alignLabel">
+      <span class="filter-label" id="alignLabel">对齐</span>
       <div class="segmented" id="alignSeg">
         <button data-align="calendar" aria-pressed="true">日历日期</button>
         <button data-align="day0" title="游戏从上线日起算，版本从该版本更新日起算">各自起点</button>
       </div>
     </div>
-    <div class="filter-group">
-      <span class="filter-label">时间范围</span>
+    <!-- 标签会随对齐方式在「最近 / 起点后」之间切换：同样是「30 天」，
+         日历对齐取的是最近 30 天，起点对齐取的是起点后的头 30 天，
+         方向相反，不能共用一个中性标签。见 app.js:syncRangeLabel -->
+    <div class="filter-group" role="group" aria-labelledby="rangeLabel">
+      <span class="filter-label" id="rangeLabel">最近</span>
       <div class="segmented" id="rangeSeg">
         <button data-days="30">30 天</button>
         <button data-days="60">60 天</button>
@@ -274,32 +433,38 @@
       </div>
     </div>
     <div class="filter-group" id="presetGroup">
-      <span class="filter-label">预设</span>
-      <select id="presetSelect"></select>
+      <span class="filter-label" id="presetLabel">预设</span>
+      <select id="presetSelect" aria-labelledby="presetLabel"></select>
     </div>
-    <div class="spacer"></div>
-    <button class="linkish" id="openPanel">自定义轨道</button>
-    <div class="menu-wrap">
-      <button class="linkish" id="openExport">导出</button>
-      <div class="menu hidden" id="exportMenu">
-        <button data-export="csv">当前范围 CSV（按日期）</button>
-        <button data-export="videos">视频明细 CSV</button>
-        <button data-export="png">综合图 PNG</button>
-        <button data-export="link">复制当前视图链接</button>
-        <div class="menu-note">导出内容仅含公开数据，不含密钥、Cookie 或本机路径。</div>
+    <div class="filter-actions">
+      <button class="linkish" id="openPanel" aria-haspopup="dialog"
+              aria-expanded="false" aria-controls="lanePanel">自定义轨道</button>
+      <div class="menu-wrap">
+        <button class="linkish" id="openExport" aria-haspopup="menu"
+                aria-expanded="false">导出</button>
+        <div class="menu hidden" id="exportMenu" role="menu">
+          <button role="menuitem" data-export="csv">当前范围 CSV（按日期）</button>
+          <button role="menuitem" data-export="videos">视频明细 CSV</button>
+          <button role="menuitem" data-export="png">综合图 PNG</button>
+          <button role="menuitem" data-export="link">复制当前视图链接</button>
+          <div class="menu-note">导出内容仅含公开数据，不含密钥、Cookie 或本机路径。</div>
+        </div>
       </div>
+      <button class="linkish" id="toggleTable" aria-expanded="false"
+              aria-controls="tableCard">显示数据表</button>
     </div>
-    <button class="linkish" id="toggleTable">显示数据表</button>
   </div>
 
   <!-- ============ 轨道自定义面板 ============ -->
   <div class="scrim" id="panelScrim"></div>
-  <aside class="panel" id="lanePanel">
-    <h3>自定义轨道</h3>
+  <aside class="panel" id="lanePanel" role="dialog" aria-modal="true"
+         aria-labelledby="lanePanelTitle">
+    <h3 id="lanePanelTitle">自定义轨道</h3>
     <p class="hint">
       勾选决定显示哪些轨道，箭头调整顺序，滑块调整高度。
       轨道来自 <code>config/dashboard.yml</code>，加一个指标只需在那里加一条，
       不需要改图表代码。设置会自动保存在本浏览器，也可以通过「导出 → 复制当前视图链接」分享。
+      按 <kbd>Esc</kbd> 关闭。
     </p>
     <div id="laneList"></div>
     <div class="panel-actions">
@@ -313,58 +478,68 @@
   <div id="app" class="hidden">
     <div class="tiles" id="tiles"></div>
 
+    <section class="readout" id="readout" aria-live="polite"></section>
+
     <section class="card">
       <div class="card-head">
         <div>
           <h2 class="card-title">Operations Pulse</h2>
-          <p class="card-note" id="pulseNote">轨道共享同一日期轴；版本更新日为贯穿竖线。各轨道单位不同，分别独立计量，不共用纵轴。轨道由 config/dashboard.yml 定义，可在右上角「自定义轨道」中增删、排序与调整高度。</p>
+          <p class="card-note" id="pulseNote"></p>
         </div>
       </div>
       <div class="legend" id="legend"></div>
       <div id="pulse"></div>
+      <details class="fine-print" id="pulseFine">
+        <summary>坐标轴与轨道口径</summary>
+        <p id="pulseFineText"></p>
+      </details>
     </section>
 
     <div class="row2">
       <section class="card">
-        <div class="card-head"><h2 class="card-title">窗口对照</h2></div>
+        <div class="card-head"><h2 class="card-title">窗口对照<button class="info" data-info="window_table" aria-label="窗口对照 的口径说明">ⓘ</button></h2></div>
         <p class="card-note" id="cmpWindowNote" style="margin-bottom:12px"></p>
-        <table id="cmpTable"><thead><tr>
+        <div class="table-wrap"><table id="cmpTable"><thead><tr>
           <th>对比对象</th>
           <th class="num">窗口内评测</th>
           <th class="num">日均</th>
           <th class="num">窗口好评率</th>
           <th class="num">当前在线</th>
           <th class="num">版本</th>
-        </tr></thead><tbody></tbody></table>
+        </tr></thead><tbody></tbody></table></div>
       </section>
 
       <section class="card">
-        <div class="card-head"><h2 class="card-title">版本节奏</h2></div>
+        <div class="card-head"><h2 class="card-title">版本节奏<button class="info" data-info="cadence_table" aria-label="版本节奏 的口径说明">ⓘ</button></h2></div>
         <p class="card-note" style="margin-bottom:12px">最近 6 个版本的更新间隔，取自各自 Steam 官方公告。</p>
-        <table id="cadenceTable"><thead><tr>
+        <div class="table-wrap"><table id="cadenceTable"><thead><tr>
           <th>游戏</th><th>最近版本</th><th class="num">平均间隔</th>
-        </tr></thead><tbody></tbody></table>
+        </tr></thead><tbody></tbody></table></div>
       </section>
     </div>
 
     <div class="row2">
       <section class="card">
         <div class="card-head">
-          <h2 class="card-title">版本更新前后 7 天对比</h2>
+          <h2 class="card-title">版本更新前后 7 天对比<button class="info" data-info="version_table" aria-label="版本更新前后 7 天对比 的口径说明">ⓘ</button></h2>
         </div>
         <p class="card-note" style="margin-bottom:12px">以评测口径衡量版本的声量、口碑与玩家结构变化。仅比较有完整前后窗口的版本。</p>
-        <table id="versionTable"><thead><tr>
+        <p class="lead" id="versionLead"></p>
+        <div class="table-wrap"><table id="versionTable"><thead><tr>
           <th>版本</th><th>更新日</th>
-        </tr></thead><tbody></tbody></table>
-        <p class="card-note" id="versionNote" style="margin-top:14px; line-height:1.6"></p>
+        </tr></thead><tbody></tbody></table></div>
+        <details class="fine-print" id="versionFine">
+          <summary>这张表怎么读 · 不看什么</summary>
+          <p id="versionNote"></p>
+        </details>
       </section>
 
       <section class="card">
         <div class="card-head">
-          <h2 class="card-title">评测语言分布</h2>
+          <h2 class="card-title">评测语言分布<button class="info" data-info="lang_table" aria-label="评测语言分布 的口径说明">ⓘ</button></h2>
         </div>
         <p class="card-note" id="langNote" style="margin-bottom:12px"></p>
-        <table id="langTable"><thead><tr></tr></thead><tbody></tbody></table>
+        <div class="table-wrap"><table id="langTable"><thead><tr></tr></thead><tbody></tbody></table></div>
       </section>
     </div>
 

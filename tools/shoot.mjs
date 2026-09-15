@@ -125,6 +125,9 @@ try {
       ['player_profile', 'player_profile', null, null],
       ['propagation', 'propagation', null, null],
       ['online_focus', 'online_focus', null, null],
+      // 语区轨道是唯一一条把多组数据压进同一个纵轴的轨道（对数 + 形状编码），
+      // 也是唯一带纵轴标尺开关的，必须单独测到
+      ['yt_locales', 'yt_locales', null, null],
       ['compare', 'compare_games', 'wuthering_waves|zenless_zone_zero|neverness_to_everness', 'calendar'],
       ['versions', 'compare_versions', 'wuthering_waves@2026-07-10|wuthering_waves@2026-08-20', 'day0'],
       ['versions', 'compare_cross_game', 'wuthering_waves@2026-08-20|zenless_zone_zero@2026-09-09', 'day0'],

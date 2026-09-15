@@ -91,9 +91,21 @@ def load_videos(game_id: str | None = None, active_only: bool = True) -> list[di
     return _load_registry("bilibili_videos.yml", game_id, active_only)
 
 
+# 官方频道的语区维度。顺序即看板与日志里的展示顺序：
+# global 放第一位是因为它是与 Steam 海外盘人群最同源的那一个（见 youtube.py 抬头）。
+#
+# 注意与 games.yml 的 region 区分：region: CN 说的是厂商在哪（谁做的），
+# locale 说的是这个频道发给谁看（给谁看的）。两者取值域不重叠，不要互相顶替。
+YOUTUBE_LOCALES = ("global", "ja", "ko", "zh-tw")
+
+
 def load_youtube_videos(game_id: str | None = None,
-                        active_only: bool = True) -> list[dict]:
-    return _load_registry("youtube_videos.yml", game_id, active_only)
+                        active_only: bool = True,
+                        locale: str | None = None) -> list[dict]:
+    videos = _load_registry("youtube_videos.yml", game_id, active_only)
+    if locale:
+        videos = [v for v in videos if v.get("locale") == locale]
+    return videos
 
 
 def official_mid(game_id: str) -> int | None:
@@ -102,9 +114,31 @@ def official_mid(game_id: str) -> int | None:
     return entry.get("mid")
 
 
-def youtube_channel(game_id: str) -> dict:
+def youtube_channels(game_id: str) -> dict[str, dict]:
+    """game_id → {locale: 频道条目}，按 YOUTUBE_LOCALES 的顺序返回。
+
+    配置里漏写某个语区不是错误（例如某游戏确实没开韩语频道），
+    这里只返回实际配置了的，不补空位 —— 补空位会让下游分不清
+    「没开这个频道」和「开了但还没解析」。
+    """
     channels = load_yaml("youtube_videos.yml").get("official_channels", {}) or {}
-    return channels.get(game_id) or {}
+    entry = channels.get(game_id) or {}
+    return {loc: entry[loc] for loc in YOUTUBE_LOCALES if entry.get(loc)}
+
+
+def youtube_channel(game_id: str, locale: str = "global") -> dict:
+    return youtube_channels(game_id).get(locale) or {}
+
+
+def youtube_locale_of_channel(game_id: str) -> dict[str, str]:
+    """channel_id → locale 的反查表。
+
+    采集时用它校验「这条视频是不是真的来自它登记的那个语区频道」。
+    只比对 channel_id 是否属于本游戏还不够：日语频道的视频被误标成
+    global，两者都在白名单里，单纯的归属校验发现不了。
+    """
+    return {e["channel_id"]: loc
+            for loc, e in youtube_channels(game_id).items() if e.get("channel_id")}
 
 
 def youtube_api_key() -> str | None:

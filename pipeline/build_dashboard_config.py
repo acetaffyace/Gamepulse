@@ -44,13 +44,20 @@ ADAPTER_SHAPES = {
     "version_marks": "list_of_events",
     "stacked_share": "language_share_object",
     "share_delta": "language_share_object",
+    # path 指向 {locale_code: {videos: [...]}}，不是数组
+    "locale_scatter": "locale_map_of_videos",
 }
 
 # 视频的 content_type 取值域。写错一个值不会报错，只会让轨道无声地筛空，
 # 所以在这里对 lane.content_types 做一次白名单校验。
 CONTENT_TYPES = {
-    "version_trailer", "character_trailer", "character_demo", "ep", "other",
+    "version_trailer", "character_trailer", "character_demo",
+    "season_teaser", "ep", "other",
 }
+
+# 一条轨道声明的纵轴标尺。前端按 id 分支取数，写错就会静默退回默认标尺，
+# 所以取值域在这里锁死。
+SCALE_IDS = {"abs", "index"}
 
 
 def resolve(snapshot: dict, path: str):
@@ -70,6 +77,41 @@ def lane_fields(lane: dict) -> list[str]:
     return [lane["field"]] if lane.get("field") else []
 
 
+def verify_locale_lane(lane: dict, node) -> list[str]:
+    """语区轨道：path 指向 {locale: {videos: [...]}}，逐个语区验证取数字段。
+
+    这里比普通视频轨道多验一层：lane.locales 里写了一个快照中不存在的语区码
+    （比如把 zh-tw 写成 zhtw），页面只会少画一组点，不会报任何错。
+    """
+    problems: list[str] = []
+    if not isinstance(node, dict):
+        problems.append(f"path «{lane['path']}» 不是语区字典"
+                        f"（adapter=locale_scatter 需要 {{语区: {{videos: [...]}}}}）")
+        return problems
+
+    wanted = lane.get("locales") or list(node)
+    missing = [code for code in wanted if code not in node]
+    if missing:
+        problems.append(f"locales 里的 {missing} 在快照的 {lane['path']} 下不存在"
+                        f"（有：{', '.join(sorted(node))}）")
+
+    field = lane.get("field")
+    container = "rates" if lane.get("from_rates") else "stats"
+    for code in wanted:
+        videos = (node.get(code) or {}).get("videos") or []
+        if not videos:
+            continue  # 该语区还没接入，是数据问题不是配置问题
+        sample = videos[0]
+        if "pubdate" not in sample:
+            problems.append(f"语区 {code} 的视频缺少 pubdate")
+        latest = sample.get("latest") or {}
+        bag = latest.get(container) or {}
+        if field and latest and field not in bag:
+            problems.append(f"字段 «{field}» 不在语区 {code} 的 latest.{container} 里"
+                            f"（有：{', '.join(sorted(bag))}）")
+    return problems
+
+
 def verify_lane(lane: dict, snapshot: dict) -> list[str]:
     """返回该轨道在此快照上的问题列表；空列表表示通过。"""
     problems: list[str] = []
@@ -79,10 +121,20 @@ def verify_lane(lane: dict, snapshot: dict) -> list[str]:
                         f"可用：{', '.join(sorted(ADAPTER_SHAPES))}")
         return problems
 
+    for scale in lane.get("scales") or []:
+        if scale.get("id") not in SCALE_IDS:
+            problems.append(f"scales 里的 id «{scale.get('id')}» 不在取值域内，"
+                            f"可用：{', '.join(sorted(SCALE_IDS))}")
+        if not scale.get("label"):
+            problems.append(f"scales 里的 «{scale.get('id')}» 缺少 label")
+
     node = resolve(snapshot, lane["path"])
     if node is None:
         problems.append(f"path «{lane['path']}» 在快照里不存在")
         return problems
+
+    if adapter == "locale_scatter":
+        return problems + verify_locale_lane(lane, node)
 
     if adapter in ("stacked_share", "share_delta"):
         if not isinstance(node, dict) or "buckets" not in node:

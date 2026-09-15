@@ -97,13 +97,44 @@ powershell -ExecutionPolicy Bypass -File scripts\register-tasks.ps1 -Remove
 ```powershell
 # https://console.cloud.google.com/ → 新建项目 → 启用 YouTube Data API v3 → 创建 API 密钥
 setx YOUTUBE_API_KEY "你的密钥"      # 计划任务读不到 set 设的临时变量，必须用 setx
+                                     # setx 只改注册表，已开的终端要重开才生效
 
 python collectors/youtube_discover.py --resolve                  # handle → channel_id
-python collectors/youtube_discover.py --since 2026-06-01         # 列出候选
+python collectors/youtube_discover.py --since 2026-06-01         # 列出候选（全部语区）
+python collectors/youtube_discover.py --since 2026-06-01 --locale ja   # 只看日语频道
 python collectors/youtube_discover.py --since 2026-06-01 --append
 ```
 
 密钥只从环境变量读取，不写进任何配置或数据文件。
+
+**语区（locale）**：每款游戏跟踪 4 个官方频道 —— `global` / `ja` / `ko` / `zh-tw`，
+共 12 个频道。同一支 PV 在四个频道各发一遍，是四个不同的 `video_id`，
+因此所有指标按语区分开落在 `youtube.locales.<locale>` 下，
+**快照里不存在跨语区的合计字段**。把四个语区的播放量相加等于把同一支片子
+数四遍，而那个数看起来完全正常 —— 结构上不提供它，就不会有人不小心用到。
+
+跨语区唯一可**直接**横向比较的是**互动率**（点赞+评论 / 播放）：它是以播放为
+分母的截面比值，不受频道订阅体量和发布时间影响。播放量不可跨语区比大小 ——
+全球频道 186 万订阅、NTE 韩语频道 3.3 万，播放差主要来自盘子大小，不是内容表现。
+
+播放量要放进同一张图，得先把体量差处理掉。「语区对照」预设里的
+**YouTube 语区播放对照**轨道用三件事做到这点：
+
+| 手段 | 解决什么 |
+|---|---|
+| 对数纵轴 | 各语区播放中位数 118k / 58k / 39k / 17k、最大 607 万，跨近三个数量级。线性轴上繁中区会被压成贴底的一条直线；对数轴上读的是**垂直距离＝倍数**，语区之间那段恒定落差就是体量差本身 |
+| 纵轴可切到「相对本语区」 | 每个点除以**本语区**的播放中位数，体量被除掉。这时「日语区那支 PV 跑到了本区常态的 8 倍」是可说的，而这句话在绝对值下说不出来 |
+| 形状＋颜色双编码 | 语区身份由形状承载（● 全球 / ▲ 日语 / ■ 韩语 / ◆ 繁中），颜色只是辅助。多对象对照时颜色归对比对象、形状仍归语区，两条规则可以同时读 |
+
+标尺开关在「自定义轨道」面板里那条轨道自己的行上，会跟着分享链接一起走。
+互动率轨道的绝对标尺是**线性**的 —— 它本来就是 1%~20% 的截面比值，
+套上对数只会把它压扁。
+
+`--resolve` 只能证明 handle 存在，**不能证明它属于官方**。实测踩到过三次
+同人号/空号（`@NevernesstoEverness` 51 订阅、`@ZZZ_TW` 1 订阅、`@NTE_KR` 0 订阅），
+三者都返回 200、都打印 `[ok]`。因此解析时对订阅数做量级检查，
+低于 1 万的拒绝写入 `channel_id` 并标 `[warn]` —— 宁可这个语区暂时没数据，
+也不要让看板上出现一整块来自同人频道的曲线。
 
 ---
 
@@ -128,9 +159,11 @@ python collectors/youtube_discover.py --since 2026-06-01 --append
 path/field 能在真实快照里取到值**——把 `new_reviews` 写成 `new_review` 会在构建时
 报错，而不是在页面上默默渲染一条空轨道让人以为「这个指标没数据」。
 
-页面右上角「自定义轨道」可以增删轨道、调整顺序与高度；「预设」提供
-默认 / 玩家结构 / 传播端 / 在线盘四套组合。设置存在 localStorage，
-也可以通过「导出 → 复制当前视图链接」把当前视图分享出去（URL 优先于本地设置）。
+页面右上角「自定义轨道」可以增删轨道、调整顺序与高度；声明了 `scales` 的轨道
+还会多一个纵轴标尺开关（目前只有两条语区轨道用到）。「预设」提供
+默认 / 玩家结构 / 传播端 / 在线盘 / 语区对照 / 日本市场等组合。设置存在
+localStorage，也可以通过「导出 → 复制当前视图链接」把当前视图分享出去
+（URL 优先于本地设置；链接里的轨道段是 `id.高度.标尺`，旧链接缺第三段时退回默认）。
 
 导出：按日期的 CSV、视频明细 CSV、综合图 PNG。
 
@@ -158,6 +191,7 @@ path/field 能在真实快照里取到值**——把 `new_reviews` 写成 `new_r
 | B 站官方视频发现 | `x/web-interface/archive/related` + mid 过滤 | 可用（半自动）|
 | YouTube 视频统计 | `videos.list` | 可用（需免费 Key）|
 | YouTube 官方视频发现 | 频道 uploads 播放列表 | 可用（**全自动**）|
+| YouTube 按地区的播放拆分 | — | **不可用**（仅频道所有者的 Analytics 有）|
 
 三款均为免费游戏，价格与折扣轨道无内容，字段保留给后续付费游戏。
 
@@ -207,6 +241,15 @@ YouTube 观众与 Steam 玩家同源，两者放在一起才有讨论因果的�
   `version_confirmed` 的声明，不按发布日机械归类 —— 版本 PV 通常在更新日
   之前十来天发布，按日期归类会把它算进上一个版本。
 - **YouTube 点踩数已被平台下线**；点赞与评论可被创作者隐藏，隐藏时记 `null` 不记 0。
+- **YouTube 各语区不合并统计**：同一支 PV 在 global/ja/ko/zh-tw 是四个 `video_id`，
+  合计会把它数四遍。快照按语区分开且不提供跨语区合计。跨语区比较只用互动率
+  这类截面比值，不比播放量绝对值。
+- **YouTube 事件时间轴只取 `global` 语区**，否则每个内容节点会重复四次。
+  代价是某语区独占的内容（如日本限定联动）暂不进时间轴，需要给时间轴加
+  语区筛选才能覆盖。
+- **播放量不分地区**：`statistics.viewCount` 是全球累计值，公开 API 不提供
+  按地区的拆分（那属于频道所有者的 YouTube Analytics）。本项目的「语区」
+  指的是官方开设的语区频道，不是同一支视频的地区播放拆分。
 - **在线人数对已结束的版本窗口留空**。在线只有「现在」这一个观测值，
   拿它代表一段历史窗口，会让两个历史版本显示出同一个数。
 - **构建号来自第三方镜像**，标 `third_party`，仅作官方公告的旁证。
@@ -219,7 +262,7 @@ YouTube 观众与 Steam 玩家同源，两者放在一起才有讨论因果的�
 ```text
 config/games.yml                  游戏与 Steam App ID
 config/bilibili_videos.yml        按角色/版本登记并核验的 BV 号
-config/youtube_videos.yml         官方频道与自动发现的视频
+config/youtube_videos.yml         12 个官方频道（3 游戏 × 4 语区）与自动发现的视频
 config/dashboard.yml              轨道目录（看板自定义的来源）
 
 collectors/common.py              配置、HTTP、幂等写入、采集日志

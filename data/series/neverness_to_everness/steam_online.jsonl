@@ -16,3 +16,6 @@
 {"date_local": "2026-09-15", "hour_local": 14, "sampled_at": "2026-09-15T06:05:11+00:00", "game_id": "neverness_to_everness", "steam_app_id": 4508340, "players": null, "status": "unavailable", "note": "request_error:ProxyError"}
 {"date_local": "2026-09-15", "hour_local": 15, "sampled_at": "2026-09-15T07:28:01+00:00", "game_id": "neverness_to_everness", "steam_app_id": 4508340, "players": 2332, "status": "observed", "note": ""}
 {"date_local": "2026-09-15", "hour_local": 16, "sampled_at": "2026-09-15T08:10:56+00:00", "game_id": "neverness_to_everness", "steam_app_id": 4508340, "players": null, "status": "unavailable", "note": "request_error:ConnectTimeout:retried2"}
+{"date_local": "2026-09-15", "hour_local": 17, "sampled_at": "2026-09-15T09:08:14+00:00", "game_id": "neverness_to_everness", "steam_app_id": 4508340, "players": 2552, "status": "observed", "note": ""}
+{"date_local": "2026-09-15", "hour_local": 18, "sampled_at": "2026-09-15T10:08:29+00:00", "game_id": "neverness_to_everness", "steam_app_id": 4508340, "players": 2809, "status": "observed", "note": ""}
+{"date_local": "2026-09-15", "hour_local": 19, "sampled_at": "2026-09-15T11:10:57+00:00", "game_id": "neverness_to_everness", "steam_app_id": 4508340, "players": null, "status": "unavailable", "note": "request_error:ConnectTimeout:retried2"}
