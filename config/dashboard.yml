@@ -69,6 +69,10 @@ lanes:
     height: 110
     unit: percent
     enabled: true
+    # 多对象对照时每个对象只画一条线，画哪条由 compare_field 指定。
+    # 这里取累计而不是当日：当日好评率本身锯齿很重，三四条叠在一起
+    # 只剩噪声；累计线平滑，能看出口碑的走向差异。
+    compare_field: cumulative_review_rate
     # 同一条轨道可以放多个系列，前提是单位相同、可以共用一个纵轴
     series:
       - field: daily_review_rate

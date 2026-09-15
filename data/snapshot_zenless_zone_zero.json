@@ -5,6 +5,8 @@
   "game": {
     "game_id": "zenless_zone_zero",
     "display_name": "绝区零",
+    "short_name": "绝区零",
+    "developer": "米哈游",
     "steam_app_id": 4162040,
     "steam_status": "partial",
     "region": "CN"

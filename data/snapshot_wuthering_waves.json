@@ -5,6 +5,8 @@
   "game": {
     "game_id": "wuthering_waves",
     "display_name": "鸣潮",
+    "short_name": "鸣潮",
+    "developer": "库洛游戏",
     "steam_app_id": 3513350,
     "steam_status": "partial",
     "region": "CN"

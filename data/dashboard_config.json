@@ -43,6 +43,7 @@
       "height": 110,
       "unit": "percent",
       "enabled": true,
+      "compare_field": "cumulative_review_rate",
       "series": [
         {
           "field": "daily_review_rate",

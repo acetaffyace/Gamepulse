@@ -5,6 +5,8 @@
   "game": {
     "game_id": "neverness_to_everness",
     "display_name": "异环",
+    "short_name": "异环",
+    "developer": "完美世界",
     "steam_app_id": 4508340,
     "steam_status": "partial",
     "region": "CN"

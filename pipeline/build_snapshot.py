@@ -236,6 +236,8 @@ def build(game_id: str) -> dict:
         "game": {
             "game_id": game_id,
             "display_name": game.get("display_name"),
+            "short_name": game.get("short_name"),
+            "developer": game.get("developer"),
             "steam_app_id": game.get("steam_app_id"),
             "steam_status": game.get("steam_status"),
             "region": game.get("region"),

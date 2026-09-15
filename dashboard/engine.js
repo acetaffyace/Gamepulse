@@ -124,7 +124,8 @@ function makeGameSubject(entry) {
     kind: 'game',
     gameId: entry.game_id,
     label: entry.short_name || entry.display_name,
-    sublabel: `${entry.developer || ''} · 上线 ${entry.review_start || '—'}`,
+    sublabel: [entry.developer, `上线 ${entry.review_start || '—'}`]
+      .filter(Boolean).join(' · '),
     color: entry.color,
     day0: entry.review_start,
     window: { start: entry.review_start, end: entry.snapshot_date },
