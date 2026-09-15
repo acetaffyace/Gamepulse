@@ -36,8 +36,11 @@ python -m http.server 8770                   # 必须在项目根目录启动
 
 访问 <http://127.0.0.1:8770/dashboard/index.html>
 
+或者直接双击 `scripts\serve.cmd` —— 它会启动服务并自动打开浏览器，
+关掉那个黑窗口就停止服务。
+
 页面通过 `../data/*.json` 读取数据，因此 **HTTP 服务必须从项目根目录启动**，
-而不是 `dashboard/` 子目录。
+而不是 `dashboard/` 子目录；在 `dashboard/` 里启动会全部 404。
 
 ### 自动更新（Windows 本机）
 
