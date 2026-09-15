@@ -6685,6 +6685,11 @@
           "d": "2026-09-14",
           "v": 14923,
           "t": 443
+        },
+        {
+          "d": "2026-09-15",
+          "v": 7461,
+          "t": 444
         }
       ],
       "boundaries": [
@@ -6770,7 +6775,7 @@
         {
           "bvid": "BV1uMbg6SEnL",
           "d": "2026-09-08",
-          "v": 1888273,
+          "v": 1890744,
           "title": "《鸣潮》共鸣者「景燃」PV | “问神”",
           "character": "景燃",
           "content_type": "character_trailer",
@@ -6780,7 +6785,7 @@
         {
           "bvid": "BV1PTbL6REMT",
           "d": "2026-09-06",
-          "v": 1626876,
+          "v": 1628125,
           "title": "《鸣潮》共鸣者战斗演示 | 景燃",
           "character": "景燃",
           "content_type": "character_demo",
@@ -6790,7 +6795,7 @@
         {
           "bvid": "BV1GFbk6LEVm",
           "d": "2026-08-18",
-          "v": 2844861,
+          "v": 2846145,
           "title": "《鸣潮》共鸣者「清宵」PV | 修行",
           "character": "清宵",
           "content_type": "character_trailer",
@@ -6800,7 +6805,7 @@
         {
           "bvid": "BV1q2b86sEZz",
           "d": "2026-08-17",
-          "v": 2470438,
+          "v": 2471203,
           "title": "《鸣潮》共鸣者战斗演示 | 清宵",
           "character": "清宵",
           "content_type": "character_demo",
@@ -6810,7 +6815,7 @@
         {
           "bvid": "BV1Jcub6BEqB",
           "d": "2026-08-07",
-          "v": 2245261,
+          "v": 2246233,
           "title": "《鸣潮》3.6版本PV | 蜃云灯影，凡尘剑心",
           "character": null,
           "content_type": "version_trailer",
@@ -6820,7 +6825,7 @@
         {
           "bvid": "BV1MQ3c62EVc",
           "d": "2026-07-28",
-          "v": 2100915,
+          "v": 2101121,
           "title": "《鸣潮》共鸣者「穗穗」PV | 重明",
           "character": "穗穗",
           "content_type": "character_trailer",
@@ -6830,7 +6835,7 @@
         {
           "bvid": "BV1hN3G6mEcB",
           "d": "2026-07-26",
-          "v": 1742087,
+          "v": 1742183,
           "title": "《鸣潮》共鸣者战斗演示 | 穗穗",
           "character": "穗穗",
           "content_type": "character_demo",
@@ -6840,7 +6845,7 @@
         {
           "bvid": "BV1ZKMe61Eth",
           "d": "2026-07-08",
-          "v": 2820401,
+          "v": 2820631,
           "title": "《鸣潮》共鸣者「秧秧·玄翎」PV | 噩梦",
           "character": "秧秧·玄翎",
           "content_type": "character_trailer",
@@ -8223,6 +8228,11 @@
           "d": "2026-09-14",
           "v": 9984,
           "t": 89
+        },
+        {
+          "d": "2026-09-15",
+          "v": 5733,
+          "t": 90
         }
       ],
       "boundaries": [
@@ -8252,7 +8262,7 @@
         {
           "bvid": "BV1vRtA6gE5m",
           "d": "2026-08-28",
-          "v": 1547846,
+          "v": 1549480,
           "title": "《绝区零》3.2版本PV | 她与她的隐秘往事",
           "character": null,
           "content_type": "version_trailer",
@@ -8262,7 +8272,7 @@
         {
           "bvid": "BV1wote6gEQ1",
           "d": "2026-09-04",
-          "v": 3176202,
+          "v": 3181646,
           "title": "《绝区零》克拉蕾角色展示 | 不想培训，但攻略已写好",
           "character": "克拉蕾",
           "content_type": "character_demo",
@@ -8272,7 +8282,7 @@
         {
           "bvid": "BV1C9b76cEks",
           "d": "2026-09-06",
-          "v": 2695902,
+          "v": 2705012,
           "title": "《绝区零》克拉蕾EP | Link Up 血火相连",
           "character": "克拉蕾",
           "content_type": "character_ep",
@@ -8282,7 +8292,7 @@
         {
           "bvid": "BV1uiNd69EYU",
           "d": "2026-07-17",
-          "v": 2212338,
+          "v": 2212462,
           "title": "《绝区零》3.1版本PV | 漫长的告别",
           "character": null,
           "content_type": "version_trailer",
@@ -8292,7 +8302,7 @@
         {
           "bvid": "BV1QRKJ6ZEzC",
           "d": "2026-07-17",
-          "v": 2817688,
+          "v": 2819763,
           "title": "《绝区零》二周年主题曲MV | 预言",
           "character": null,
           "content_type": "theme_mv",
@@ -8302,7 +8312,7 @@
         {
           "bvid": "BV11Aga6oENR",
           "d": "2026-07-24",
-          "v": 4178448,
+          "v": 4179583,
           "title": "《绝区零》蕾米埃尔角色展示 | 恰如往昔",
           "character": "蕾米埃尔",
           "content_type": "character_demo",
@@ -8312,7 +8322,7 @@
         {
           "bvid": "BV1fk3E61Eu5",
           "d": "2026-07-26",
-          "v": 3570722,
+          "v": 3571454,
           "title": "《绝区零》蕾米埃尔动画短片 | 静默之日",
           "character": "蕾米埃尔",
           "content_type": "animation_short",
@@ -8322,7 +8332,7 @@
         {
           "bvid": "BV1jhgf6pEJw",
           "d": "2026-07-27",
-          "v": 4488147,
+          "v": 4493860,
           "title": "《绝区零》蕾米埃尔EP | Two to Tango 交缠舞步",
           "character": "蕾米埃尔",
           "content_type": "character_ep",
@@ -8332,7 +8342,7 @@
         {
           "bvid": "BV1jm3r6rEif",
           "d": "2026-07-29",
-          "v": 984406,
+          "v": 984814,
           "title": "ZTALK | 蕾米埃尔设计幕后",
           "character": "蕾米埃尔",
           "content_type": "behind_the_scenes",
@@ -8342,7 +8352,7 @@
         {
           "bvid": "BV1bWgA6SEnT",
           "d": "2026-08-14",
-          "v": 1752219,
+          "v": 1752878,
           "title": "《绝区零》希格莉德角色展示 | 好马识途",
           "character": "希格莉德",
           "content_type": "character_demo",
@@ -8352,7 +8362,7 @@
         {
           "bvid": "BV1Qfb86LEC5",
           "d": "2026-08-17",
-          "v": 1536761,
+          "v": 1537264,
           "title": "《绝区零》希格莉德角色PV | 小马希莉",
           "character": "希格莉德",
           "content_type": "character_trailer",
@@ -8362,7 +8372,7 @@
         {
           "bvid": "BV1x77Q6eE7o",
           "d": "2026-06-06",
-          "v": 1812411,
+          "v": 1812527,
           "title": "《绝区零》3.0版本PV | 某个梦游者的自白",
           "character": null,
           "content_type": "version_trailer",
@@ -8372,7 +8382,7 @@
         {
           "bvid": "BV1FzEr6YExJ",
           "d": "2026-06-12",
-          "v": 2605357,
+          "v": 2605660,
           "title": "《绝区零》维琳娜角色展示 | 茶会一如既往",
           "character": "维琳娜",
           "content_type": "character_demo",
@@ -8382,7 +8392,7 @@
         {
           "bvid": "BV1mrjN6qE4C",
           "d": "2026-06-16",
-          "v": 1582993,
+          "v": 1583165,
           "title": "《绝区零》维琳娜角色PV | 拟剧论",
           "character": "维琳娜",
           "content_type": "character_trailer",
@@ -8392,7 +8402,7 @@
         {
           "bvid": "BV1W1Tp6xEhT",
           "d": "2026-07-03",
-          "v": 2816177,
+          "v": 2816800,
           "title": "《绝区零》诺姆角色展示 | 大嗯呐假说",
           "character": "诺姆",
           "content_type": "character_demo",
@@ -8402,7 +8412,7 @@
         {
           "bvid": "BV1WdTS6eECV",
           "d": "2026-07-06",
-          "v": 3279868,
+          "v": 3282084,
           "title": "《绝区零》诺姆EP｜chaos.exe",
           "character": "诺姆",
           "content_type": "character_ep",
@@ -9470,6 +9480,11 @@
           "d": "2026-09-14",
           "v": 4321,
           "t": 68
+        },
+        {
+          "d": "2026-09-15",
+          "v": 2277,
+          "t": 69
         }
       ],
       "boundaries": [
@@ -9492,7 +9507,7 @@
         {
           "bvid": "BV1jVtt6LEjP",
           "d": "2026-09-02",
-          "v": 2435669,
+          "v": 2436112,
           "title": "《异环》灵可角色PV丨宇宙的频段",
           "character": "灵可",
           "content_type": "character_trailer",
@@ -9502,7 +9517,7 @@
         {
           "bvid": "BV18btt6NEJw",
           "d": "2026-09-03",
-          "v": 561249,
+          "v": 561857,
           "title": "《异环》灵可EP丨Frequency☆Finder",
           "character": "灵可",
           "content_type": "character_ep",
@@ -9512,7 +9527,7 @@
         {
           "bvid": "BV1UU4C6kEam",
           "d": "2026-08-30",
-          "v": 697650,
+          "v": 697819,
           "title": "《异环》角色实机战斗丨灵可",
           "character": "灵可",
           "content_type": "character_demo",
@@ -9522,7 +9537,7 @@
         {
           "bvid": "BV1y1uq6zEud",
           "d": "2026-08-12",
-          "v": 3692834,
+          "v": 3693686,
           "title": "《异环》残虹角色PV丨惑心谲影",
           "character": "残虹",
           "content_type": "character_trailer",
@@ -9532,7 +9547,7 @@
         {
           "bvid": "BV1W1uq6zEdG",
           "d": "2026-08-13",
-          "v": 939881,
+          "v": 940176,
           "title": "《异环》残虹EP丨Seven Shades of Red",
           "character": "残虹",
           "content_type": "character_ep",
@@ -9542,7 +9557,7 @@
         {
           "bvid": "BV1RgM16rEe6",
           "d": "2026-08-08",
-          "v": 2783283,
+          "v": 2783339,
           "title": "《异环》残虹角色短片丨灵魂的颜色",
           "character": "残虹",
           "content_type": "animation_short",
@@ -9552,7 +9567,7 @@
         {
           "bvid": "BV15gM16kE1g",
           "d": "2026-08-10",
-          "v": 728017,
+          "v": 728101,
           "title": "《异环》角色实机战斗丨残虹",
           "character": "残虹",
           "content_type": "character_demo",
@@ -9562,7 +9577,7 @@
         {
           "bvid": "BV1egM16kE9D",
           "d": "2026-08-09",
-          "v": 2453535,
+          "v": 2453586,
           "title": "《异环》1.3版本PV「雾中朔望星回」",
           "character": null,
           "content_type": "version_trailer",
@@ -9572,7 +9587,7 @@
         {
           "bvid": "BV1VVKH6vEnH",
           "d": "2026-07-22",
-          "v": 2701366,
+          "v": 2701428,
           "title": "《异环》伊洛伊角色PV丨想做什么梦？",
           "character": "伊洛伊",
           "content_type": "character_trailer",
@@ -9582,7 +9597,7 @@
         {
           "bvid": "BV1YVKH6vEdg",
           "d": "2026-07-23",
-          "v": 884704,
+          "v": 884756,
           "title": "《异环》伊洛伊EP丨Lullaby",
           "character": "伊洛伊",
           "content_type": "character_ep",
@@ -9592,7 +9607,7 @@
         {
           "bvid": "BV1YLKH6PEPP",
           "d": "2026-07-19",
-          "v": 782869,
+          "v": 782894,
           "title": "《异环》角色实机战斗丨伊洛伊",
           "character": "伊洛伊",
           "content_type": "character_demo",
@@ -9602,7 +9617,7 @@
         {
           "bvid": "BV12iKU6eEyj",
           "d": "2026-07-01",
-          "v": 2890158,
+          "v": 2890257,
           "title": "《异环》真红角色PV丨梦的边缘",
           "character": "真红",
           "content_type": "character_trailer",
@@ -9612,7 +9627,7 @@
         {
           "bvid": "BV1xiKU6eED2",
           "d": "2026-07-02",
-          "v": 1079602,
+          "v": 1079676,
           "title": "《异环》真红EP丨Whatever It Says",
           "character": "真红",
           "content_type": "character_ep",
@@ -9622,7 +9637,7 @@
         {
           "bvid": "BV12BKU6AEW1",
           "d": "2026-06-30",
-          "v": 3043596,
+          "v": 3043663,
           "title": "《异环》真红角色短片丨赤龙假日",
           "character": "真红",
           "content_type": "animation_short",
@@ -9632,7 +9647,7 @@
         {
           "bvid": "BV11f7J6LEwU",
           "d": "2026-06-28",
-          "v": 1344536,
+          "v": 1344561,
           "title": "《异环》角色实机战斗丨真红",
           "character": "真红",
           "content_type": "character_demo",
@@ -9642,7 +9657,7 @@
         {
           "bvid": "BV1Bo736yE99",
           "d": "2026-06-27",
-          "v": 3504735,
+          "v": 3504813,
           "title": "《异环》1.2版本PV「九百九十九夜」",
           "character": null,
           "content_type": "version_trailer",
@@ -9652,7 +9667,7 @@
         {
           "bvid": "BV18dEr6DErw",
           "d": "2026-06-17",
-          "v": 2177210,
+          "v": 2177250,
           "title": "《异环》卡厄斯角色PV丨未尽的抉择",
           "character": "卡厄斯",
           "content_type": "character_trailer",
@@ -9662,7 +9677,7 @@
         {
           "bvid": "BV1tcEk67EBB",
           "d": "2026-06-18",
-          "v": 1278689,
+          "v": 1278731,
           "title": "《异环》卡厄斯EP丨Chains of the Dark",
           "character": "卡厄斯",
           "content_type": "character_ep",
@@ -9672,7 +9687,7 @@
         {
           "bvid": "BV1gdEr6QE1a",
           "d": "2026-06-14",
-          "v": 920153,
+          "v": 920182,
           "title": "《异环》角色实机战斗丨卡厄斯",
           "character": "卡厄斯",
           "content_type": "character_demo",
@@ -9697,7 +9712,7 @@
       "window_reviews": 4919,
       "window_daily_avg": 71.3,
       "window_rate": 81.78,
-      "latest_online": 14923,
+      "latest_online": 7461,
       "videos_in_window": 8,
       "versions_in_window": 2
     },
@@ -9708,7 +9723,7 @@
       "window_reviews": 7310,
       "window_daily_avg": 105.9,
       "window_rate": 87.91,
-      "latest_online": 9984,
+      "latest_online": 5733,
       "videos_in_window": 11,
       "versions_in_window": 2
     },
@@ -9719,7 +9734,7 @@
       "window_reviews": 6388,
       "window_daily_avg": 92.6,
       "window_rate": 81.95,
-      "latest_online": 4321,
+      "latest_online": 2277,
       "videos_in_window": 11,
       "versions_in_window": 1
     }

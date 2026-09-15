@@ -4,19 +4,19 @@
       "game_id": "wuthering_waves",
       "display_name": "鸣潮",
       "file": "snapshot_wuthering_waves.json",
-      "valid_days": 1
+      "valid_days": 2
     },
     {
       "game_id": "zenless_zone_zero",
       "display_name": "绝区零",
       "file": "snapshot_zenless_zone_zero.json",
-      "valid_days": 1
+      "valid_days": 2
     },
     {
       "game_id": "neverness_to_everness",
       "display_name": "异环",
       "file": "snapshot_neverness_to_everness.json",
-      "valid_days": 1
+      "valid_days": 2
     }
   ],
   "generated_at": "2026-09-15"
