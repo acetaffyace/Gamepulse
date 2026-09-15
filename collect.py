@@ -68,8 +68,6 @@ def main() -> int:
     if run("pipeline/build_snapshot.py", scope) != 0:
         failures.append("build_snapshot")
         critical = True
-    if run("pipeline/build_compare.py", []) != 0:
-        failures.append("build_compare")
 
     print()
     if failures:

@@ -14,6 +14,7 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import urlparse
 
 import requests
 import yaml
@@ -115,26 +116,101 @@ def youtube_api_key() -> str | None:
     return os.environ.get("YOUTUBE_API_KEY") or None
 
 
+# 按域名决定走不走代理。这条策略不是偏好，是实测约束：
+#
+#   Steam  api/store.steampowered.com 境内直连 ReadTimeout，必须走代理；
+#   B 站   api.bilibili.com 直连可用，且**必须**直连 —— 接口对境外 IP 有风控，
+#          走代理会让同一个指标在不同日子来自不同出口，口径漂移。
+#   YouTube 境内不可达，走代理。
+#
+# 以前 session() 无差别继承环境代理，B 站请求也跟着出境了。分流放在这里
+# 而不是各采集器里，是为了让「哪个站走哪条路」只有一处定义、无法写漏。
+PROXY_HOSTS = ("steampowered.com", "steamcommunity.com",
+               "googleapis.com", "youtube.com", "ytimg.com")
+DIRECT_HOSTS = ("bilibili.com", "bilivideo.com", "hdslb.com")
+
+
+def _env_proxies() -> dict:
+    return {
+        "http": os.environ.get("HTTP_PROXY") or os.environ.get("http_proxy"),
+        "https": os.environ.get("HTTPS_PROXY") or os.environ.get("https_proxy"),
+    }
+
+
+def _host_of(url: str) -> str:
+    return (urlparse(url).hostname or "").lower()
+
+
+def proxies_for(url: str) -> dict:
+    """URL → 该用的 proxies 字典。直连返回显式的 None，而不是空字典 ——
+    空字典在 trust_env=True 时仍会被环境代理填充。"""
+    host = _host_of(url)
+    if any(host == h or host.endswith("." + h) for h in DIRECT_HOSTS):
+        return {"http": None, "https": None}
+    if any(host == h or host.endswith("." + h) for h in PROXY_HOSTS):
+        return _env_proxies()
+    return _env_proxies()
+
+
+class RoutedSession(requests.Session):
+    """按域名自动选路的 Session。
+
+    trust_env=False 关掉 requests 自己的环境代理合并，改由 proxies_for()
+    显式决定，避免「设了 proxies 但环境变量又偷偷合并进来」这类隐式行为。
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.trust_env = False
+        self.headers.update({"User-Agent": USER_AGENT})
+
+    def request(self, method, url, **kwargs):  # type: ignore[override]
+        if kwargs.get("proxies") is None:
+            kwargs["proxies"] = proxies_for(url)
+        return super().request(method, url, **kwargs)
+
+
 def session() -> requests.Session:
-    sess = requests.Session()
-    sess.headers.update({"User-Agent": USER_AGENT})
-    return sess
+    return RoutedSession()
+
+
+# 代理是本机进程，计划任务跑的时候它可能没开着。这类失败是暂时的，
+# 重试一次就能过；而 HTTP 4xx/风控页是确定性的，重试没有意义也不礼貌。
+_TRANSIENT = (requests.exceptions.ProxyError,
+              requests.exceptions.ConnectionError,
+              requests.exceptions.Timeout)
 
 
 def get_json(sess: requests.Session, url: str, params: dict | None = None,
-             timeout: int = 20, headers: dict | None = None) -> tuple[dict | None, str]:
-    """返回 (payload, status)。失败时 payload 为 None，绝不返回伪造值。"""
-    try:
-        resp = sess.get(url, params=params, timeout=timeout, headers=headers)
-    except requests.RequestException as exc:
-        return None, f"request_error:{type(exc).__name__}"
-    if resp.status_code != 200:
-        return None, f"http_{resp.status_code}"
-    try:
-        return resp.json(), "ok"
-    except ValueError:
-        # 风控页通常是 HTML，不是 JSON
-        return None, "non_json_response"
+             timeout: int = 20, headers: dict | None = None,
+             retries: int = 2, backoff: float = 3.0) -> tuple[dict | None, str]:
+    """返回 (payload, status)。失败时 payload 为 None，绝不返回伪造值。
+
+    只对连接层的暂时性故障重试。status 会保留最后一次的失败原因，
+    并在重试过 n 次后标成 request_error:XxxError:retried{n}，
+    这样采集日志能区分「网络抖了一下」和「一直连不上」。
+    """
+    attempts = max(1, retries + 1)
+    last = "unknown"
+    for attempt in range(attempts):
+        try:
+            resp = sess.get(url, params=params, timeout=timeout, headers=headers)
+        except _TRANSIENT as exc:
+            last = f"request_error:{type(exc).__name__}"
+            if attempt + 1 < attempts:
+                time.sleep(backoff * (attempt + 1))
+                continue
+            return None, f"{last}:retried{retries}" if retries else last
+        except requests.RequestException as exc:
+            return None, f"request_error:{type(exc).__name__}"
+        if resp.status_code != 200:
+            return None, f"http_{resp.status_code}"
+        try:
+            return resp.json(), "ok"
+        except ValueError:
+            # 风控页通常是 HTML，不是 JSON
+            return None, "non_json_response"
+    return None, last
 
 
 def write_json(path: Path, payload: dict) -> None:

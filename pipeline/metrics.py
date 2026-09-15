@@ -207,9 +207,14 @@ def video_series(records: list[dict], platform: str = "bilibili",
     B 站与 YouTube 共用这一套：两边的字段名在采集器里已经统一成
     view/like/comment 这类平台无关的名字，差异只在字段集合与互动率分子。
 
-    发布后 D1..D7 的爬坡曲线只有在「视频发布当天就已进采集表」时才成立。
-    事后补登记的视频，首次采集拿到的是已经积累若干天的累计值，
-    该视频的 ramp.available=False —— 不能把它和当天就入表的视频放一起比。
+    ramp 是「发布后第 N 天的累计播放」曲线，用于把不同时间发布的视频
+    按各自的发布日对齐后比较 —— 拿当前累计播放直接比，等于拿上线一年的
+    游戏和上线一周的游戏比总流水。
+
+    曲线从首次采集到该视频那天开始，一直长到今天。发布当天就进采集表的
+    视频 ramp.available=True，曲线含起跑段；事后补登记的视频首次采集拿到的
+    已经是积累若干天的累计值，available=False，看板把这类曲线画成虚线并
+    标出缺口 —— 缺起跑段不等于这条曲线没有价值，但不能假装它是完整的。
     """
     stats_keys = stats_keys or (BILI_STATS if platform == "bilibili" else YT_STATS)
     by_video: dict[str, dict] = {}
@@ -275,15 +280,18 @@ def video_series(records: list[dict], platform: str = "bilibili",
             }
             slot["latest_view"] = last["stats"]["view"]
             first_gap = observed[0]["days_since_pub"]
-            # 允许 1 天误差：当天发布、次日首采仍能还原 D1 起的爬坡
+            # available 只描述「有没有拍到起跑段」，不再决定收多少个点：
+            # 曲线要一直往后长，看板才能把同类视频按发布后天数叠在一起比。
+            # 事后补登记的视频曲线从第 N 天才开始，缺口由 available=False
+            # 标出来（看板画成虚线），而不是把整条曲线丢掉。
+            # 允许 1 天误差：当天发布、次日首采仍能还原 D1 起的爬坡。
             slot["ramp"] = {
                 "available": first_gap is not None and first_gap <= 1,
                 "first_capture_days_since_pub": first_gap,
                 "points": [{"day": p["days_since_pub"],
                             "view": p["stats"]["view"],
                             "view_delta": p["deltas"].get("view")}
-                           for p in observed if p["days_since_pub"] is not None
-                           and p["days_since_pub"] <= 7],
+                           for p in observed if p["days_since_pub"] is not None],
             }
         else:
             slot["latest"] = None

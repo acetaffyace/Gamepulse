@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import re
 import sys
+from datetime import date, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -26,6 +27,12 @@ from collectors.steam_build import build_events as build_build_events  # noqa: E
 from pipeline import metrics, quality, review_profile  # noqa: E402
 
 OBSERVED_LABEL = "observed"
+
+# 对比对象的固定配色。看板里颜色代表「对比对象」这个身份，不代表指标，
+# 所以色位在这里按游戏分配一次，index.json 带出去给前端直接用，
+# 避免前端各自再发明一套。同游戏的不同版本由前端在基色上取深浅。
+# 这 5 个色位已通过 validate_palette 的相邻对与全对检查。
+SLOT_COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#4a3aa7", "#e87ba4"]
 
 # 官方公告标题里的版本号，例如 Version 3.2 "Their Secret Histories"
 VERSION_PATTERNS = [
@@ -297,6 +304,53 @@ def build(game_id: str) -> dict:
     return snapshot
 
 
+def version_catalog(snapshot: dict) -> list[dict]:
+    """版本更新日 → 可作为「对比对象」的版本窗口列表。
+
+    窗口是 [本次更新日, 下次更新日的前一天]，最后一个版本延伸到快照日。
+    这样每个版本各占一段互不重叠的区间，用它自己的更新日做 day0 对齐时，
+    「3.1 的第 7 天」和「3.2 的第 7 天」才是同一件事。
+
+    版本号会重复（例如鸣潮 2.7 在相邻两天各有一条更新公告），所以对外的
+    唯一键取更新日期而不是版本号。
+    """
+    bounds = [e for e in snapshot.get("events", [])
+              if e.get("is_version_boundary") and e.get("date_local")]
+    bounds.sort(key=lambda e: e["date_local"])
+
+    out = []
+    for i, ev in enumerate(bounds):
+        start = ev["date_local"]
+        if i + 1 < len(bounds):
+            nxt = bounds[i + 1]["date_local"]
+            end = _shift_day(nxt, -1)
+            next_version = bounds[i + 1].get("version_id")
+        else:
+            nxt, next_version = None, None
+            end = snapshot["snapshot_date"]
+        if end < start:
+            # 同一天或相邻天的两条更新公告，窗口会退化成空区间，跳过
+            continue
+        out.append({
+            "key": start,
+            "version_id": ev.get("version_id"),
+            "date_local": start,
+            "end_local": end,
+            "days": _days_between(start, end) + 1,
+            "next_version": next_version,
+            "open_ended": nxt is None,
+        })
+    return out
+
+
+def _shift_day(iso: str, n: int) -> str:
+    return (date.fromisoformat(iso) + timedelta(days=n)).isoformat()
+
+
+def _days_between(a: str, b: str) -> int:
+    return (date.fromisoformat(b) - date.fromisoformat(a)).days
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="生成 dashboard 快照 JSON")
     parser.add_argument("--game", help="game_id；省略则处理所有 active 游戏")
@@ -306,7 +360,7 @@ def main() -> int:
         g["game_id"] for g in load_games() if g.get("active")]
 
     index = []
-    for game_id in game_ids:
+    for slot, game_id in enumerate(game_ids):
         snapshot = build(game_id)
         out = DATA_DIR / f"snapshot_{game_id}.json"
         write_json(out, snapshot)
@@ -315,8 +369,16 @@ def main() -> int:
         index.append({
             "game_id": game_id,
             "display_name": snapshot["game"]["display_name"],
+            "short_name": snapshot["game"].get("short_name")
+                          or snapshot["game"]["display_name"],
+            "developer": snapshot["game"].get("developer"),
+            "color": SLOT_COLORS[slot % len(SLOT_COLORS)],
             "file": out.name,
             "valid_days": cov["valid_days"],
+            "review_start": (snapshot.get("review_history_coverage") or {}).get("start"),
+            "review_days": (snapshot.get("review_history_coverage") or {}).get("days"),
+            "snapshot_date": snapshot["snapshot_date"],
+            "versions": version_catalog(snapshot),
         })
         print(f"已生成 {out.name}")
         print(f"  覆盖 : {cov['start']} → {cov['end']}，"
