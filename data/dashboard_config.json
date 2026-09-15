@@ -292,18 +292,214 @@
       "caveat": "互动率跨视频可比，播放量不可比 —— 后者受推荐位影响极大"
     },
     {
-      "id": "yt_videos",
-      "title": "YouTube 官方视频",
+      "id": "yt_view_global",
+      "title": "YouTube 播放 · 全球",
       "subtitle": "横轴为发布日 · 纵轴为当前累计观看数",
       "adapter": "video_scatter",
-      "path": "youtube.videos",
+      "path": "youtube.locales.global.videos",
       "field": "view",
       "chart": "scatter",
+      "color": "slot1",
+      "height": 110,
+      "unit": "count",
+      "enabled": false,
+      "caveat": "累计值随时间自然增长，跨视频比大小不公平；跨语区更不可比"
+    },
+    {
+      "id": "yt_view_ja",
+      "title": "YouTube 播放 · 日语",
+      "subtitle": "横轴为发布日 · 纵轴为当前累计观看数",
+      "adapter": "video_scatter",
+      "path": "youtube.locales.ja.videos",
+      "field": "view",
+      "chart": "scatter",
+      "color": "slot2",
+      "height": 110,
+      "unit": "count",
+      "enabled": false,
+      "caveat": "累计值随时间自然增长，跨视频比大小不公平；跨语区更不可比"
+    },
+    {
+      "id": "yt_view_ko",
+      "title": "YouTube 播放 · 韩语",
+      "subtitle": "横轴为发布日 · 纵轴为当前累计观看数",
+      "adapter": "video_scatter",
+      "path": "youtube.locales.ko.videos",
+      "field": "view",
+      "chart": "scatter",
+      "color": "slot3",
+      "height": 110,
+      "unit": "count",
+      "enabled": false,
+      "caveat": "累计值随时间自然增长，跨视频比大小不公平；跨语区更不可比"
+    },
+    {
+      "id": "yt_view_zhtw",
+      "title": "YouTube 播放 · 繁中",
+      "subtitle": "横轴为发布日 · 纵轴为当前累计观看数",
+      "adapter": "video_scatter",
+      "path": "youtube.locales.zh-tw.videos",
+      "field": "view",
+      "chart": "scatter",
+      "color": "slot5",
+      "height": 110,
+      "unit": "count",
+      "enabled": false,
+      "caveat": "累计值随时间自然增长，跨视频比大小不公平；跨语区更不可比"
+    },
+    {
+      "id": "yt_engagement_global",
+      "title": "YouTube 互动率 · 全球",
+      "subtitle": "（点赞+评论）/ 播放",
+      "adapter": "video_scatter",
+      "path": "youtube.locales.global.videos",
+      "field": "engagement",
+      "from_rates": true,
+      "chart": "scatter",
+      "color": "slot1",
+      "height": 100,
+      "unit": "percent",
+      "enabled": false,
+      "caveat": "点赞与评论可被创作者隐藏，隐藏时记 null 不记 0"
+    },
+    {
+      "id": "yt_engagement_ja",
+      "title": "YouTube 互动率 · 日语",
+      "subtitle": "（点赞+评论）/ 播放",
+      "adapter": "video_scatter",
+      "path": "youtube.locales.ja.videos",
+      "field": "engagement",
+      "from_rates": true,
+      "chart": "scatter",
+      "color": "slot2",
+      "height": 100,
+      "unit": "percent",
+      "enabled": false,
+      "caveat": "点赞与评论可被创作者隐藏，隐藏时记 null 不记 0"
+    },
+    {
+      "id": "yt_engagement_ko",
+      "title": "YouTube 互动率 · 韩语",
+      "subtitle": "（点赞+评论）/ 播放",
+      "adapter": "video_scatter",
+      "path": "youtube.locales.ko.videos",
+      "field": "engagement",
+      "from_rates": true,
+      "chart": "scatter",
+      "color": "slot3",
+      "height": 100,
+      "unit": "percent",
+      "enabled": false,
+      "caveat": "点赞与评论可被创作者隐藏，隐藏时记 null 不记 0"
+    },
+    {
+      "id": "yt_engagement_zhtw",
+      "title": "YouTube 互动率 · 繁中",
+      "subtitle": "（点赞+评论）/ 播放",
+      "adapter": "video_scatter",
+      "path": "youtube.locales.zh-tw.videos",
+      "field": "engagement",
+      "from_rates": true,
+      "chart": "scatter",
+      "color": "slot5",
+      "height": 100,
+      "unit": "percent",
+      "enabled": false,
+      "caveat": "点赞与评论可被创作者隐藏，隐藏时记 null 不记 0"
+    },
+    {
+      "id": "yt_view_locales",
+      "title": "YouTube 语区播放对照",
+      "subtitle": "横轴为发布日 · 一个语区一种形状",
+      "adapter": "locale_scatter",
+      "path": "youtube.locales",
+      "order_path": "youtube.locale_order",
+      "locales": [
+        "global",
+        "ja",
+        "ko",
+        "zh-tw"
+      ],
+      "field": "view",
+      "chart": "scatter",
+      "height": 150,
+      "unit": "count",
+      "log": true,
+      "enabled": false,
+      "scales": [
+        {
+          "id": "abs",
+          "label": "播放量",
+          "hint": "对数纵轴。语区之间的垂直落差＝频道体量差，不是内容表现差。"
+        },
+        {
+          "id": "index",
+          "label": "相对本语区",
+          "hint": "每个点除以本语区播放量中位数，体量被除掉，跨语区可比。"
+        }
+      ],
+      "caveat": "累计播放随时间自然增长，发布越久越高；跨语区比大小请切到「相对本语区」"
+    },
+    {
+      "id": "yt_engagement_locales",
+      "title": "YouTube 语区互动率对照",
+      "subtitle": "（点赞+评论）/ 播放 · 一个语区一种形状",
+      "adapter": "locale_scatter",
+      "path": "youtube.locales",
+      "order_path": "youtube.locale_order",
+      "locales": [
+        "global",
+        "ja",
+        "ko",
+        "zh-tw"
+      ],
+      "field": "engagement",
+      "from_rates": true,
+      "chart": "scatter",
+      "height": 140,
+      "unit": "percent",
+      "enabled": false,
+      "scales": [
+        {
+          "id": "abs",
+          "label": "互动率",
+          "hint": "互动率本身就是截面比值，不受体量影响，四个语区可以直接比大小。"
+        },
+        {
+          "id": "index",
+          "label": "相对本语区",
+          "hint": "除以本语区互动率中位数，看的是「这支比同区常态高多少」。"
+        }
+      ],
+      "caveat": "点赞与评论可被创作者隐藏，隐藏时记 null 不记 0"
+    },
+    {
+      "id": "yt_ramp_global",
+      "title": "YouTube 发布后播放曲线 · 全球",
+      "subtitle": "横轴为发布后第 N 天",
+      "adapter": "video_ramp",
+      "path": "youtube.locales.global.videos",
+      "field": "view",
+      "chart": "line",
       "color": "slot1",
       "height": 120,
       "unit": "count",
       "enabled": false,
-      "caveat": "点赞与评论可被创作者隐藏，隐藏时记 null 不记 0"
+      "caveat": "补登记的视频缺起跑段，曲线画虚线并标出缺口"
+    },
+    {
+      "id": "yt_ramp_ja",
+      "title": "YouTube 发布后播放曲线 · 日语",
+      "subtitle": "横轴为发布后第 N 天",
+      "adapter": "video_ramp",
+      "path": "youtube.locales.ja.videos",
+      "field": "view",
+      "chart": "line",
+      "color": "slot2",
+      "height": 120,
+      "unit": "count",
+      "enabled": false,
+      "caveat": "补登记的视频缺起跑段，曲线画虚线并标出缺口"
     }
   ],
   "presets": {
@@ -361,9 +557,27 @@
         "new_reviews",
         "review_rate"
       ]
+    },
+    "yt_locales": {
+      "label": "语区对照",
+      "lanes": [
+        "yt_view_locales",
+        "yt_engagement_locales",
+        "new_reviews"
+      ]
+    },
+    "jp_market": {
+      "label": "日本市场",
+      "lanes": [
+        "yt_view_ja",
+        "yt_engagement_ja",
+        "yt_ramp_ja",
+        "new_reviews"
+      ]
     }
   },
   "adapters": [
+    "locale_scatter",
     "series",
     "share_delta",
     "stacked_share",

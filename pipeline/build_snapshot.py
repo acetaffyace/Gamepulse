@@ -21,7 +21,7 @@ from collectors.common import (  # noqa: E402
     read_series,
     today_local,
     write_json,
-    youtube_channel,
+    youtube_channels,
 )
 from collectors.steam_build import build_events as build_build_events  # noqa: E402
 from pipeline import metrics, quality, review_profile  # noqa: E402
@@ -163,7 +163,17 @@ def build_events(news_records: list[dict], price_points: list[dict],
 
     # 内容事件：来自 YouTube 官方频道发布日。与 B 站分开标 platform ——
     # 同一支 PV 在两个平台的发布时间常常差几小时到一天，合并会丢掉这个差异。
+    #
+    # **只取 global 语区。** 同一支 PV 在 4 个语区各发一遍，全部入事件会让
+    # 时间轴上每个内容节点重复四次；事件回答的是「什么时候发了这支片子」，
+    # 不是「发了几个语言版本」。语区之间的发布节奏差异由按语区分开的
+    # video_scatter / video_ramp 轨道回答，那才是能看出差异的地方。
+    #
+    # 已知取舍：某语区独占的内容（例如日本限定联动）暂不进事件时间轴。
+    # 要覆盖它，需要给时间轴加语区筛选，属于前端改动，未在本次范围内。
     for slot in (yt_videos or {}).values():
+        if slot.get("locale") not in (None, "global"):
+            continue
         label_kind = CONTENT_TYPE_LABEL.get(slot.get("content_type"), "官方视频")
         name = slot.get("character_name") or slot.get("version_id") or ""
         events.append({
@@ -174,6 +184,7 @@ def build_events(news_records: list[dict], price_points: list[dict],
             "version_id": slot.get("version_id"),
             "version_confirmed": slot.get("version_confirmed", False),
             "video_id": slot.get("video_id"),
+            "locale": slot.get("locale") or "global",
             "platform": "youtube",
             "source": "youtube",
             "source_url": f"https://www.youtube.com/watch?v={slot.get('video_id')}",
@@ -209,6 +220,24 @@ def build(game_id: str) -> dict:
     price_points = metrics.price_series(steam)
     videos = metrics.video_series(bili, platform="bilibili")
     yt_videos = metrics.video_series(youtube, platform="youtube", id_key="video_id")
+
+    # 按语区分组。**刻意不提供跨语区的 videos / totals。**
+    # 同一支 PV 在 global/ja/ko/zh-tw 是四个不同的 video_id，合计播放量会把
+    # 同一支片子数四遍 —— 那个数不会报错、看着也正常，只是没有任何含义。
+    # 跨语区该比的是同一支 PV 在各语区的表现差异（比值与排名），不是求和。
+    yt_locales: dict[str, dict] = {}
+    for locale, channel in youtube_channels(game_id).items():
+        slots = {vid: slot for vid, slot in yt_videos.items()
+                 if slot.get("locale") == locale}
+        yt_locales[locale] = {
+            "channel": channel,
+            "videos": list(slots.values()),
+            "totals": metrics.video_totals(slots, "youtube"),
+        }
+    # locale 缺失的视频（注册表漏填）不能静默丢掉 —— 它们不属于任何分组，
+    # 按语区取数时会整体消失。把数量摆出来，让它成为一个能被发现的问题。
+    yt_unassigned = [s for s in yt_videos.values() if not s.get("locale")]
+
     issues = quality.check(steam, bili)
 
     events = build_events(news, price_points, videos, yt_videos, builds)
@@ -270,9 +299,11 @@ def build(game_id: str) -> dict:
         },
         "youtube": {
             "available": bool(yt_videos),
-            "channel": youtube_channel(game_id),
-            "videos": list(yt_videos.values()),
-            "totals": metrics.video_totals(yt_videos, "youtube"),
+            # 只有 locales 这一层，没有平级的 videos/totals：
+            # 不提供跨语区合计，就不会有人不小心用到它。
+            "locales": yt_locales,
+            "locale_order": list(yt_locales),
+            "unassigned": len(yt_unassigned),
         },
         "quality": {"summary": quality.summarize(issues), "issues": issues},
         "sources": [

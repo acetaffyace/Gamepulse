@@ -288,18 +288,215 @@ lanes:
     enabled: false
     caveat: 互动率跨视频可比，播放量不可比 —— 后者受推荐位影响极大
 
-  - id: yt_videos
-    title: YouTube 官方视频
+  # ── YouTube：按语区分开的轨道 ──────────────────────────────────────
+  #
+  # 每款游戏有 global/ja/ko/zh-tw 四个官方频道，同一支 PV 在四处各发一遍，
+  # 是四个不同的 video_id。这里**刻意不设「YouTube 合计」轨道** ——
+  # 快照里也没有可供它取数的跨语区合计（见 build_snapshot.py）。
+  # 四条轨道并排堆叠，比较靠横向读，不靠求和。
+  #
+  # 播放量轨道跨语区**不可直接比大小**：频道体量差一个数量级
+  # （global 186 万订阅 vs NTE 韩语 3.3 万），播放量差主要来自盘子大小，
+  # 不是内容表现。跨语区看差异请用下面的互动率轨道 —— 它以播放为分母，
+  # 是截面比值，不受频道体量影响。
+
+  - id: yt_view_global
+    title: YouTube 播放 · 全球
     subtitle: 横轴为发布日 · 纵轴为当前累计观看数
     adapter: video_scatter
-    path: youtube.videos
+    path: youtube.locales.global.videos
     field: view
     chart: scatter
+    color: slot1
+    height: 110
+    unit: count
+    enabled: false
+    caveat: 累计值随时间自然增长，跨视频比大小不公平；跨语区更不可比
+
+  - id: yt_view_ja
+    title: YouTube 播放 · 日语
+    subtitle: 横轴为发布日 · 纵轴为当前累计观看数
+    adapter: video_scatter
+    path: youtube.locales.ja.videos
+    field: view
+    chart: scatter
+    color: slot2
+    height: 110
+    unit: count
+    enabled: false
+    caveat: 累计值随时间自然增长，跨视频比大小不公平；跨语区更不可比
+
+  - id: yt_view_ko
+    title: YouTube 播放 · 韩语
+    subtitle: 横轴为发布日 · 纵轴为当前累计观看数
+    adapter: video_scatter
+    path: youtube.locales.ko.videos
+    field: view
+    chart: scatter
+    color: slot3
+    height: 110
+    unit: count
+    enabled: false
+    caveat: 累计值随时间自然增长，跨视频比大小不公平；跨语区更不可比
+
+  - id: yt_view_zhtw
+    title: YouTube 播放 · 繁中
+    subtitle: 横轴为发布日 · 纵轴为当前累计观看数
+    adapter: video_scatter
+    path: youtube.locales.zh-tw.videos
+    field: view
+    chart: scatter
+    color: slot5
+    height: 110
+    unit: count
+    enabled: false
+    caveat: 累计值随时间自然增长，跨视频比大小不公平；跨语区更不可比
+
+  # 互动率是四个语区之间唯一能横向对比的指标：以播放为分母的截面比值，
+  # 不受频道订阅体量与发布时间影响。「日语频道互动率高于全球频道」
+  # 是一个有意义的陈述；「日语频道播放低于全球频道」不是。
+  - id: yt_engagement_global
+    title: YouTube 互动率 · 全球
+    subtitle: （点赞+评论）/ 播放
+    adapter: video_scatter
+    path: youtube.locales.global.videos
+    field: engagement
+    from_rates: true
+    chart: scatter
+    color: slot1
+    height: 100
+    unit: percent
+    enabled: false
+    caveat: 点赞与评论可被创作者隐藏，隐藏时记 null 不记 0
+
+  - id: yt_engagement_ja
+    title: YouTube 互动率 · 日语
+    subtitle: （点赞+评论）/ 播放
+    adapter: video_scatter
+    path: youtube.locales.ja.videos
+    field: engagement
+    from_rates: true
+    chart: scatter
+    color: slot2
+    height: 100
+    unit: percent
+    enabled: false
+    caveat: 点赞与评论可被创作者隐藏，隐藏时记 null 不记 0
+
+  - id: yt_engagement_ko
+    title: YouTube 互动率 · 韩语
+    subtitle: （点赞+评论）/ 播放
+    adapter: video_scatter
+    path: youtube.locales.ko.videos
+    field: engagement
+    from_rates: true
+    chart: scatter
+    color: slot3
+    height: 100
+    unit: percent
+    enabled: false
+    caveat: 点赞与评论可被创作者隐藏，隐藏时记 null 不记 0
+
+  - id: yt_engagement_zhtw
+    title: YouTube 互动率 · 繁中
+    subtitle: （点赞+评论）/ 播放
+    adapter: video_scatter
+    path: youtube.locales.zh-tw.videos
+    field: engagement
+    from_rates: true
+    chart: scatter
+    color: slot5
+    height: 100
+    unit: percent
+    enabled: false
+    caveat: 点赞与评论可被创作者隐藏，隐藏时记 null 不记 0
+
+  # ---- 四个语区放进同一张图 ----
+  #
+  # 上面那组「一个语区一条轨道」的做法，理由是播放量跨语区不可直接比大小。
+  # 那条理由针对的是**线性共享纵轴**：实测各语区播放中位数
+  # global 118k / ja 58k / ko 39k / zh-tw 17k，最大值 607 万，跨近三个数量级，
+  # 硬叠在一条线性轴上繁中区会被压成贴底的直线。
+  #
+  # 换成下面这套编码之后，同图对照是成立的：
+  #   纵轴取对数 —— 读的是垂直距离＝倍数，语区之间那段恒定落差就是体量差本身；
+  #   纵轴可切到「相对本语区中位数」—— 体量被除掉，跨语区比较这才真正合法；
+  #   语区身份由**形状**承载，颜色只是辅助（多对象时颜色归对比对象）。
+  #
+  # 于是「日语区那支 PV 跑到了本区常态的 8 倍」这种话可以说了，
+  # 而「日语区播放低于全球区」依然不是一个有意义的陈述。
+  - id: yt_view_locales
+    title: YouTube 语区播放对照
+    subtitle: 横轴为发布日 · 一个语区一种形状
+    adapter: locale_scatter
+    path: youtube.locales
+    order_path: youtube.locale_order
+    locales: [global, ja, ko, zh-tw]
+    field: view
+    chart: scatter
+    height: 150
+    unit: count
+    # 播放量跨三个数量级（1.7 万 ~ 607 万），必须对数轴
+    log: true
+    enabled: false
+    scales:
+      - id: abs
+        label: 播放量
+        hint: 对数纵轴。语区之间的垂直落差＝频道体量差，不是内容表现差。
+      - id: index
+        label: 相对本语区
+        hint: 每个点除以本语区播放量中位数，体量被除掉，跨语区可比。
+    caveat: 累计播放随时间自然增长，发布越久越高；跨语区比大小请切到「相对本语区」
+
+  - id: yt_engagement_locales
+    title: YouTube 语区互动率对照
+    subtitle: （点赞+评论）/ 播放 · 一个语区一种形状
+    adapter: locale_scatter
+    path: youtube.locales
+    order_path: youtube.locale_order
+    locales: [global, ja, ko, zh-tw]
+    field: engagement
+    from_rates: true
+    chart: scatter
+    height: 140
+    unit: percent
+    enabled: false
+    scales:
+      - id: abs
+        label: 互动率
+        hint: 互动率本身就是截面比值，不受体量影响，四个语区可以直接比大小。
+      - id: index
+        label: 相对本语区
+        hint: 除以本语区互动率中位数，看的是「这支比同区常态高多少」。
+    caveat: 点赞与评论可被创作者隐藏，隐藏时记 null 不记 0
+
+  # 发布后播放曲线：按各自发布日对齐，这是跨语区比「起量速度」的正确形式。
+  # 只能从开始采集那天往后长，事后补登记的视频缺起跑段、画虚线。
+  - id: yt_ramp_global
+    title: YouTube 发布后播放曲线 · 全球
+    subtitle: 横轴为发布后第 N 天
+    adapter: video_ramp
+    path: youtube.locales.global.videos
+    field: view
+    chart: line
     color: slot1
     height: 120
     unit: count
     enabled: false
-    caveat: 点赞与评论可被创作者隐藏，隐藏时记 null 不记 0
+    caveat: 补登记的视频缺起跑段，曲线画虚线并标出缺口
+
+  - id: yt_ramp_ja
+    title: YouTube 发布后播放曲线 · 日语
+    subtitle: 横轴为发布后第 N 天
+    adapter: video_ramp
+    path: youtube.locales.ja.videos
+    field: view
+    chart: line
+    color: slot2
+    height: 120
+    unit: count
+    enabled: false
+    caveat: 补登记的视频缺起跑段，曲线画虚线并标出缺口
 
 # 预设视图：一键切换关注点。用户改动会覆盖预设并存进 localStorage。
 presets:
@@ -321,3 +518,9 @@ presets:
   online_focus:
     label: 在线盘
     lanes: [online, online_band, new_reviews, review_rate]
+  yt_locales:
+    label: 语区对照
+    lanes: [yt_view_locales, yt_engagement_locales, new_reviews]
+  jp_market:
+    label: 日本市场
+    lanes: [yt_view_ja, yt_engagement_ja, yt_ramp_ja, new_reviews]

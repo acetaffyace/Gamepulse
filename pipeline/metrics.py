@@ -232,6 +232,9 @@ def video_series(records: list[dict], platform: str = "bilibili",
                 "content_type": v.get("content_type"),
                 "owner_mid": v.get("owner_mid"),
                 "channel_id": v.get("channel_id"),
+                # YouTube 的语区。B 站没有这个维度，留 None。
+                # 不带下来的话，build_snapshot 就没法按语区分组。
+                "locale": v.get("locale"),
                 "platform": platform,
                 "pubdate": v.get("pubdate"),
                 "points": [],

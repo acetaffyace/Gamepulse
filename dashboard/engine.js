@@ -25,13 +25,18 @@
 
 const FONT = 'system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif';
 
+/* 与 index.html 的 CSS 变量一一对应。muted 从 #898781 提到 #6f6d68 是
+   对比度修正（3.50:1 → 5.10:1，WCAG AA 正文需 4.5:1）——
+   轨道标题的副标题、坐标轴刻度、提示框次要文字都走这个色。 */
 const C = {
   gridline:  '#e1e0d9',
   baseline:  '#c3c2b7',
-  muted:     '#898781',
+  marker:    '#9a978c',   // 版本更新竖线：承载信息，不能和网格线一样淡
+  muted:     '#6f6d68',
   secondary: '#52514e',
   primary:   '#0b0b0b',
   surface:   '#fcfcfb',
+  warning:   '#8a6300',   // 「数据积累中」状态文字，对浅底 ≥4.5:1
 };
 
 const fmt = n => (n === null || n === undefined) ? '—' : n.toLocaleString('zh-CN');
@@ -81,6 +86,15 @@ const UNITS = {
   percent: v => v == null ? '' : v + '%',
   pp: v => v == null ? '' : (v > 0 ? '+' : '') + v + 'pp',
   minutes_as_hours: v => v == null ? '' : v + 'h',
+  /* 相对本语区中位数的倍数。对数轴的刻度是 0.01 / 0.1 / 1 / 10 / 100，
+     小于 1 的那几档必须按量级给小数位 —— 一律 toFixed(1) 会把
+     0.01 显示成「0.0×」，正好是对数轴最不该出现的那个数字。 */
+  ratio: v => {
+    if (v == null) return '';
+    if (v >= 1) return Math.round(v) + '×';
+    if (v >= 0.1) return v.toFixed(1) + '×';
+    return v.toFixed(2) + '×';
+  },
 };
 
 const TOOLTIP_UNITS = {
@@ -88,6 +102,7 @@ const TOOLTIP_UNITS = {
   percent: v => v == null ? '—' : v.toFixed(2) + '%',
   pp: v => v == null ? '—' : (v > 0 ? '+' : '') + v.toFixed(2) + 'pp',
   minutes_as_hours: v => v == null ? '—' : v.toFixed(1) + ' 小时',
+  ratio: v => v == null ? '—' : v.toFixed(2) + '× 本语区中位数',
 };
 
 const unitFmt = u => UNITS[u] || UNITS.count;
@@ -114,6 +129,27 @@ function shadeFor(index, total) {
   if (total <= 1) return 0;
   return -0.3 + (0.66 * index) / (total - 1);
 }
+
+/* ---------- 语区 ----------
+ *
+ * 语区身份用**形状**承载，颜色只是辅助。两个理由：
+ *   一是本页调色板里 aqua 与 magenta 对浅底低于 3:1，CSS 顶部那条
+ *     relief 规则要求颜色不能是唯一线索；
+ *   二是多对象时颜色已经被「对比对象」占用了，形状是唯一还空着的通道。
+ * 四个符号刻意挑了轮廓差异大的（圆 / 三角 / 方 / 菱形），
+ * 在 9px 的散点尺寸下也能分得开。
+ */
+const LOCALE_LABEL = {
+  global: '全球', ja: '日语', ko: '韩语', 'zh-tw': '繁中', 'zh-cn': '简中',
+};
+const LOCALE_SYMBOL = {
+  global: 'circle', ja: 'triangle', ko: 'rect', 'zh-tw': 'diamond',
+  'zh-cn': 'pin',
+};
+const LOCALE_SLOT = {
+  global: 'slot1', ja: 'slot2', ko: 'slot3', 'zh-tw': 'slot5', 'zh-cn': 'slot7',
+};
+const localeLabel = code => LOCALE_LABEL[code] || code;
 
 /* ---------- 对比对象 ---------- */
 
@@ -259,7 +295,13 @@ function seriesName(subject, def, lane, multi) {
  *   「碰巧发布在它窗口里的」两批，口径就混了。
  */
 function videosForSubject(subject, lane) {
-  let videos = (resolve(subject.snap, lane.path) || [])
+  return filterVideos(resolve(subject.snap, lane.path) || [], subject, lane);
+}
+
+/* 同样的归属规则，但直接吃一个视频数组 —— 语区轨道的视频挂在
+   youtube.locales.<code>.videos 下，取数路径不是一条固定的 lane.path。 */
+function filterVideos(list, subject, lane) {
+  let videos = (list || [])
     .filter(v => !lane.content_types || lane.content_types.includes(v.content_type));
 
   if (subject.kind !== 'version') return videos;
@@ -430,6 +472,100 @@ const ADAPTERS = {
     return { series, empty: false, note, axisKeys, axisUnit: 'day' };
   },
 
+  /* 多语区同图对照。
+   *
+   * 四个语区原本是四条并排的独立轨道，理由写在 dashboard.yml 里：
+   * 播放量跨语区不可直接比大小，频道订阅体量差一个数量级
+   * （global 186 万 vs NTE 韩语 3.3 万），量差主要来自盘子大小。
+   * 那个理由在**线性共享纵轴**下完全成立 —— 实测各语区播放中位数
+   * global 118k / ja 58k / ko 39k / zh-tw 17k，最大值 6.07M，跨近三个
+   * 数量级，硬叠在一起繁中区会被压成贴底的一条直线。
+   *
+   * 放进一张图要成立，得换三样东西：
+   *
+   * 1. **对数纵轴**。读的不再是「谁的柱子高」，而是垂直距离 = 倍数关系。
+   *    语区之间那段恒定的垂直位移就是体量差本身，看见它之后，
+   *    真正有意义的问题变成「某支视频偏离本语区常态多少」。
+   * 2. **相对本语区中位数的标尺**（scale=index）。把每个点除以该语区
+   *    自己的中位数，体量差被除掉，跨语区比较这才真正合法 ——
+   *    「这支 PV 在日语区跑到常态的 8 倍、在全球区只有 3 倍」是可说的。
+   * 3. **形状 + 颜色双编码**。四个语区各有固定符号，不靠颜色单独承载
+   *    语区身份（本页调色板里 aqua/magenta 对比度低于 3:1，
+   *    CSS 顶部那条 relief 规则要求颜色不能是唯一线索）。
+   *
+   * 多对象时颜色改由对象承担、形状仍归语区，于是
+   * 「蓝色是鸣潮、三角是日语区」两条规则可以同时读。
+   */
+  locale_scatter(lane, ctx) {
+    const bag = lane.from_rates ? 'rates' : 'stats';
+    const wanted = lane.locales;
+    const indexed = lane.scale === 'index';
+    const out = [];
+    let any = false;
+
+    ctx.subjects.forEach(subject => {
+      const root = resolve(subject.snap, lane.path) || {};
+      const order = (wanted && wanted.length)
+        ? wanted
+        : (resolve(subject.snap, lane.order_path) || Object.keys(root));
+
+      order.forEach(code => {
+        const node = root[code];
+        if (!node) return;
+        const videos = filterVideos(node.videos, subject, lane);
+        const keys = new Set(ctx.axis.keys);
+
+        // 基线必须用**该语区该对象的全部视频**算，不能只用落在当前
+        // 时间范围内的那些 —— 否则切一下「最近 30 天」，基线跟着变，
+        // 同一支视频的倍数会莫名其妙地跳。
+        const all = (node.videos || [])
+          .map(v => ((v.latest || {})[bag] || {})[lane.field])
+          .filter(v => v != null && v > 0)
+          .sort((a, b) => a - b);
+        const median = all.length
+          ? all[Math.floor(all.length / 2)] : null;
+
+        const points = videos.map(v => {
+          const k = axisKeyOf(v.pubdate, subject, ctx.axis.align);
+          if (k === null || !keys.has(k)) return null;
+          const raw = ((v.latest || {})[bag] || {})[lane.field];
+          // 对数轴不接受 0 与负数；这类点是「没采到」而不是「值为 0」
+          if (raw == null || raw <= 0) return null;
+          if (indexed && !median) return null;
+          return { key: k, value: indexed ? raw / median : raw, raw, median,
+                   meta: { ...v, subject, locale: code } };
+        }).filter(Boolean);
+
+        if (points.length) any = true;
+        out.push({
+          name: ctx.multi ? `${subject.label} · ${localeLabel(code)}`
+                          : localeLabel(code),
+          subject, locale: code, kind: 'scatter',
+          color: ctx.multi ? subject.color : color(LOCALE_SLOT[code] || 'slot1'),
+          symbol: LOCALE_SYMBOL[code] || 'circle',
+          median, points,
+        });
+      });
+    });
+
+    const shown = out.filter(s => s.points.length).length;
+    // 相对标尺下 1× 是一条对所有语区都成立的共同基线，值得画出来；
+    // 绝对标尺下没有这样一条线（各语区的常态本来就不在一个高度）。
+    const baseline = indexed ? 1 : null;
+    // 对数轴只在「跨数量级」时才是对的。播放量跨三个数量级，要对数；
+    // 互动率本来就是 1%~20% 的截面比值，套上对数只会把它压扁 ——
+    // 所以绝对标尺是否取对数由 lane.log 决定，相对标尺则一律取对数
+    // （倍数是乘性的，0.5× 与 2× 只有在对数轴上才关于 1× 对称）。
+    const logScale = indexed || !!lane.log;
+    const axisNote = logScale ? '对数纵轴' : '线性纵轴';
+    const note = indexed
+      ? `${shown} 个语区 · 各自除以本语区中位数 · ${axisNote} · 1× 为该语区常态`
+      : `${shown} 个语区 · ${axisNote}` +
+        (logScale ? ' · 语区间的垂直落差＝频道体量差' : ' · 截面比值，可直接比大小');
+    return { series: out, empty: !any, logScale, baseline, note,
+             valueUnit: indexed ? 'ratio' : lane.unit };
+  },
+
   /* 全部登记视频的播放量日增量合计。跨天的增量记在结束日，
      因此 span_days > 1 的点标记出来，不假装是单日增量。 */
   video_delta(lane, ctx) {
@@ -587,19 +723,41 @@ const LANE_GAP = 46;     // 轨道之间的留白，需容纳轨道标题
 const CHART_TOP = 44;
 const CHART_BOTTOM = 42;
 
-function laneTitle(lane, top, note) {
+function laneTitle(lane, top, note, thin) {
   const sub = [lane.subtitle, note].filter(Boolean).join(' · ');
   return {
-    text: `{h|${lane.title}}` + (sub ? `  {s|${sub}}` : ''),
+    text: `{h|${lane.title}}` + (sub ? `  {${thin ? 'w' : 's'}|${sub}}` : ''),
     left: 2, top: top - 30,
     textStyle: {
       fontFamily: FONT,
       rich: {
         h: { fontSize: 12.5, fontWeight: 600, color: C.primary, fontFamily: FONT },
         s: { fontSize: 11.5, color: C.muted, fontFamily: FONT },
+        // 「数据还在积累」是一种状态，不是一句注释，要和普通副标题区分开
+        w: { fontSize: 11.5, color: C.warning, fontFamily: FONT, fontWeight: 500 },
       },
     },
   };
+}
+
+/* 一条轨道画得出来、但覆盖率极低时，必须把「数据还在积累」和
+   「这个指标本来就低」区分开。典型是 Steam 同时在线：它无法回填，
+   只能从开始采集那天往后长，90 天的横轴上目前只有 2 个点 ——
+   而它在默认预设里，新用户第一眼看到的就是一条近乎空白的轨道。
+   散点轨道（视频）天然稀疏，不参与这个判断。 */
+const THIN_COVERAGE = 0.25;
+
+function coverageOf(built, ctx) {
+  if (built.note) return { note: built.note, thin: false };
+  const span = ctx.axis.keys.length;
+  const dense = built.series.filter(s => s.values && s.kind !== 'scatter');
+  if (!span || !dense.length) return { note: undefined, thin: false };
+  const covered = Math.max(...dense.map(
+    s => s.values.filter(v => v != null).length));
+  if (!covered || covered / span >= THIN_COVERAGE) {
+    return { note: undefined, thin: false };
+  }
+  return { note: `数据积累中 · ${span} 天里只有 ${covered} 天有值`, thin: true };
 }
 
 /* 贯穿竖线只在「单个对象」时画版本更新日 —— 多对象各有各的版本节奏，
@@ -610,7 +768,7 @@ function laneMarkLine(ctx, withLabel) {
     const s = ctx.subjects[0];
     return {
       silent: true, symbol: 'none',
-      lineStyle: { color: C.baseline, width: 1 },
+      lineStyle: { color: C.marker, width: 1 },
       label: withLabel ? {
         show: true, position: 'start', distance: 6, fontSize: 11,
         color: C.secondary, fontFamily: FONT, fontWeight: 500,
@@ -625,7 +783,7 @@ function laneMarkLine(ctx, withLabel) {
   const bounds = (s.snap.events || []).filter(e => e.is_version_boundary);
   return {
     silent: true, symbol: 'none',
-    lineStyle: { color: C.baseline, width: 1 },
+    lineStyle: { color: C.marker, width: 1 },
     label: withLabel ? {
       show: true, position: 'start', distance: 6,
       formatter: p => p.name, fontSize: 11, color: C.secondary,
@@ -648,16 +806,21 @@ function buildLaneSeries(def, laneIndex, ctx, isFirst, ownAxis) {
   };
 
   if (def.kind === 'scatter') {
+    // 语区轨道用固定尺寸：纵轴已经在编码数值，再让直径也跟着数值走
+    // 就是同一个量编码两遍，而且会让大点吞掉相邻语区的点。
+    // 形状在这里承载语区身份，尺寸必须让位给形状的可辨识度。
+    const fixed = !!def.symbol && def.symbol !== true;
     return {
       ...base, type: 'scatter',
       data: (def.points || []).map(p => ({ value: [p.key, p.value], meta: p.meta })),
-      symbolSize: d => {
+      symbol: fixed ? def.symbol : 'circle',
+      symbolSize: fixed ? 10 : (d => {
         const v = Math.abs(d[1]) || 0;
         // 面积随数值开方增长：直接用数值做直径会让大视频吞掉整条轨道
         return Math.max(9, Math.min(26, 9 + Math.sqrt(v) / 160));
-      },
+      }),
       itemStyle: { color: def.color, opacity: .85,
-                   borderColor: C.surface, borderWidth: 2 },
+                   borderColor: C.surface, borderWidth: fixed ? 1 : 2 },
     };
   }
 
@@ -783,25 +946,53 @@ function renderPulse(chart, el, lanes, ctx) {
         axisLabel: { color: C.secondary, fontSize: 11.5, fontFamily: FONT },
       });
     } else {
+      // 跨数量级的轨道（语区播放量：中位数 17k~118k、最大 607 万）走对数轴，
+      // 读的是垂直距离＝倍数关系，而不是柱子高低
+      const unit = built.valueUnit || lane.unit;
       yAxes.push({
         gridIndex: i,
+        type: built.logScale ? 'log' : 'value',
+        logBase: 10,
         axisLine: { show: false }, axisTick: { show: false },
         splitLine: { lineStyle: { color: C.gridline, width: 1 } },
         axisLabel: { color: C.muted, fontSize: 11, fontFamily: FONT,
-                     formatter: unitFmt(lane.unit) },
+                     formatter: unitFmt(unit) },
         max: isShare ? 100 : undefined,
         // 好评率这类高位窄幅指标，从 0 起会把全部变化压成一条直线
-        min: (lane.unit === 'percent' && !isShare)
+        min: (lane.unit === 'percent' && !isShare && !built.logScale)
           ? (v => Math.max(0, Math.floor(v.min - 4))) : undefined,
       });
     }
 
-    const note = built.empty ? (built.note || '暂无数据') : built.note;
-    titles.push(laneTitle(lane, top, note));
+    const cov = built.empty
+      ? { note: built.note || '暂无数据', thin: true }
+      : coverageOf(built, ctx);
+    built.coverage = cov;
+    titles.push(laneTitle(lane, top, cov.note, cov.thin));
 
     built.series.forEach(def => {
+      // 图例点掉的对象只是不画，轨道结构（纵轴、标题、其余对象）保持不变
+      if (def.subject && ctx.hidden && ctx.hidden.has(def.subject.key)) return;
       series.push(buildLaneSeries(def, i, ctx, i === 0, ownAxis));
     });
+
+    // 相对标尺下的 1× 基准线。它对所有语区同时成立，是这个视图里
+    // 唯一一条跨语区可读的横线 —— 绝对标尺下没有这种线。
+    if (built.baseline != null) {
+      series.push({
+        type: 'line', xAxisIndex: i, yAxisIndex: i, data: [], silent: true,
+        markLine: {
+          symbol: 'none', silent: true,
+          lineStyle: { color: C.marker, width: 1, type: 'dashed' },
+          // 标签放在网格外的右侧留白里：画在网格内会正好压在
+          // 最密集的那一簇点上（1× 附近本来就是点最多的地方）
+          label: { show: true, position: 'end', distance: 4,
+                   formatter: '1× 本语区常态',
+                   fontSize: 10.5, color: C.secondary, fontFamily: FONT },
+          data: [{ yAxis: built.baseline }],
+        },
+      });
+    }
 
     top += lane.height + LANE_GAP;
   });
@@ -855,7 +1046,7 @@ function buildTooltip(params, laneData, ctx) {
   let any = false;
 
   laneData.forEach(({ lane, built }) => {
-    const toText = tipFmt(lane.unit);
+    const toText = tipFmt(built.valueUnit || lane.unit);
     // 自带横轴的轨道要按自己的刻度找下标，不能用共享轴的
     const laneAt = built.axisKeys ? built.axisKeys.indexOf(key) : at;
     built.series.forEach(def => {
@@ -863,9 +1054,13 @@ function buildTooltip(params, laneData, ctx) {
         def.points.filter(p => p.key === key).forEach(p => {
           any = true;
           const m = p.meta || {};
+          // 相对标尺下光给倍数不够：读者需要知道「8× 的绝对值是多少」，
+          // 以及这个语区的常态本身在什么量级
+          const scaleNote = (p.raw != null && p.median)
+            ? `<br>${fmt(p.raw)} · 本语区中位数 ${fmt(p.median)}` : '';
           const extra = def.kind === 'marks'
             ? ''
-            : `${(m.title || '').slice(0, 42)}${m.content_type ? ' · ' + CONTENT_LABEL[m.content_type] : ''}`;
+            : `${(m.title || '').slice(0, 42)}${m.content_type ? ' · ' + CONTENT_LABEL[m.content_type] : ''}${scaleNote}`;
           s += row(def.color, def.kind === 'marks' ? `${def.name} 版本更新` : def.name,
                    def.kind === 'marks' ? (m.label || '') : toText(p.value), extra);
         });
@@ -904,6 +1099,7 @@ const CONTENT_LABEL = {
   version_trailer: '版本 PV',
   character_trailer: '角色 PV',
   character_demo: '角色演示',
+  season_teaser: '季前瞻',
   ep: 'EP',
   other: '其他',
 };

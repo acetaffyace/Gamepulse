@@ -8,6 +8,13 @@
 YouTube 观众与 Steam 玩家高度同源，接上之后海外盘才有完整的
 「传播 → 关注 → 留存」链条。
 
+语区（locale）
+--------------
+每款游戏有 global/ja/ko/zh-tw 四个官方频道。同一支 PV 在四个频道各发一遍，
+是四个不同的 video_id。因此每条记录都带 locale，统计一律按语区分开 ——
+把四个语区的播放量相加等于把同一支片子数四遍，得到的数看着正常，但无意义。
+跨语区要比的是同一支 PV 的表现差异（比值），不是求和。
+
 配额
 ----
 免费层每天 10,000 units，本采集器的用法：
@@ -52,7 +59,7 @@ from collectors.common import (  # noqa: E402
     today_local,
     upsert_series,
     youtube_api_key,
-    youtube_channel,
+    youtube_locale_of_channel,
 )
 
 VIDEOS_URL = "https://www.googleapis.com/youtube/v3/videos"
@@ -135,8 +142,10 @@ def collect_game(game_id: str, api_key: str, date_local: str) -> dict:
         return {}
 
     sess = session()
-    channel = youtube_channel(game_id)
-    expected_channel = channel.get("channel_id")
+    # channel_id → locale。比「是不是本游戏的频道」更严一层：
+    # 日语频道的视频被误标成 global 时，两个 channel_id 都在本游戏白名单里，
+    # 单纯的归属校验发现不了，但语区归属校验能。
+    locale_of = youtube_locale_of_channel(game_id)
 
     results: list[dict] = []
     raws: dict[str, dict] = {}
@@ -152,13 +161,25 @@ def collect_game(game_id: str, api_key: str, date_local: str) -> dict:
             measured = {"video_id": vid, **fetched[vid]}
             entry = by_id[vid]
 
-            # 与 B 站的 owner.mid 复核同理：防止登记表指向了搬运频道
-            if (expected_channel and measured.get("channel_id")
-                    and measured["channel_id"] != expected_channel):
-                measured["note"] = (f"channel_mismatch:got={measured['channel_id']},"
-                                    f"expected={expected_channel}")
+            # 与 B 站的 owner.mid 复核同理：防止登记表指向了搬运频道。
+            # 多语区下分两种错法，必须分开报，因为处理方式不同：
+            #   channel_not_official —— 采到的频道根本不属于本游戏（配错 handle）
+            #   locale_mismatch      —— 频道属于本游戏，但不是登记的那个语区
+            #                           （多为 --append 时 locale 落错）
+            declared = entry.get("locale")
+            actual_cid = measured.get("channel_id")
+            actual_locale = locale_of.get(actual_cid) if actual_cid else None
+
+            if actual_cid and locale_of and not actual_locale:
+                measured["note"] = f"channel_not_official:got={actual_cid}"
+            elif actual_locale and declared and actual_locale != declared:
+                measured["note"] = (f"locale_mismatch:got={actual_locale},"
+                                    f"declared={declared}")
 
             measured.update({
+                # 以登记值为准，缺失时用接口反查出的语区兜底 ——
+                # 留空会让这条视频在按语区分组时掉出所有分组，静默消失。
+                "locale": declared or actual_locale,
                 "character_id": entry.get("character_id"),
                 "character_name": entry.get("character_name"),
                 "version_id": entry.get("version_id"),
@@ -181,10 +202,28 @@ def collect_game(game_id: str, api_key: str, date_local: str) -> dict:
 
     ok = sum(1 for r in results if r["status"] == OBSERVED)
     units = (len(ids) + BATCH_SIZE - 1) // BATCH_SIZE
+
+    # 按语区分别计数。合计数字掩盖不了的问题它掩盖得了：某个语区整体采空
+    # （频道改名、handle 失效）在总数里只是「少了几十条」，按语区看才是
+    # 「ja 这一栏是 0」。
+    by_locale: dict[str, list[int]] = {}
+    for r in results:
+        bucket = by_locale.setdefault(r.get("locale") or "?", [0, 0])
+        bucket[1] += 1
+        if r["status"] == OBSERVED:
+            bucket[0] += 1
+    locale_detail = " ".join(f"{loc}={n[0]}/{n[1]}"
+                             for loc, n in sorted(by_locale.items()))
+    flagged = sum(1 for r in results if r.get("note", "").startswith(
+        ("channel_not_official", "locale_mismatch")))
+
     log_collection("youtube", game_id, date_local, action,
-                   f"observed={ok}/{len(results)};quota_units={units}")
-    print(f"[{action}] {game_id} {date_local}：{ok}/{len(results)} 个视频，"
-          f"消耗配额 {units} units")
+                   f"observed={ok}/{len(results)};by_locale={locale_detail};"
+                   f"flagged={flagged};quota_units={units}")
+    print(f"[{action}] {game_id} {date_local}：{ok}/{len(results)} 个视频"
+          f"（{locale_detail}），消耗配额 {units} units")
+    if flagged:
+        print(f"  ⚠ {flagged} 条存在频道/语区归属问题，见上方标注")
     return record
 
 
