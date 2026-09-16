@@ -237,17 +237,61 @@ function buildCtx() {
   };
 }
 
+function clearDashboardState(message) {
+  chart.clear();
+  laneData = [];
+  hiddenSubjects.clear();
+
+  document.getElementById('pulse').style.height = '120px';
+  document.getElementById('legend').innerHTML = `<span class="muted">${message}</span>`;
+  document.getElementById('pulseNote').textContent = '';
+  document.getElementById('pulseFineText').textContent = '';
+  document.getElementById('tiles').innerHTML = '';
+  document.getElementById('readout').innerHTML = '';
+
+  document.getElementById('cmpWindowNote').textContent = '';
+  document.querySelector('#cmpTable tbody').innerHTML = '';
+  document.querySelector('#cadenceTable tbody').innerHTML = '';
+
+  document.querySelector('#versionTable thead tr').innerHTML =
+    '<th>版本</th><th>更新日</th>';
+  document.querySelector('#versionTable tbody').innerHTML = '';
+  document.getElementById('versionLead').innerHTML = '';
+  document.getElementById('versionNote').textContent = '';
+
+  document.querySelector('#langTable thead tr').innerHTML = '';
+  document.querySelector('#langTable tbody').innerHTML = '';
+  document.getElementById('langNote').textContent = '';
+
+  document.querySelector('#dataTable thead tr').innerHTML = `
+    <th>日期</th>
+    <th class="num">新增评测</th>
+    <th class="num">好评</th>
+    <th class="num">差评</th>
+    <th class="num">当日好评率</th>
+    <th class="num">累计好评率</th>
+    <th class="num">Steam 同时在线</th>
+    <th>事件</th>`;
+  document.querySelector('#dataTable tbody').innerHTML = '';
+
+  document.getElementById('sources').innerHTML = '';
+  document.getElementById('caveat').innerHTML = '';
+
+  document.getElementById('pulseFine').open = false;
+  document.getElementById('versionFine').open = false;
+  document.getElementById('tableCard').classList.add('hidden');
+  const toggleTable = document.getElementById('toggleTable');
+  toggleTable.textContent = '显示数据表';
+  toggleTable.setAttribute('aria-expanded', 'false');
+}
+
 function renderAll() {
   const ctx = buildCtx();
   const lanes = activeLanes();
   const el = document.getElementById('pulse');
 
   const blank = msg => {
-    chart.clear();
-    el.style.height = '120px';
-    document.getElementById('legend').innerHTML = `<span class="muted">${msg}</span>`;
-    document.getElementById('readout').innerHTML = '';
-    document.getElementById('pulseNote').textContent = '';
+    clearDashboardState(msg);
     persistView();
   };
   if (!subjects.length) {
