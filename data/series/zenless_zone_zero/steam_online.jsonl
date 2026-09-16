@@ -19,3 +19,11 @@
 {"date_local": "2026-09-15", "hour_local": 17, "sampled_at": "2026-09-15T09:08:13+00:00", "game_id": "zenless_zone_zero", "steam_app_id": 4162040, "players": 5664, "status": "observed", "note": ""}
 {"date_local": "2026-09-15", "hour_local": 18, "sampled_at": "2026-09-15T10:08:28+00:00", "game_id": "zenless_zone_zero", "steam_app_id": 4162040, "players": 6128, "status": "observed", "note": ""}
 {"date_local": "2026-09-15", "hour_local": 19, "sampled_at": "2026-09-15T11:08:46+00:00", "game_id": "zenless_zone_zero", "steam_app_id": 4162040, "players": null, "status": "unavailable", "note": "request_error:ReadTimeout:retried2"}
+{"date_local": "2026-09-15", "hour_local": 21, "sampled_at": "2026-09-15T13:09:08+00:00", "game_id": "zenless_zone_zero", "steam_app_id": 4162040, "players": null, "status": "unavailable", "note": "request_error:ConnectTimeout:retried2"}
+{"date_local": "2026-09-16", "hour_local": 10, "sampled_at": "2026-09-16T02:33:34+00:00", "game_id": "zenless_zone_zero", "steam_app_id": 4162040, "players": 6131, "status": "observed", "note": ""}
+{"date_local": "2026-09-16", "hour_local": 11, "sampled_at": "2026-09-16T03:05:09+00:00", "game_id": "zenless_zone_zero", "steam_app_id": 4162040, "players": 6074, "status": "observed", "note": ""}
+{"date_local": "2026-09-16", "hour_local": 12, "sampled_at": "2026-09-16T04:06:59+00:00", "game_id": "zenless_zone_zero", "steam_app_id": 4162040, "players": 5888, "status": "observed", "note": ""}
+{"date_local": "2026-09-16", "hour_local": 13, "sampled_at": "2026-09-16T05:05:06+00:00", "game_id": "zenless_zone_zero", "steam_app_id": 4162040, "players": 5325, "status": "observed", "note": ""}
+{"date_local": "2026-09-16", "hour_local": 14, "sampled_at": "2026-09-16T06:08:45+00:00", "game_id": "zenless_zone_zero", "steam_app_id": 4162040, "players": null, "status": "unavailable", "note": "request_error:ReadTimeout:retried2"}
+{"date_local": "2026-09-16", "hour_local": 15, "sampled_at": "2026-09-16T07:05:07+00:00", "game_id": "zenless_zone_zero", "steam_app_id": 4162040, "players": 4913, "status": "observed", "note": ""}
+{"date_local": "2026-09-16", "hour_local": 16, "sampled_at": "2026-09-16T08:08:21+00:00", "game_id": "zenless_zone_zero", "steam_app_id": 4162040, "players": 5011, "status": "observed", "note": ""}
