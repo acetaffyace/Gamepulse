@@ -9,7 +9,7 @@
  */
 
 const STORAGE_KEY = 'gamepulse.view.v3';
-const VIEW_STATE_VERSION = 4;
+const VIEW_STATE_VERSION = 5;
 
 let config = null;            // dashboard_config.json
 let catalog = [];             // index.json 的 games，即对比对象目录
@@ -20,8 +20,111 @@ let subjects = [];            // 当前对比对象（长度 1 即单游戏）
 let align = 'calendar';       // calendar | day0
 let rangeDays = 90;
 let laneState = [];           // [{id, height, enabled}]，顺序即显示顺序
+let videoViews = [];          // 用户配置的视频视图，按数组顺序垂直排列
+let videoDraft = null;        // 面板中尚未添加的视频筛选条件
+let videoStatus = '';
 let laneData = [];            // 最近一次渲染的轨道数据，供图例/数据表复用
 let hiddenSubjects = new Set();  // 图例里被临时隐藏的对象（不进 URL，刷新即复位）
+
+const VIDEO_PLATFORMS = ['bilibili', 'youtube'];
+const VIDEO_LOCALES = ['global', 'ja', 'ko', 'zh-tw'];
+const VIDEO_CONTENT_LABELS = {
+  version_trailer: '版本 PV', version_preview: '版本前瞻节目',
+  character_trailer: '角色 PV',
+  character_demo: '角色展示', character_ep: '角色 EP',
+  season_teaser: '主题 / 活动预告', ep: 'EP', theme_mv: '主题曲 MV',
+  animation_short: '动画短片', behind_the_scenes: '幕后内容', other: '其他官方视频',
+};
+const VIDEO_METRICS = {
+  view: { label: '播放 / 观看量', title: '视频播放量', unit: 'count' },
+  engagement: { label: '互动率', title: '视频互动率', unit: 'percent' },
+  ramp: { label: '发布后播放曲线', title: '视频发布后播放曲线', unit: 'count' },
+  daily_delta: { label: '每日播放增量', title: '视频每日播放增量', unit: 'count' },
+};
+
+const isLegacyVideoLane = lane =>
+  ['video_scatter', 'video_ramp', 'video_delta', 'locale_scatter'].includes(lane.adapter);
+
+function defaultVideoDraft() {
+  return {
+    platforms: ['bilibili', 'youtube'],
+    locales: VIDEO_LOCALES.slice(),
+    content_types: [...(config.important_video_types || [
+      'version_trailer', 'character_trailer', 'character_demo', 'character_ep',
+    ]), 'version_preview'],
+    metric: 'view', scale: 'abs',
+  };
+}
+
+function normalizeVideoView(raw) {
+  const value = raw || {};
+  const platforms = [...new Set((value.platforms || []).filter(x => VIDEO_PLATFORMS.includes(x)))];
+  const locales = [...new Set((value.locales || []).filter(x => VIDEO_LOCALES.includes(x)))];
+  const contentTypes = [...new Set((value.content_types || []).filter(x =>
+    Object.hasOwn(VIDEO_CONTENT_LABELS, x)))];
+  if (!platforms.length || !contentTypes.length) return null;
+  const metric = Object.hasOwn(VIDEO_METRICS, value.metric) ? value.metric : 'view';
+  const scale = metric === 'view' && ['abs', 'index'].includes(value.scale)
+    ? value.scale : 'abs';
+  const id = /^[a-zA-Z0-9_-]{1,48}$/.test(value.id || '')
+    ? value.id : `video-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+  const height = Math.max(80, Math.min(260, Number(value.height) || 150));
+  return { id, platforms, locales: locales.length ? locales : VIDEO_LOCALES.slice(),
+           content_types: contentTypes, metric, scale, height };
+}
+
+function uniqueViewId() {
+  return `video-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+}
+
+function videoViewFromLegacyLane(lane, scale, height) {
+  const isBili = String(lane.path || '').startsWith('bilibili.');
+  const ytLocale = String(lane.path || '').match(/^youtube\.locales\.([^.]+)\.videos$/);
+  let metric = lane.adapter === 'video_ramp' ? 'ramp'
+    : lane.adapter === 'video_delta' ? 'daily_delta'
+    : lane.from_rates ? 'engagement' : 'view';
+  const contentTypes = (lane.content_types || config.important_video_types || []).slice();
+  // 旧的版本 PV 轨道包含前瞻特别节目；新视图将它们拆开后仍保留原有覆盖范围。
+  if (contentTypes.includes('version_trailer') && !contentTypes.includes('version_preview')) {
+    contentTypes.push('version_preview');
+  }
+  const locales = lane.locales || (ytLocale ? [ytLocale[1]] : VIDEO_LOCALES);
+  return normalizeVideoView({
+    id: uniqueViewId(), platforms: [isBili ? 'bilibili' : 'youtube'], locales,
+    content_types: contentTypes,
+    metric, scale: scale || (lane.scales || [])[0]?.id || 'abs',
+    height: height || lane.height || (metric === 'ramp' ? 150 : 140),
+  });
+}
+
+function videoViewsFromLaneIds(ids, states = laneState) {
+  const byId = new Map(config.lanes.map(l => [l.id, l]));
+  const grouped = new Map();
+  ids.forEach(id => {
+    const lane = byId.get(id);
+    if (!lane || !isLegacyVideoLane(lane)) return;
+    const state = states.find(s => s.id === id);
+    const view = videoViewFromLegacyLane(lane, state && state.scale,
+                                         state && state.height);
+    if (!view) return;
+    const key = JSON.stringify([view.metric, view.scale]);
+    const current = grouped.get(key) || { ...view, platforms: [], locales: [],
+                                           content_types: [], height: 0 };
+    current.platforms.push(...view.platforms);
+    if (view.platforms.includes('youtube')) current.locales.push(...view.locales);
+    current.content_types.push(...view.content_types);
+    current.height = Math.max(current.height, view.height);
+    grouped.set(key, current);
+  });
+  return [...grouped.values()].map(view => normalizeVideoView({
+    ...view, platforms: [...new Set(view.platforms)], locales: [...new Set(view.locales)],
+  })).filter(Boolean);
+}
+
+function defaultVideoViews() {
+  const preset = (config.presets || {}).default;
+  return videoViewsFromLaneIds((preset && preset.lanes) || []);
+}
 
 const pct = n => (n === null || n === undefined) ? '—' : n.toFixed(2) + '%';
 
@@ -136,7 +239,7 @@ function fail(title, hint) {
 const defaultScale = l => ((l.scales || [])[0] || {}).id || null;
 
 function defaultLaneState() {
-  return config.lanes.map(l => ({
+  return config.lanes.filter(l => !isLegacyVideoLane(l)).map(l => ({
     id: l.id, height: l.height || 120, enabled: !!l.enabled,
     scale: defaultScale(l),
   }));
@@ -145,15 +248,19 @@ function defaultLaneState() {
 function applyPreset(name) {
   const preset = (config.presets || {})[name];
   if (!preset) return;
-  const wanted = preset.lanes;
+  const wanted = preset.lanes.filter(id => {
+    const lane = config.lanes.find(l => l.id === id);
+    return !lane || !isLegacyVideoLane(lane);
+  });
   const byId = new Map(config.lanes.map(l => [l.id, l]));
   const make = (id, enabled) => {
     const l = byId.get(id) || {};
     return { id, height: l.height || 120, enabled, scale: defaultScale(l) };
   };
   laneState = wanted.map(id => make(id, true))
-    .concat(config.lanes.filter(l => !wanted.includes(l.id))
+    .concat(config.lanes.filter(l => !isLegacyVideoLane(l) && !wanted.includes(l.id))
                         .map(l => make(l.id, false)));
+  videoViews = videoViewsFromLaneIds(preset.lanes, []);
 }
 
 /* 轨道序列化成 id.height 或 id.height.scale。第三段是后加的，
@@ -161,7 +268,14 @@ function applyPreset(name) {
 function serializeView() {
   const on = laneState.filter(l => l.enabled)
     .map(l => `${l.id}.${l.height}${l.scale ? '.' + l.scale : ''}`).join(',');
-  return `v=${VIEW_STATE_VERSION}&s=${subjects.map(s => s.key).join('|')}&a=${align}&r=${rangeDays}&l=${on}`;
+  const params = new URLSearchParams();
+  params.set('v', VIEW_STATE_VERSION);
+  params.set('s', subjects.map(s => s.key).join('|'));
+  params.set('a', align);
+  params.set('r', rangeDays);
+  params.set('l', on);
+  params.set('x', JSON.stringify(videoViews));
+  return params.toString();
 }
 
 function parseView(str) {
@@ -172,42 +286,60 @@ function parseView(str) {
   if (params.get('a')) out.align = params.get('a') === 'day0' ? 'day0' : 'calendar';
   if (params.get('r') !== null) out.range = Number(params.get('r'));
   const l = params.get('l');
-  if (l) {
+  if (l !== null) {
     const byId = new Map(config.lanes.map(x => [x.id, x]));
-    const on = l.split(',').map(part => {
+    const parsed = l ? l.split(',').map(part => {
       const [id, h, scale] = part.split('.');
       const lane = byId.get(id);
       if (!lane) return null;
+      if (isLegacyVideoLane(lane)) {
+        return { id, height: Number(h) || lane.height || 120,
+                 enabled: true, scale: scale || defaultScale(lane), legacyVideo: true };
+      }
       // 链接里的 scale 必须是该轨道真的声明过的，否则退回默认 ——
       // 老链接没有这一段，改过配置的链接可能带着已删掉的标尺
       const known = (lane.scales || []).some(s => s.id === scale);
       return { id, height: Number(h) || 120, enabled: true,
                scale: known ? scale : defaultScale(lane) };
-    }).filter(Boolean);
-    if (on.length) {
-      // 旧视图只启用了 B 站轨道。补入现在已接入的四语区 YouTube 轨道一次，
-      // 随后的视图链接带 v=4，用户以后手动关闭也会保留自己的选择。
-      if (viewVersion < VIEW_STATE_VERSION) {
-        const onIds = new Set(on.map(x => x.id));
-        config.lanes.filter(x => x.enabled &&
-          ['yt_view_locales', 'yt_engagement_locales'].includes(x.id) &&
-          !onIds.has(x.id)).forEach(x => on.push({
-            id: x.id, height: x.height || 120, enabled: true,
-            scale: defaultScale(x),
-          }));
-      }
-      const onIds = new Set(on.map(x => x.id));
-      const off = config.lanes.filter(x => !onIds.has(x.id))
-        .map(x => ({ id: x.id, height: x.height || 120, enabled: false,
-                     scale: defaultScale(x) }));
-      out.lanes = on.concat(off);
+    }).filter(Boolean) : [];
+    const on = parsed.filter(x => !x.legacyVideo);
+    const legacyVideos = parsed.filter(x => x.legacyVideo);
+    // v3 链接在当时只记了 B 站轨道；按旧版升级规则补上 YouTube 语区比较一次。
+    if (viewVersion > 0 && viewVersion < 4) {
+      const present = new Set(legacyVideos.map(x => x.id));
+      ['yt_view_locales', 'yt_engagement_locales'].forEach(id => {
+        if (!present.has(id)) {
+          const lane = byId.get(id);
+          if (lane) legacyVideos.push({ id, height: lane.height || 140,
+                                        scale: defaultScale(lane), legacyVideo: true });
+        }
+      });
     }
+    const onIds = new Set(on.map(x => x.id));
+    const off = config.lanes.filter(x => !isLegacyVideoLane(x) && !onIds.has(x.id))
+      .map(x => ({ id: x.id, height: x.height || 120, enabled: false,
+                   scale: defaultScale(x) }));
+    out.lanes = on.concat(off);
+    out.videoViews = videoViewsFromLaneIds(
+      legacyVideos.map(x => x.id), parsed);
+  }
+  if (params.has('x')) {
+    try {
+      const parsedViews = JSON.parse(params.get('x'));
+      if (Array.isArray(parsedViews)) out.videoViews = parsedViews
+        .map(normalizeVideoView).filter(Boolean);
+    } catch (e) { /* 损坏的自定义视频状态会忽略，其他视图仍可加载 */ }
+  } else if (l === null && viewVersion > 0 && viewVersion < VIEW_STATE_VERSION) {
+    // 旧链接没有视频配置字段，保留当时启用的公开视频默认轨道。
+    out.videoViews = defaultVideoViews();
   }
   return out;
 }
 
 function restoreView() {
   laneState = defaultLaneState();
+  videoViews = defaultVideoViews();
+  videoDraft = defaultVideoDraft();
   let restored = {};
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -219,6 +351,7 @@ function restoreView() {
     Object.assign(restored, parseView(location.hash.slice(1)));
   }
   if (restored.lanes) laneState = restored.lanes;
+  if (restored.videoViews) videoViews = restored.videoViews;
   if (restored.range !== undefined) rangeDays = restored.range;
   if (restored.align) align = restored.align;
   return restored.subjectKeys || null;
@@ -233,10 +366,30 @@ function persistView() {
 
 function activeLanes() {
   const byId = new Map(config.lanes.map(l => [l.id, l]));
-  return laneState
+  const ordinary = laneState
     .filter(s => s.enabled && byId.has(s.id))
+    .filter(s => !isLegacyVideoLane(byId.get(s.id)))
     .map(s => ({ ...byId.get(s.id), height: s.height,
                  scale: s.scale || defaultScale(byId.get(s.id)) }));
+  const customVideo = videoViews.map(view => ({
+    ...view, id: `custom-${view.id}`, adapter: 'video_compare',
+    title: VIDEO_METRICS[view.metric].title,
+    subtitle: videoViewSummary(view),
+    field: view.metric === 'engagement' ? 'engagement' : 'view',
+    unit: VIDEO_METRICS[view.metric].unit,
+    chart: view.metric === 'ramp' ? 'line'
+      : view.metric === 'daily_delta' ? 'bar' : 'scatter',
+  }));
+  return ordinary.concat(customVideo);
+}
+
+function videoViewSummary(view) {
+  const platforms = view.platforms.map(p => p === 'bilibili' ? 'B 站' : 'YouTube').join(' + ');
+  const locales = view.platforms.includes('youtube')
+    ? ` · ${view.locales.map(locale => ({global:'全球', ja:'日语', ko:'韩语', 'zh-tw':'繁中'}[locale])).join('、')}` : '';
+  const types = view.content_types.map(type => VIDEO_CONTENT_LABELS[type]).join('、');
+  const scale = view.metric === 'view' && view.scale === 'index' ? ' · 相对各来源中位数' : '';
+  return `${platforms}${locales} · ${types}${scale}`;
 }
 
 function buildCtx() {
@@ -244,7 +397,8 @@ function buildCtx() {
   // 散点、日增量和语区对照都按发布日期定位；发布后爬升曲线用独立横轴，
   // 不应改变版本主图的起点或数据表日期范围。
   const videoLanes = lanes.filter(lane =>
-    ['video_scatter', 'video_delta', 'locale_scatter'].includes(lane.adapter));
+    ['video_scatter', 'video_delta', 'locale_scatter'].includes(lane.adapter) ||
+    (lane.adapter === 'video_compare' && lane.metric !== 'ramp'));
   return {
     axis: buildAxis(subjects, align, rangeDays, videoLanes),
     subjects,
@@ -317,7 +471,7 @@ function renderAll() {
     return blank('还没有选择对比对象。用上方的「＋ 添加对象」挑一个游戏或版本。');
   }
   if (!lanes.length) {
-    return blank('没有启用任何轨道。点击右上角「自定义轨道」选择要显示的指标。');
+    return blank('没有启用任何轨道。打开「轨道配置」添加视频视图或选择其他指标。');
   }
 
   laneData = renderPulse(chart, el, lanes, ctx);
@@ -363,9 +517,9 @@ function renderPulseNote(ctx) {
   }
   fine.push('各轨道单位不同，分别独立计量，不共用纵轴。');
   fine.push(ctx.multi
-    ? '颜色代表对比对象；同一游戏的多个版本共用基色、以明度区分。点击图例可把某个对象从图上暂时拿掉，下方表格不受影响。'
+    ? '颜色色相代表对比对象；视频类别在同一对象内还会用明暗区分。点击图例可把某个对象从图上暂时拿掉，下方表格不受影响。'
     : '颜色在轨道内部区分指标系列。');
-  fine.push('轨道由 config/dashboard.yml 定义，可在右上角「自定义轨道」中增删、排序与调整高度。');
+  fine.push('视频视图可在「轨道配置」里组合平台、YouTube 地区和内容类型；其他指标轨道也可在那里增删、排序与调整高度。');
   // 轨道各自的口径限制原本挤在图例尾巴上，现在跟着轨道说明走
   laneData.forEach(({ lane }) => {
     if (lane.caveat) fine.push(`${lane.title}：${lane.caveat}。`);
@@ -442,7 +596,8 @@ async function refresh() {
  * 并且可以点掉某个对象把图让给其余的。
  */
 const SYMBOL_GLYPH = {
-  circle: '●', triangle: '▲', rect: '■', diamond: '◆', pin: '⬟',
+  circle: '●', triangle: '▲', rect: '■', roundRect: '▰',
+  diamond: '◆', pin: '⬟', arrow: '➤',
 };
 
 /* 单对象时只给「一条轨道里有多个系列」的轨道出图例 ——
@@ -451,7 +606,8 @@ const SYMBOL_GLYPH = {
 function laneLegends() {
   const rows = new Map();   // 相同的图例内容只出一行，由多条轨道共用
   laneData
-    .filter(({ built }) => (built.series || []).length > 1 && !built.empty)
+    .filter(({ lane, built }) => lane.adapter !== 'video_compare' &&
+      (built.series || []).length > 1 && !built.empty)
     .forEach(({ lane, built }) => {
       const marks = built.series.slice(0, 8).map(def => {
         const glyph = def.symbol && SYMBOL_GLYPH[def.symbol];
@@ -474,6 +630,28 @@ function laneLegends() {
      </div>`).join('');
 }
 
+function videoCategoryLegend(ctx) {
+  const categories = new Map();
+  laneData.filter(({ lane }) => lane.adapter === 'video_compare')
+    .forEach(({ built }) => (built.series || []).forEach(def => {
+      if (def.categoryKey && !categories.has(def.categoryKey)) {
+        categories.set(def.categoryKey, def);
+      }
+    }));
+  if (!categories.size) return '';
+  const rows = [...categories.values()];
+  const shown = rows.slice(0, 12).map(def => {
+    const glyph = SYMBOL_GLYPH[def.symbol] || '●';
+    const colorStyle = ctx.multi ? C.muted : def.color;
+    return `<span style="font-size:10px;line-height:1;color:${colorStyle}">${glyph}</span>` +
+      `<span>${def.categoryLabel}</span>`;
+  }).join('<span style="width:10px"></span>');
+  const tail = rows.length > 12
+    ? `<span style="color:${C.muted}">另 ${rows.length - 12} 类请悬停查看</span>` : '';
+  return `<div class="legend-item" style="cursor:default">
+    <span style="color:${C.muted}">视频类别：</span>${shown}${tail}</div>`;
+}
+
 /* 形状 → 语区。多对象时颜色已被对象占用，形状是语区身份的唯一线索。 */
 function shapeLegend() {
   const seen = new Map();
@@ -494,7 +672,7 @@ function shapeLegend() {
 
 function renderLegend(ctx) {
   const el = document.getElementById('legend');
-  if (!ctx.multi) { el.innerHTML = laneLegends(); return; }
+  if (!ctx.multi) { el.innerHTML = laneLegends() + videoCategoryLegend(ctx); return; }
 
   el.innerHTML = subjects.map(s => {
     const off = hiddenSubjects.has(s.key);
@@ -509,7 +687,7 @@ function renderLegend(ctx) {
   }).join('');
 
   // 多对象时颜色归对象、形状归语区，两套编码同时在场，形状那套要单独说明
-  el.innerHTML += shapeLegend();
+  el.innerHTML += shapeLegend() + videoCategoryLegend(ctx);
 
   el.querySelectorAll('[data-subject]').forEach(btn => {
     btn.onclick = () => {
@@ -997,10 +1175,142 @@ function importantBiliSummary(snap) {
 
 /* ---------- 自定义面板 ---------- */
 
+function renderVideoConfig(panel) {
+  const draft = videoDraft || defaultVideoDraft();
+  const checks = (root, items, selected, attr, disabled = false) => {
+    document.getElementById(root).innerHTML = items.map(([value, label]) => `
+      <label class="video-option ${disabled ? 'disabled' : ''}">
+        <input type="checkbox" ${attr}="${value}"
+               ${selected.includes(value) ? 'checked' : ''} ${disabled ? 'disabled' : ''}>
+        ${label}
+      </label>`).join('');
+  };
+  checks('videoPlatformOptions', [['bilibili', 'B 站'], ['youtube', 'YouTube']],
+         draft.platforms, 'data-video-platform');
+  const youtubeSelected = draft.platforms.includes('youtube');
+  checks('videoLocaleOptions', VIDEO_LOCALES.map((code, i) =>
+    [code, ['全球', '日语', '韩语', '繁中'][i]]), draft.locales,
+    'data-video-locale', !youtubeSelected);
+  checks('videoTypeOptions', Object.entries(VIDEO_CONTENT_LABELS),
+         draft.content_types, 'data-video-type');
+  const metric = document.getElementById('videoMetric');
+  metric.innerHTML = Object.entries(VIDEO_METRICS)
+    .map(([id, option]) => `<option value="${id}">${option.label}</option>`).join('');
+  metric.value = draft.metric;
+  document.getElementById('videoScaleOptions').classList.toggle('hidden', draft.metric !== 'view');
+  panel.querySelectorAll('[data-video-scale]').forEach(button =>
+    button.setAttribute('aria-pressed', String(button.dataset.videoScale === draft.scale)));
+  document.getElementById('videoStatus').textContent = videoStatus;
+
+  const list = document.getElementById('videoViewList');
+  list.innerHTML = videoViews.length ? videoViews.map((view, i) => `
+    <div class="video-view-row">
+      <div class="video-view-name">${VIDEO_METRICS[view.metric].title}
+        <span title="${videoViewSummary(view)}">${videoViewSummary(view)}</span>
+      </div>
+      <div class="video-view-actions">
+        <button class="icon-btn" data-video-move="up" data-id="${view.id}"
+                title="上移" ${i === 0 ? 'disabled' : ''}>↑</button>
+        <button class="icon-btn" data-video-move="down" data-id="${view.id}"
+                title="下移" ${i === videoViews.length - 1 ? 'disabled' : ''}>↓</button>
+        <button class="icon-btn" data-video-remove="${view.id}" title="删除">×</button>
+      </div>
+    </div>
+    <div class="height-row">
+      <span style="font-size:11px;color:${C.muted}">高度</span>
+      <input type="range" min="80" max="260" step="10" value="${view.height}"
+             data-video-height="${view.id}">
+      <span class="val">${view.height}</span>
+    </div>`).join('') : '<p class="hint">还没有视频视图。先选择平台、地区、内容类型和指标。</p>';
+
+  panel.querySelectorAll('[data-video-platform], [data-video-locale], [data-video-type]')
+    .forEach(input => input.onchange = () => {
+      updateVideoDraft(panel);
+      const yt = videoDraft.platforms.includes('youtube');
+      panel.querySelectorAll('[data-video-locale]').forEach(locale => {
+        locale.disabled = !yt;
+        locale.closest('.video-option').classList.toggle('disabled', !yt);
+      });
+    });
+  metric.onchange = () => {
+    updateVideoDraft(panel);
+    document.getElementById('videoScaleOptions')
+      .classList.toggle('hidden', videoDraft.metric !== 'view');
+  };
+  panel.querySelectorAll('[data-video-scale]').forEach(button => button.onclick = () => {
+    videoDraft.scale = button.dataset.videoScale;
+    panel.querySelectorAll('[data-video-scale]').forEach(other =>
+      other.setAttribute('aria-pressed', String(other === button)));
+  });
+  document.getElementById('addVideoCompare').onclick = () => addVideoView(panel, false);
+  document.getElementById('addVideoTrack').onclick = () => addVideoView(panel, true);
+
+  panel.querySelectorAll('[data-video-move]').forEach(button => button.onclick = () => {
+    const index = videoViews.findIndex(view => view.id === button.dataset.id);
+    const next = index + (button.dataset.videoMove === 'up' ? -1 : 1);
+    if (index < 0 || next < 0 || next >= videoViews.length) return;
+    [videoViews[index], videoViews[next]] = [videoViews[next], videoViews[index]];
+    afterLaneChange();
+  });
+  panel.querySelectorAll('[data-video-remove]').forEach(button => button.onclick = () => {
+    videoViews = videoViews.filter(view => view.id !== button.dataset.videoRemove);
+    videoStatus = '已删除该视频视图';
+    afterLaneChange();
+  });
+  panel.querySelectorAll('[data-video-height]').forEach(slider => {
+    slider.oninput = () => {
+      const view = videoViews.find(item => item.id === slider.dataset.videoHeight);
+      if (!view) return;
+      view.height = Number(slider.value);
+      slider.parentElement.querySelector('.val').textContent = slider.value;
+      renderAll();
+    };
+    slider.onchange = () => persistView();
+  });
+}
+
+function updateVideoDraft(panel) {
+  videoDraft = {
+    platforms: [...panel.querySelectorAll('[data-video-platform]:checked')]
+      .map(input => input.dataset.videoPlatform),
+    locales: [...panel.querySelectorAll('[data-video-locale]:checked')]
+      .map(input => input.dataset.videoLocale),
+    content_types: [...panel.querySelectorAll('[data-video-type]:checked')]
+      .map(input => input.dataset.videoType),
+    metric: document.getElementById('videoMetric').value,
+    scale: videoDraft.scale || 'abs',
+  };
+}
+
+function addVideoView(panel, independent) {
+  updateVideoDraft(panel);
+  const draft = videoDraft;
+  if (!draft.platforms.length || !draft.content_types.length ||
+      (draft.platforms.includes('youtube') && !draft.locales.length)) {
+    videoStatus = '请至少选择一个平台、一个内容类型；选择 YouTube 时还要选地区。';
+    renderPanel();
+    return;
+  }
+  if (independent && (draft.platforms.length !== 1 || draft.content_types.length !== 1 ||
+      (draft.platforms[0] === 'youtube' && draft.locales.length !== 1))) {
+    videoStatus = '独立轨道请单选平台和内容类型；选择 YouTube 时再单选一个地区。';
+    renderPanel();
+    return;
+  }
+  const view = normalizeVideoView({ ...draft, id: uniqueViewId(), height: 150 });
+  if (!view) return;
+  videoViews.push(view);
+  videoStatus = independent ? '已添加独立视频轨道，可以继续选择并添加。'
+                            : '已添加同图比较视图，可以继续添加其他视频视图。';
+  afterLaneChange();
+}
+
 function renderPanel() {
   const byId = new Map(config.lanes.map(l => [l.id, l]));
-  const on = laneState.filter(s => s.enabled);
-  const off = laneState.filter(s => !s.enabled);
+  const ordinaryState = laneState.filter(s => byId.has(s.id) &&
+    !isLegacyVideoLane(byId.get(s.id)));
+  const on = ordinaryState.filter(s => s.enabled);
+  const off = ordinaryState.filter(s => !s.enabled);
 
   const rowHtml = (state, idx, list, isOn) => {
     const lane = byId.get(state.id);
@@ -1047,6 +1357,7 @@ function renderPanel() {
     || `<p class="hint">全部轨道都已启用。</p>`;
 
   const panel = document.getElementById('lanePanel');
+  renderVideoConfig(panel);
 
   panel.querySelectorAll('[data-toggle]').forEach(cb => {
     cb.onchange = () => {
@@ -1106,7 +1417,9 @@ function afterLaneChange() {
 function datedColumns(ctx) {
   const cols = [];
   activeLanes().forEach(lane => {
-    if (!['series', 'video_delta', 'share_delta'].includes(lane.adapter)) return;
+    const dailyVideoView = lane.adapter === 'video_compare' && lane.metric === 'daily_delta';
+    if (!['series', 'video_delta', 'share_delta'].includes(lane.adapter) &&
+        !dailyVideoView) return;
     const built = ADAPTERS[lane.adapter](lane, ctx);
     built.series.forEach(def => {
       if (!def.values) return;
@@ -1437,6 +1750,9 @@ async function boot() {
   scrim.onclick = closePanel;
   document.getElementById('resetLanes').onclick = () => {
     laneState = defaultLaneState();
+    videoViews = defaultVideoViews();
+    videoDraft = defaultVideoDraft();
+    videoStatus = '已恢复默认轨道与视频视图';
     presetSel.value = '';
     renderPanel(); renderAll();
   };
