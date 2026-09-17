@@ -306,6 +306,45 @@
   .panel-sec { font-size: 11.5px; color: var(--text-muted); margin: 18px 0 8px;
                text-transform: none; letter-spacing: .02em; }
 
+  .video-config { border: 1px solid var(--border); border-radius: 10px;
+                  padding: 13px 12px 12px; background: var(--page); margin: 14px 0 16px; }
+  .video-config h4 { margin: 0 0 3px; font-size: 13px; font-weight: 600; }
+  .video-config .hint { margin: 0 0 12px; }
+  .video-control { margin: 10px 0; }
+  .video-control-title { display: block; color: var(--text-secondary);
+                         font-size: 11.5px; margin-bottom: 5px; }
+  .video-options { display: flex; flex-wrap: wrap; gap: 5px; }
+  .video-options.types { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .video-option { display: inline-flex; align-items: center; gap: 5px;
+                  border: 1px solid var(--border); border-radius: 7px;
+                  background: var(--surface-1); padding: 4px 7px;
+                  color: var(--text-secondary); font-size: 11.5px; cursor: pointer; }
+  .video-option input { margin: 0; accent-color: var(--series-new-reviews); }
+  .video-option.disabled { opacity: .48; cursor: default; }
+  .video-select { width: 100%; border: 1px solid var(--border); border-radius: 7px;
+                  padding: 6px 8px; color: var(--text-primary); background: var(--surface-1);
+                  font: inherit; font-size: 12px; }
+  .video-config .segmented button { font-size: 11px; padding: 4px 8px; }
+  .video-actions { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 12px; }
+  .video-actions button { border: 1px solid var(--border); border-radius: 7px;
+                          padding: 6px 9px; background: var(--surface-1);
+                          color: var(--text-primary); font: inherit; font-size: 11.5px;
+                          cursor: pointer; }
+  .video-actions button.primary { color: #fff; background: var(--text-primary); }
+  .video-status { color: var(--text-muted); font-size: 11px; min-height: 17px; margin: 7px 0 0; }
+  .video-view-row { display: flex; align-items: center; gap: 8px;
+                    border: 1px solid var(--border); border-radius: 8px;
+                    padding: 8px; margin-bottom: 6px; background: var(--surface-1); }
+  .video-view-name { min-width: 0; flex: 1; font-size: 11.5px; font-weight: 500; }
+  .video-view-name span { display: block; color: var(--text-muted); font-weight: 400;
+                          white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .video-view-actions { display: flex; gap: 3px; }
+  .video-view-list .height-row { margin: 0 0 9px 4px; }
+  .metric-track-details { margin-top: 14px; border-top: 1px solid var(--border); padding-top: 10px; }
+  .metric-track-details > summary { color: var(--text-secondary); font-size: 12px;
+                                    cursor: pointer; user-select: none; }
+  .metric-track-details .panel-sec { margin-top: 12px; }
+
   .lane-row { display: flex; align-items: center; gap: 9px; padding: 9px 10px;
               border: 1px solid var(--border); border-radius: 9px;
               margin-bottom: 7px; background: var(--page); }
@@ -438,7 +477,7 @@
     </div>
     <div class="filter-actions">
       <button class="linkish" id="openPanel" aria-haspopup="dialog"
-              aria-expanded="false" aria-controls="lanePanel">自定义轨道</button>
+              aria-expanded="false" aria-controls="lanePanel">轨道配置</button>
       <div class="menu-wrap">
         <button class="linkish" id="openExport" aria-haspopup="menu"
                 aria-expanded="false">导出</button>
@@ -455,24 +494,60 @@
     </div>
   </div>
 
-  <!-- ============ 轨道自定义面板 ============ -->
+  <!-- ============ 轨道配置面板 ============ -->
   <div class="scrim" id="panelScrim"></div>
   <aside class="panel" id="lanePanel" role="dialog" aria-modal="true"
          aria-labelledby="lanePanelTitle">
-    <h3 id="lanePanelTitle">自定义轨道</h3>
+    <h3 id="lanePanelTitle">轨道配置</h3>
     <p class="hint">
-      勾选决定显示哪些轨道，箭头调整顺序，滑块调整高度。
-      轨道来自 <code>config/dashboard.yml</code>，加一个指标只需在那里加一条，
-      不需要改图表代码。设置会自动保存在本浏览器，也可以通过「导出 → 复制当前视图链接」分享。
+      先配置视频视图；其他指标可在下方展开。设置会保存到本机，也会写入当前视图链接。
       按 <kbd>Esc</kbd> 关闭。
     </p>
-    <div id="laneList"></div>
+    <section class="video-config" aria-labelledby="videoConfigTitle">
+      <h4 id="videoConfigTitle">视频</h4>
+      <p class="hint">多选后放进同一张图比较；单选后可添加为独立轨道，之后还能继续添加和排序。</p>
+      <div class="video-control">
+        <span class="video-control-title">平台</span>
+        <div class="video-options" id="videoPlatformOptions"></div>
+      </div>
+      <div class="video-control" id="youtubeLocaleOptions">
+        <span class="video-control-title">YouTube 地区</span>
+        <div class="video-options" id="videoLocaleOptions"></div>
+      </div>
+      <div class="video-control">
+        <span class="video-control-title">内容类型</span>
+        <div class="video-options types" id="videoTypeOptions"></div>
+      </div>
+      <div class="video-control">
+        <label class="video-control-title" for="videoMetric">指标</label>
+        <select class="video-select" id="videoMetric"></select>
+      </div>
+      <div class="video-control" id="videoScaleOptions">
+        <span class="video-control-title">播放量标尺</span>
+        <div class="segmented">
+          <button type="button" data-video-scale="abs">实际播放量</button>
+          <button type="button" data-video-scale="index">相对来源中位数</button>
+        </div>
+      </div>
+      <div class="video-actions">
+        <button class="primary" id="addVideoCompare">添加同图比较</button>
+        <button id="addVideoTrack">添加为独立轨道</button>
+      </div>
+      <p class="video-status" id="videoStatus" aria-live="polite"></p>
+      <div class="panel-sec">已添加的视频视图</div>
+      <div class="video-view-list" id="videoViewList"></div>
+    </section>
+    <details class="metric-track-details">
+      <summary>其他指标轨道</summary>
+      <div class="panel-sec">已启用的轨道</div>
+      <div id="laneList"></div>
+      <div class="panel-sec">未启用的轨道</div>
+      <div id="laneListOff"></div>
+    </details>
     <div class="panel-actions">
       <button class="linkish" id="resetLanes">恢复默认</button>
       <button class="linkish" id="closePanel">完成</button>
     </div>
-    <div class="panel-sec">未启用的轨道</div>
-    <div id="laneListOff"></div>
   </aside>
 
   <div id="app" class="hidden">
@@ -575,7 +650,7 @@
 </div>
 
 <!-- 版本参数避免本地静态服务继续复用旧的引擎脚本缓存。 -->
-<script src="engine.js?v=20260917-version-axis-5"></script>
-<script src="app.js?v=20260917-version-axis-5"></script>
+<script src="engine.js?v=20260917-video-config-3"></script>
+<script src="app.js?v=20260917-video-config-3"></script>
 </body>
 </html>

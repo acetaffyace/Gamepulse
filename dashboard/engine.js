@@ -281,6 +281,12 @@ function dataAxisKeyOf(dateIso, subject, ctx) {
 function prereleaseVideoDates(subject, lanes = []) {
   if (subject.kind !== 'version') return [];
   return lanes.flatMap(lane => {
+    if (lane.adapter === 'video_compare') {
+      return videoCompareGroups(subject, lane).flatMap(group => group.videos
+        .filter(v => v.version_confirmed && v.version_id === subject.versionId &&
+                     v.pubdate && v.pubdate < subject.window.start)
+        .map(v => ({ subject, date: v.pubdate })));
+    }
     const source = resolve(subject.snap, lane.path);
     const videos = Array.isArray(source) ? source
       : source && typeof source === 'object'
@@ -370,6 +376,82 @@ function filterVideos(list, subject, lane) {
   return videos.filter(v =>
     !(v.version_confirmed && v.version_id && v.version_id !== subject.versionId) &&
     v.pubdate && v.pubdate >= w.start && v.pubdate <= w.end);
+}
+
+function videoCompareCategory(video) {
+  if (video.content_type === 'version_trailer' &&
+      /preview\s+special|preview\s+(?:special\s+)?(?:program|broadcast)|special\s+program|前瞻特別節目|前瞻特别节目/i
+        .test(video.title || '')) return 'version_preview';
+  if (video.content_type === 'season_teaser' && roleVideoKind(video) === 'pv') {
+    return 'character_trailer';
+  }
+  return video.content_type;
+}
+
+/* 视频配置视图可同时跨平台、语区与内容类型。把选择展开成来源×类型分组，
+   散点与日增量按分组聚合，发布后曲线则仍按每支视频单独绘制。 */
+function videoCompareGroups(subject, lane) {
+  const roots = [];
+  if ((lane.platforms || []).includes('bilibili')) {
+    roots.push({ platform: 'bilibili', locale: null,
+      videos: ((subject.snap.bilibili || {}).videos || []) });
+  }
+  if ((lane.platforms || []).includes('youtube')) {
+    const youtube = subject.snap.youtube || {};
+    const locales = youtube.locales || {};
+    const order = (lane.locales && lane.locales.length)
+      ? lane.locales : (youtube.locale_order || Object.keys(locales));
+    order.forEach(locale => {
+      if (locales[locale]) roots.push({ platform: 'youtube', locale,
+                                       videos: locales[locale].videos || [] });
+    });
+  }
+
+  const contentTypes = (lane.content_types && lane.content_types.length)
+    ? lane.content_types
+    : [...new Set(roots.flatMap(r => r.videos.map(videoCompareCategory)))];
+  const rawTypes = [...new Set(contentTypes.flatMap(type =>
+    type === 'version_preview' ? ['version_trailer']
+      : type === 'character_trailer' ? ['character_trailer', 'season_teaser']
+      : [type]))];
+  const selection = { ...lane, content_types: rawTypes };
+  const groups = [];
+  roots.forEach(root => {
+    const selected = filterVideos(root.videos, subject, selection);
+    contentTypes.forEach(type => {
+      const videos = selected.filter(v => videoCompareCategory(v) === type);
+      if (!videos.length) return;
+      const source = root.platform === 'bilibili' ? 'B 站'
+        : `YouTube ${localeLabel(root.locale)}`;
+      const typeLabel = CONTENT_LABEL[type] || '官方视频';
+      groups.push({
+        ...root, type, videos,
+        allVideos: root.videos.filter(v => videoCompareCategory(v) === type),
+        key: `${root.platform}:${root.locale || ''}:${type}`,
+        label: `${source} · ${typeLabel}`,
+      });
+    });
+  });
+  return groups;
+}
+
+function videoGroupColor(group, subject, ctx, index, count) {
+  if (ctx.multi) return count > 1 ? shade(subject.color, shadeFor(index, count)) : subject.color;
+  return color(group.platform === 'bilibili'
+    ? 'slot5' : (LOCALE_SLOT[group.locale] || 'slot1'));
+}
+
+const VIDEO_TYPE_SYMBOL = {
+  version_trailer: 'circle', character_trailer: 'triangle',
+  version_preview: 'pin', character_demo: 'diamond', character_ep: 'rect',
+  season_teaser: 'roundRect',
+  ep: 'roundRect', theme_mv: 'arrow', animation_short: 'triangle',
+  behind_the_scenes: 'diamond', other: 'circle',
+};
+
+function videoGroupMeta(video, group, subject) {
+  return { ...video, subject, platform: group.platform, locale: group.locale,
+           content_type: group.type };
 }
 
 /* 语种构成必须按**对象自己的窗口**重算。
@@ -547,6 +629,129 @@ const ADAPTERS = {
     const note = `${picked.length} 支视频 · 横轴为各自发布后天数（独立于上方轨道）` +
       (partial ? ` · ${partial} 支缺起跑段，画为虚线` : '');
     return { series, empty: false, note, axisKeys, axisUnit: 'day' };
+  },
+
+  /* 用户配置的视频视图。平台、YouTube 语区与内容类型先组成若干可读类别，
+     所选类别仍共用一张图；发布后曲线保留逐视频线条与独立天数轴。 */
+  video_compare(lane, ctx) {
+    const metric = lane.metric || 'view';
+    const groupsBySubject = ctx.subjects.map(subject => ({
+      subject, groups: videoCompareGroups(subject, lane),
+    }));
+    const categoryOrder = [];
+    groupsBySubject.forEach(({ groups }) => groups.forEach(group => {
+      if (!categoryOrder.includes(group.key)) categoryOrder.push(group.key);
+    }));
+    const categoryIndex = new Map(categoryOrder.map((key, index) => [key, index]));
+    const out = [];
+    let any = false;
+
+    if (metric === 'ramp') {
+      const picked = groupsBySubject.flatMap(({ subject, groups }) => groups.flatMap(group =>
+        group.videos.filter(v => (v.ramp || {}).points && v.ramp.points.length)
+          .map(v => ({ subject, group, video: v }))));
+      if (!picked.length) return { series: [], empty: true };
+      let maxDay = 0, partial = 0;
+      picked.forEach(({ video }) => {
+        if (!video.ramp.available) partial++;
+        video.ramp.points.forEach(p => { if (p.day > maxDay) maxDay = p.day; });
+      });
+      const axisKeys = Array.from({ length: maxDay + 1 }, (_, i) => String(i));
+      const counts = new Map();
+      picked.forEach(({ subject }) =>
+        counts.set(subject.key, (counts.get(subject.key) || 0) + 1));
+      const seen = new Map();
+      picked.forEach(({ subject, group, video }) => {
+        const index = seen.get(subject.key) || 0;
+        seen.set(subject.key, index + 1);
+        const byDay = new Map(video.ramp.points.map(p => [String(p.day), p.view]));
+        const suffix = compactVideoLabel(video, subject);
+        const name = `${ctx.multi ? subject.label + ' · ' : ''}${group.label} · ${suffix}`;
+        out.push({
+          name, subject, kind: 'line',
+          color: ctx.multi
+            ? shade(subject.color, shadeFor(index, counts.get(subject.key)))
+            : videoGroupColor(group, subject, ctx, index, picked.length),
+          width: 1.8, dashed: !video.ramp.available, symbol: true,
+          meta: video,
+          values: axisKeys.map(k => byDay.has(k) ? byDay.get(k) : null),
+          categoryKey: group.key, categoryLabel: group.label,
+        });
+      });
+      const note = `${picked.length} 支视频 · 横轴为发布后第 N 天` +
+        (partial ? ` · ${partial} 支缺少起跑段` : '');
+      return { series: out, empty: false, note, axisKeys, axisUnit: 'day' };
+    }
+
+    if (metric === 'daily_delta') {
+      groupsBySubject.forEach(({ subject, groups }) => {
+        groups.forEach(group => {
+          const index = categoryIndex.get(group.key) || 0;
+          const sums = new Map(), spans = new Map();
+          group.videos.forEach(video => (video.points || []).forEach(point => {
+            const delta = (point.deltas || {}).view;
+            if (delta == null) return;
+            const key = videoAxisKeyOf({ ...video, pubdate: point.date_local },
+                                       subject, ctx.axis.align);
+            if (key === null) return;
+            sums.set(key, (sums.get(key) || 0) + delta);
+            if ((point.span_days || 1) > 1) spans.set(key, point.span_days);
+          }));
+          if (sums.size) any = true;
+          out.push({
+            name: `${ctx.multi ? subject.label + ' · ' : ''}${group.label}`,
+            subject, kind: 'bar',
+            color: videoGroupColor(group, subject, ctx, index, categoryOrder.length),
+            values: ctx.axis.keys.map(k => sums.has(k) ? sums.get(k) : null),
+            spans, categoryKey: group.key, categoryLabel: group.label,
+          });
+        });
+      });
+      return { series: out, empty: !any };
+    }
+
+    const bag = metric === 'engagement' ? 'rates' : 'stats';
+    const field = metric === 'engagement' ? 'engagement' : 'view';
+    const indexed = metric === 'view' && lane.scale === 'index';
+    groupsBySubject.forEach(({ subject, groups }) => {
+      groups.forEach(group => {
+        const baseline = group.allVideos
+          .map(v => ((v.latest || {})[bag] || {})[field])
+          .filter(value => value != null && value > 0)
+          .sort((a, b) => a - b);
+        const median = baseline.length ? baseline[Math.floor(baseline.length / 2)] : null;
+        const keys = new Set(ctx.axis.keys);
+        const points = group.videos.map(video => {
+          const key = videoAxisKeyOf(video, subject, ctx.axis.align);
+          if (key === null || !keys.has(key)) return null;
+          const raw = ((video.latest || {})[bag] || {})[field];
+          if (raw == null || (metric === 'view' && raw <= 0)) return null;
+          if (indexed && !median) return null;
+          return { key, value: indexed ? raw / median : raw,
+                   raw, median, meta: videoGroupMeta(video, group, subject) };
+        }).filter(Boolean);
+        if (points.length) any = true;
+        const groupCount = Math.max(1, categoryOrder.length);
+        const groupIndex = categoryIndex.get(group.key) || 0;
+        out.push({
+          name: `${ctx.multi ? subject.label + ' · ' : ''}${group.label}`,
+          subject, kind: 'scatter',
+          color: videoGroupColor(group, subject, ctx, groupIndex, groupCount),
+          symbol: VIDEO_TYPE_SYMBOL[group.type] || 'circle',
+          points, median, categoryKey: group.key, categoryLabel: group.label,
+        });
+      });
+    });
+
+    const logScale = metric === 'view';
+    const valueUnit = indexed ? 'ratio' : (metric === 'engagement' ? 'percent' : 'count');
+    return {
+      series: out, empty: !any, logScale: indexed || logScale,
+      baseline: indexed ? 1 : null, valueUnit,
+      note: indexed ? '播放量按各来源与内容类型中位数归一化 · 1× 为该组常态'
+        : metric === 'view' ? '播放 / 观看量使用对数纵轴，跨来源展示量级差异'
+        : '互动率为播放量的截面比值',
+    };
   },
 
   /* 多语区同图对照。
@@ -1187,10 +1392,11 @@ const dateForKey = (key, subject) =>
 
 const CONTENT_LABEL = {
   version_trailer: '版本 PV',
+  version_preview: '版本前瞻节目',
   character_trailer: '角色 PV',
-  character_demo: '角色演示',
+  character_demo: '角色展示',
   character_ep: '角色 EP',
-  season_teaser: '季前瞻',
+  season_teaser: '主题 / 活动预告',
   ep: 'EP',
   theme_mv: '主题曲 MV',
   animation_short: '动画短片',
@@ -1290,7 +1496,7 @@ function compactVideoLabel(video, subject) {
 
   const ver = title.match(/\b(?:version|ver(?:sion)?\.?|v)\s*(\d+(?:\.\d+)+)\b|\b(\d+\.\d+)\s*版本/i);
   const version = (ver && (ver[1] || ver[2])) || String(video.version_id || '').replace(/^v/i, '');
-  if (version && (type === 'version_trailer' || type === 'season_teaser')) {
+  if (version && ['version_trailer', 'version_preview', 'season_teaser'].includes(type)) {
     if (/preview\s+recap/i.test(title)) {
       const topic = cleanVideoName(title.split(/[|｜丨ح]/u).pop())
         .replace(/^(?:new|updated)\s+/i, '')
