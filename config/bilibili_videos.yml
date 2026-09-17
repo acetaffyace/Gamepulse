@@ -1,29 +1,30 @@
 # B 站视频注册表 —— 三款游戏对照
 #
 # 核验方式：
-#   全部条目的 owner.mid 经官方 view / related 接口核验，必须等于该游戏
-#   official_accounts 中登记的 mid。发现渠道为公开的 archive/related 接口
+#   全部条目的 owner.mid 经官方 view / related 接口核验，必须属于该游戏
+#   official_accounts 中明确登记的官方账号。发现渠道为公开 archive/related 接口
 #   + mid 过滤，不调用有风控的搜索接口。
 #
 #   核验已剔除多个伪装度很高的非官方投稿，例如：
 #     BV1wULQ64EB9「先导演示丨蕾米埃尔」实为「哔哩哔哩游戏中心」(mid 1328260)
 #     BV1rAB8BjEpR / BV1iGB8BgEZ8 / BV1ejB8BqEzZ 实为「异环攻略组」搬运
 #
-# version_id / version_confirmed：
-#   只有标题自带版本号时才填写版本并标 confirmed: true（如「3.6版本PV」）。
-#   角色视频不臆测版本归属 —— 角色 PV 通常早于版本更新日 5-12 天发布，
-#   按日期机械归类会错。看板中角色视频的版本归属由其在版本竖线之间的
-#   位置体现，而不是由本文件断言。
+# video_pairs.yml 是本轮核心视频的收录、版本归属和跨平台配对依据。
+# 角色宣传视频可以早于版本正式更新时间发布；按发布时间机械归类会错。
+# 本文件保留官方 B 站视频身份与标题，video_pairs.yml 负责人工确认的版本映射。
 #
-# 收录范围：2026-06 起。三款游戏的共同可比窗口始于绝区零 Steam 上线
-#   (2026-06-17)，更早的视频播放量已接近饱和，日增量无分析价值。
+# 收录范围：2026-06-17 至 2026-09-17。当前统计仅使用四类核心视频，
+#   具体清单与 YouTube 四语区配对见 config/video_pairs.yml。
 #
-# 核验日期: 2026-09-14
+# 核验日期: 2026-09-17
 
 official_accounts:
   wuthering_waves:
     mid: 1955897084
     name: 鸣潮
+    additional_mids:
+      - { mid: 3493090606188642, name: 鸣潮先行公约,
+          role: official_music_and_extras_account }
   zenless_zone_zero:
     mid: 1636034895
     name: 绝区零
@@ -34,6 +35,10 @@ official_accounts:
 videos:
 
   # ==================== 鸣潮 ====================
+  - { bvid: BV1tDbG6ZEDp, game_id: wuthering_waves, character_id: jingran,
+      character_name: 景燃, version_id: '3.6', version_confirmed: true,
+      content_type: character_ep, title: 《鸣潮》先约电台EP3.6——景燃《三叩首》,
+      pubdate: '2026-09-09', is_official_account: true, verified_at: '2026-09-17', active: true }
   - { bvid: BV1uMbg6SEnL, game_id: wuthering_waves, character_id: jingran,
       character_name: 景燃, version_id: null, version_confirmed: false,
       content_type: character_trailer, title: 《鸣潮》共鸣者「景燃」PV | “问神”,
@@ -46,6 +51,10 @@ videos:
       character_name: 清宵, version_id: null, version_confirmed: false,
       content_type: character_trailer, title: 《鸣潮》共鸣者「清宵」PV | 修行,
       pubdate: '2026-08-18', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1G48g68Ej1, game_id: wuthering_waves, character_id: qingxiao,
+      character_name: 清宵, version_id: '3.6', version_confirmed: true,
+      content_type: character_ep, title: 《鸣潮》先约电台EP3.6——清宵《尘外客》,
+      pubdate: '2026-08-20', is_official_account: true, verified_at: '2026-09-17', active: true }
   - { bvid: BV1q2b86sEZz, game_id: wuthering_waves, character_id: qingxiao,
       character_name: 清宵, version_id: null, version_confirmed: false,
       content_type: character_demo, title: 《鸣潮》共鸣者战斗演示 | 清宵,
@@ -58,6 +67,10 @@ videos:
       character_name: 穗穗, version_id: null, version_confirmed: false,
       content_type: character_trailer, title: 《鸣潮》共鸣者「穗穗」PV | 重明,
       pubdate: '2026-07-28', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1Ao3Y6YE1T, game_id: wuthering_waves, character_id: suisui,
+      character_name: 穗穗, version_id: '3.5', version_confirmed: true,
+      content_type: character_ep, title: 《鸣潮》先约电台EP3.5——穗穗《待春归》,
+      pubdate: '2026-07-29', is_official_account: true, verified_at: '2026-09-17', active: true }
   - { bvid: BV1hN3G6mEcB, game_id: wuthering_waves, character_id: suisui,
       character_name: 穗穗, version_id: null, version_confirmed: false,
       content_type: character_demo, title: 《鸣潮》共鸣者战斗演示 | 穗穗,
@@ -66,6 +79,14 @@ videos:
       character_name: 秧秧·玄翎, version_id: null, version_confirmed: false,
       content_type: character_trailer, title: 《鸣潮》共鸣者「秧秧·玄翎」PV | 噩梦,
       pubdate: '2026-07-08', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1NbM36aEtm, game_id: wuthering_waves, character_id: yangyang_xuanling,
+      character_name: 秧秧·玄翎, version_id: '3.5', version_confirmed: true,
+      content_type: character_ep, title: 《鸣潮》先约电台EP3.5——秧秧·玄翎《风之所在》,
+      pubdate: '2026-07-09', is_official_account: true, verified_at: '2026-09-17', active: true }
+  - { bvid: BV1mtTD6rEtQ, game_id: wuthering_waves, character_id: yangyang_xuanling,
+      character_name: 秧秧·玄翎, version_id: '3.5', version_confirmed: true,
+      content_type: character_demo, title: 《鸣潮》共鸣者战斗演示 | 秧秧·玄翎,
+      pubdate: '2026-07-06', is_official_account: true, verified_at: '2026-09-17', active: true }
 
   # ==================== 绝区零 ====================
   - { bvid: BV1vRtA6gE5m, game_id: zenless_zone_zero, character_id: null,
@@ -166,6 +187,10 @@ videos:
       character_name: null, version_id: '1.3', version_confirmed: true,
       content_type: version_trailer, title: 《异环》1.3版本PV「雾中朔望星回」,
       pubdate: '2026-08-09', is_official_account: true, verified_at: '2026-09-14', active: true }
+  - { bvid: BV1jWej6hET5, game_id: neverness_to_everness, character_id: null,
+      character_name: null, version_id: '1.4', version_confirmed: true,
+      content_type: version_trailer, title: 《异环》1.4版本PV「祷歌为谁而诵」,
+      pubdate: '2026-09-17', is_official_account: true, verified_at: '2026-09-17', active: true }
   - { bvid: BV1VVKH6vEnH, game_id: neverness_to_everness, character_id: yiluoyi,
       character_name: 伊洛伊, version_id: null, version_confirmed: false,
       content_type: character_trailer, title: 《异环》伊洛伊角色PV丨想做什么梦？,

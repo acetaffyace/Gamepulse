@@ -108,10 +108,51 @@ def load_youtube_videos(game_id: str | None = None,
     return videos
 
 
+def load_curated_video_pairs(game_id: str | None = None) -> list[dict]:
+    """Load the small, manually checked video set used by collection/dashboard."""
+    videos = load_yaml("video_pairs.yml").get("videos", []) or []
+    if game_id:
+        videos = [v for v in videos if v.get("game_id") == game_id]
+    return videos
+
+
+def curated_youtube_entries(game_id: str | None = None) -> list[dict]:
+    """Expand each curated pair into separate YouTube locale video records."""
+    out = []
+    for pair in load_curated_video_pairs(game_id):
+        for locale, video_id in (pair.get("youtube") or {}).items():
+            if not video_id:
+                continue
+            out.append({
+                "video_id": video_id,
+                "game_id": pair["game_id"],
+                "locale": locale,
+                "pair_id": pair["pair_id"],
+                "character_id": pair.get("character_id"),
+                "character_name": pair.get("character_name"),
+                "version_id": pair.get("version_id"),
+                "version_confirmed": pair.get("version_confirmed", False),
+                "content_type": pair.get("content_type"),
+                "pubdate": pair.get("pubdate"),
+            })
+    return out
+
+
 def official_mid(game_id: str) -> int | None:
     accounts = load_yaml("bilibili_videos.yml").get("official_accounts", {})
     entry = accounts.get(game_id) or {}
     return entry.get("mid")
+
+
+def official_mids(game_id: str) -> set[int]:
+    """Return the explicitly allowlisted official Bilibili account IDs."""
+    accounts = load_yaml("bilibili_videos.yml").get("official_accounts", {})
+    entry = accounts.get(game_id) or {}
+    mids = {mid for mid in [entry.get("mid"), *[
+        account.get("mid") if isinstance(account, dict) else account
+        for account in (entry.get("additional_mids") or [])
+    ]] if mid is not None}
+    return mids
 
 
 def youtube_channels(game_id: str) -> dict[str, dict]:
@@ -315,6 +356,25 @@ def upsert_series_keyed(game_id: str, source: str, record: dict,
 def upsert_series(game_id: str, source: str, record: dict) -> str:
     """按 date_local 幂等写入。返回 'insert' 或 'update'。"""
     return upsert_series_keyed(game_id, source, record, keys=("date_local",))
+
+
+def upsert_video_subset_series(game_id: str, source: str, record: dict,
+                               id_key: str) -> str:
+    """Merge a curated video refresh into today's row without dropping other IDs."""
+    existing = next((r for r in read_series(game_id, source)
+                     if r.get("date_local") == record.get("date_local")), None)
+    if existing:
+        merged = list(existing.get("videos") or [])
+        positions = {v.get(id_key): i for i, v in enumerate(merged)}
+        for video in record.get("videos") or []:
+            key = video.get(id_key)
+            if key in positions:
+                merged[positions[key]] = video
+            else:
+                positions[key] = len(merged)
+                merged.append(video)
+        record = {**record, "videos": merged}
+    return upsert_series(game_id, source, record)
 
 
 def log_collection(source: str, game_id: str, date_local: str,

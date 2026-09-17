@@ -18,6 +18,12 @@
     "#e0edfb"
   ],
   "share_other": "#c3c2b7",
+  "important_video_types": [
+    "version_trailer",
+    "character_trailer",
+    "character_demo",
+    "character_ep"
+  ],
   "lanes": [
     {
       "id": "new_reviews",
@@ -36,7 +42,7 @@
     {
       "id": "review_rate",
       "title": "好评率",
-      "subtitle": "当日 / 累计",
+      "subtitle": "当日 / 全局累计 / 版本滚动累计（版本对象专属）",
       "adapter": "series",
       "path": "review_history",
       "chart": "line",
@@ -65,7 +71,7 @@
     {
       "id": "online",
       "title": "Steam 同时在线人数",
-      "subtitle": "逐日采集 · 平台同时在线，非 DAU",
+      "subtitle": "逐日观测 / SteamDB 历史回填 · 平台同时在线，非 DAU",
       "adapter": "series",
       "path": "online_series",
       "field": "value",
@@ -75,7 +81,7 @@
       "unit": "count",
       "enabled": true,
       "symbol": true,
-      "caveat": "历史无法回填（SteamDB 不可程序化访问、SteamCharts 未收录），只能逐日积累"
+      "caveat": "当前值来自 Steam 官方接口；历史段来自 SteamDB 图表日点位，二者都是平台同时在线观测，不是 DAU"
     },
     {
       "id": "online_band",
@@ -159,7 +165,7 @@
     {
       "id": "language_delta",
       "title": "评测语种结构变化",
-      "subtitle": "相对首个 7 天桶的百分点差 · 0 为基线",
+      "subtitle": "相对首个周的百分点差 · 0 为基线",
       "adapter": "share_delta",
       "path": "review_profile.language_share",
       "chart": "line",
@@ -173,7 +179,7 @@
     {
       "id": "language_share",
       "title": "评测语种构成",
-      "subtitle": "7 天分桶 · 绝对占比",
+      "subtitle": "7 天分桶（版本对象从更新日计周） · 绝对占比",
       "adapter": "stacked_share",
       "path": "review_profile.language_share",
       "chart": "stacked_area",
@@ -185,11 +191,17 @@
     },
     {
       "id": "bili_videos",
-      "title": "B 站官方视频",
+      "title": "B 站重点官方视频",
       "subtitle": "横轴为发布日 · 纵轴为当前累计播放量",
       "adapter": "video_scatter",
       "path": "bilibili.videos",
       "field": "view",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
       "chart": "scatter",
       "color": "slot5",
       "height": 130,
@@ -224,7 +236,7 @@
       "content_types": [
         "character_trailer",
         "character_demo",
-        "ep"
+        "character_ep"
       ],
       "chart": "scatter",
       "color": "slot5",
@@ -235,11 +247,17 @@
     },
     {
       "id": "bili_ramp",
-      "title": "B 站发布后播放曲线",
+      "title": "B 站重点内容发布后播放曲线",
       "subtitle": "一支视频一条线 · 横轴为发布后第 N 天",
       "adapter": "video_ramp",
       "path": "bilibili.videos",
       "field": "view",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
       "chart": "line",
       "color": "slot5",
       "height": 150,
@@ -266,11 +284,17 @@
     },
     {
       "id": "bili_view_delta",
-      "title": "B 站日增播放",
+      "title": "B 站重点内容日增播放",
       "subtitle": "全部登记视频的播放量日增量合计",
       "adapter": "video_delta",
       "path": "bilibili.videos",
       "field": "view",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
       "chart": "bar",
       "color": "slot5",
       "height": 110,
@@ -278,11 +302,17 @@
     },
     {
       "id": "bili_engagement",
-      "title": "B 站互动率",
+      "title": "B 站重点内容互动率",
       "subtitle": "（点赞+投币+收藏）/ 播放 · 按视频发布日定位",
       "adapter": "video_scatter",
       "path": "bilibili.videos",
       "field": "engagement",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
       "from_rates": true,
       "chart": "scatter",
       "color": "slot3",
@@ -293,11 +323,17 @@
     },
     {
       "id": "yt_view_global",
-      "title": "YouTube 播放 · 全球",
+      "title": "YouTube 重点内容播放 · 全球",
       "subtitle": "横轴为发布日 · 纵轴为当前累计观看数",
       "adapter": "video_scatter",
       "path": "youtube.locales.global.videos",
       "field": "view",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
       "chart": "scatter",
       "color": "slot1",
       "height": 110,
@@ -307,11 +343,17 @@
     },
     {
       "id": "yt_view_ja",
-      "title": "YouTube 播放 · 日语",
+      "title": "YouTube 重点内容播放 · 日语",
       "subtitle": "横轴为发布日 · 纵轴为当前累计观看数",
       "adapter": "video_scatter",
       "path": "youtube.locales.ja.videos",
       "field": "view",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
       "chart": "scatter",
       "color": "slot2",
       "height": 110,
@@ -321,11 +363,17 @@
     },
     {
       "id": "yt_view_ko",
-      "title": "YouTube 播放 · 韩语",
+      "title": "YouTube 重点内容播放 · 韩语",
       "subtitle": "横轴为发布日 · 纵轴为当前累计观看数",
       "adapter": "video_scatter",
       "path": "youtube.locales.ko.videos",
       "field": "view",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
       "chart": "scatter",
       "color": "slot3",
       "height": 110,
@@ -335,11 +383,17 @@
     },
     {
       "id": "yt_view_zhtw",
-      "title": "YouTube 播放 · 繁中",
+      "title": "YouTube 重点内容播放 · 繁中",
       "subtitle": "横轴为发布日 · 纵轴为当前累计观看数",
       "adapter": "video_scatter",
       "path": "youtube.locales.zh-tw.videos",
       "field": "view",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
       "chart": "scatter",
       "color": "slot5",
       "height": 110,
@@ -349,11 +403,17 @@
     },
     {
       "id": "yt_engagement_global",
-      "title": "YouTube 互动率 · 全球",
+      "title": "YouTube 重点内容互动率 · 全球",
       "subtitle": "（点赞+评论）/ 播放",
       "adapter": "video_scatter",
       "path": "youtube.locales.global.videos",
       "field": "engagement",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
       "from_rates": true,
       "chart": "scatter",
       "color": "slot1",
@@ -364,11 +424,17 @@
     },
     {
       "id": "yt_engagement_ja",
-      "title": "YouTube 互动率 · 日语",
+      "title": "YouTube 重点内容互动率 · 日语",
       "subtitle": "（点赞+评论）/ 播放",
       "adapter": "video_scatter",
       "path": "youtube.locales.ja.videos",
       "field": "engagement",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
       "from_rates": true,
       "chart": "scatter",
       "color": "slot2",
@@ -379,11 +445,17 @@
     },
     {
       "id": "yt_engagement_ko",
-      "title": "YouTube 互动率 · 韩语",
+      "title": "YouTube 重点内容互动率 · 韩语",
       "subtitle": "（点赞+评论）/ 播放",
       "adapter": "video_scatter",
       "path": "youtube.locales.ko.videos",
       "field": "engagement",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
       "from_rates": true,
       "chart": "scatter",
       "color": "slot3",
@@ -394,11 +466,17 @@
     },
     {
       "id": "yt_engagement_zhtw",
-      "title": "YouTube 互动率 · 繁中",
+      "title": "YouTube 重点内容互动率 · 繁中",
       "subtitle": "（点赞+评论）/ 播放",
       "adapter": "video_scatter",
       "path": "youtube.locales.zh-tw.videos",
       "field": "engagement",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
       "from_rates": true,
       "chart": "scatter",
       "color": "slot5",
@@ -409,7 +487,7 @@
     },
     {
       "id": "yt_view_locales",
-      "title": "YouTube 语区播放对照",
+      "title": "YouTube 重点内容语区播放对照",
       "subtitle": "横轴为发布日 · 一个语区一种形状",
       "adapter": "locale_scatter",
       "path": "youtube.locales",
@@ -421,11 +499,17 @@
         "zh-tw"
       ],
       "field": "view",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
       "chart": "scatter",
       "height": 150,
       "unit": "count",
       "log": true,
-      "enabled": false,
+      "enabled": true,
       "scales": [
         {
           "id": "abs",
@@ -442,7 +526,7 @@
     },
     {
       "id": "yt_engagement_locales",
-      "title": "YouTube 语区互动率对照",
+      "title": "YouTube 重点内容语区互动率对照",
       "subtitle": "（点赞+评论）/ 播放 · 一个语区一种形状",
       "adapter": "locale_scatter",
       "path": "youtube.locales",
@@ -454,11 +538,17 @@
         "zh-tw"
       ],
       "field": "engagement",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
       "from_rates": true,
       "chart": "scatter",
       "height": 140,
       "unit": "percent",
-      "enabled": false,
+      "enabled": true,
       "scales": [
         {
           "id": "abs",
@@ -475,11 +565,17 @@
     },
     {
       "id": "yt_ramp_global",
-      "title": "YouTube 发布后播放曲线 · 全球",
+      "title": "YouTube 重点内容发布后播放曲线 · 全球",
       "subtitle": "横轴为发布后第 N 天",
       "adapter": "video_ramp",
       "path": "youtube.locales.global.videos",
       "field": "view",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
       "chart": "line",
       "color": "slot1",
       "height": 120,
@@ -489,11 +585,17 @@
     },
     {
       "id": "yt_ramp_ja",
-      "title": "YouTube 发布后播放曲线 · 日语",
+      "title": "YouTube 重点内容发布后播放曲线 · 日语",
       "subtitle": "横轴为发布后第 N 天",
       "adapter": "video_ramp",
       "path": "youtube.locales.ja.videos",
       "field": "view",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
       "chart": "line",
       "color": "slot2",
       "height": 120,
@@ -509,7 +611,10 @@
         "new_reviews",
         "review_rate",
         "online",
-        "bili_videos"
+        "playtime_median",
+        "bili_videos",
+        "yt_view_locales",
+        "yt_engagement_locales"
       ]
     },
     "compare": {
@@ -546,7 +651,9 @@
         "bili_version_pv",
         "bili_character_pv",
         "bili_engagement",
-        "bili_ramp"
+        "bili_ramp",
+        "yt_view_locales",
+        "yt_engagement_locales"
       ]
     },
     "online_focus": {

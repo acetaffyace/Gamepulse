@@ -49,6 +49,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from collectors.common import (  # noqa: E402
     OBSERVED,
     UNAVAILABLE,
+    curated_youtube_entries,
     get_json,
     load_games,
     load_youtube_videos,
@@ -58,6 +59,7 @@ from collectors.common import (  # noqa: E402
     session,
     today_local,
     upsert_series,
+    upsert_video_subset_series,
     youtube_api_key,
     youtube_locale_of_channel,
 )
@@ -134,11 +136,14 @@ def fetch_batch(sess, api_key: str, video_ids: list[str]) -> tuple[dict, dict]:
     return found, payload
 
 
-def collect_game(game_id: str, api_key: str, date_local: str) -> dict:
-    videos = load_youtube_videos(game_id)
+def collect_game(game_id: str, api_key: str, date_local: str,
+                 curated_only: bool = True) -> dict:
+    videos = (curated_youtube_entries(game_id) if curated_only
+              else load_youtube_videos(game_id))
     if not videos:
-        log_collection("youtube", game_id, date_local, "skipped", "no_active_videos")
-        print(f"[skip] {game_id}: youtube_videos.yml 中没有 active 视频")
+        reason = "no_curated_videos" if curated_only else "no_active_videos"
+        log_collection("youtube", game_id, date_local, "skipped", reason)
+        print(f"[skip] {game_id}: 没有可采集的 YouTube 视频")
         return {}
 
     sess = session()
@@ -185,6 +190,7 @@ def collect_game(game_id: str, api_key: str, date_local: str) -> dict:
                 "version_id": entry.get("version_id"),
                 "version_confirmed": entry.get("version_confirmed", False),
                 "content_type": entry.get("content_type"),
+                "pair_id": entry.get("pair_id"),
             })
             results.append(measured)
 
@@ -198,7 +204,8 @@ def collect_game(game_id: str, api_key: str, date_local: str) -> dict:
 
     save_raw("youtube", game_id, date_local, raws)
     record = {"date_local": date_local, "game_id": game_id, "videos": results}
-    action = upsert_series(game_id, "youtube", record)
+    action = (upsert_video_subset_series(game_id, "youtube", record, "video_id")
+              if curated_only else upsert_series(game_id, "youtube", record))
 
     ok = sum(1 for r in results if r["status"] == OBSERVED)
     units = (len(ids) + BATCH_SIZE - 1) // BATCH_SIZE
@@ -219,7 +226,8 @@ def collect_game(game_id: str, api_key: str, date_local: str) -> dict:
 
     log_collection("youtube", game_id, date_local, action,
                    f"observed={ok}/{len(results)};by_locale={locale_detail};"
-                   f"flagged={flagged};quota_units={units}")
+                   f"flagged={flagged};quota_units={units};"
+                   f"curated_only={curated_only}")
     print(f"[{action}] {game_id} {date_local}：{ok}/{len(results)} 个视频"
           f"（{locale_detail}），消耗配额 {units} units")
     if flagged:
@@ -231,6 +239,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="采集 YouTube 登记视频的公开统计")
     parser.add_argument("--game", help="game_id；省略则采集所有 active 游戏")
     parser.add_argument("--date", default=today_local())
+    parser.add_argument("--all-registered", action="store_true",
+                        help="采集注册表全部 active 视频，默认只采 video_pairs.yml 白名单")
     args = parser.parse_args()
 
     api_key = youtube_api_key()
@@ -242,7 +252,8 @@ def main() -> int:
         g["game_id"] for g in load_games() if g.get("active")]
 
     for game_id in game_ids:
-        collect_game(game_id, api_key, args.date)
+        collect_game(game_id, api_key, args.date,
+                     curated_only=not args.all_registered)
     return 0
 
 

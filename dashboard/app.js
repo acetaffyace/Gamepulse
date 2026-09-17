@@ -9,6 +9,7 @@
  */
 
 const STORAGE_KEY = 'gamepulse.view.v3';
+const VIEW_STATE_VERSION = 4;
 
 let config = null;            // dashboard_config.json
 let catalog = [];             // index.json 的 games，即对比对象目录
@@ -160,11 +161,12 @@ function applyPreset(name) {
 function serializeView() {
   const on = laneState.filter(l => l.enabled)
     .map(l => `${l.id}.${l.height}${l.scale ? '.' + l.scale : ''}`).join(',');
-  return `s=${subjects.map(s => s.key).join('|')}&a=${align}&r=${rangeDays}&l=${on}`;
+  return `v=${VIEW_STATE_VERSION}&s=${subjects.map(s => s.key).join('|')}&a=${align}&r=${rangeDays}&l=${on}`;
 }
 
 function parseView(str) {
   const params = new URLSearchParams(str);
+  const viewVersion = Number(params.get('v') || 0);
   const out = {};
   if (params.get('s')) out.subjectKeys = params.get('s').split('|').filter(Boolean);
   if (params.get('a')) out.align = params.get('a') === 'day0' ? 'day0' : 'calendar';
@@ -183,6 +185,17 @@ function parseView(str) {
                scale: known ? scale : defaultScale(lane) };
     }).filter(Boolean);
     if (on.length) {
+      // 旧视图只启用了 B 站轨道。补入现在已接入的四语区 YouTube 轨道一次，
+      // 随后的视图链接带 v=4，用户以后手动关闭也会保留自己的选择。
+      if (viewVersion < VIEW_STATE_VERSION) {
+        const onIds = new Set(on.map(x => x.id));
+        config.lanes.filter(x => x.enabled &&
+          ['yt_view_locales', 'yt_engagement_locales'].includes(x.id) &&
+          !onIds.has(x.id)).forEach(x => on.push({
+            id: x.id, height: x.height || 120, enabled: true,
+            scale: defaultScale(x),
+          }));
+      }
       const onIds = new Set(on.map(x => x.id));
       const off = config.lanes.filter(x => !onIds.has(x.id))
         .map(x => ({ id: x.id, height: x.height || 120, enabled: false,
@@ -227,10 +240,16 @@ function activeLanes() {
 }
 
 function buildCtx() {
+  const lanes = activeLanes();
+  // 散点、日增量和语区对照都按发布日期定位；发布后爬升曲线用独立横轴，
+  // 不应改变版本主图的起点或数据表日期范围。
+  const videoLanes = lanes.filter(lane =>
+    ['video_scatter', 'video_delta', 'locale_scatter'].includes(lane.adapter));
   return {
-    axis: buildAxis(subjects, align, rangeDays),
+    axis: buildAxis(subjects, align, rangeDays, videoLanes),
     subjects,
     multi: subjects.length > 1,
+    includesVideoLanes: videoLanes.length > 0,
     // 图例里被点掉的对象只从图上消失，下方表格照常统计 ——
     // 隐藏是为了看清剩下那几条线，不是把对象移出这次对比
     hidden: hiddenSubjects,
@@ -320,8 +339,12 @@ function renderAll() {
    读错就全错。其余固定不变的口径收进可折叠的 fine print，
    原来那一整段 5 句话的注释里有 4 句每次渲染都一模一样。 */
 function renderPulseNote(ctx) {
+  const hasVersion = subjects.some(s => s.kind === 'version');
+  const hasVideoLanes = ctx.includesVideoLanes;
   const head = ctx.axis.align === 'day0'
-    ? '横轴＝各自起点后的第 N 天（游戏从上线日起算，版本从该版本更新日起算）'
+    ? '横轴＝各自起点后的第 N 天（游戏从上线日起算，版本从该版本更新日起算）' +
+      (hasVersion && hasVideoLanes
+        ? '；已确认归属该版本的视频也按正式更新前的实际发布日期显示' : '')
     : '横轴＝日历日期';
   const span = rangeDays
     ? (ctx.axis.align === 'day0' ? `，取起点后的头 ${rangeDays} 天`
@@ -334,6 +357,9 @@ function renderPulseNote(ctx) {
     fine.push(`各对象窗口长度不齐，已统一截断到最短的 ${ctx.axis.truncatedTo} 天 ——
       否则长窗口会在短窗口结束后继续延伸，被读成「它表现更持久」，
       其实只是它有更多天的数据。`);
+  }
+  if (hasVersion && hasVideoLanes) {
+    fine.push('版本对象的负天数由已确认归属该版本的视频确定；评测、在线等普通指标按已有历史数据延伸，版本滚动累计好评率从更新日起算。');
   }
   fine.push('各轨道单位不同，分别独立计量，不共用纵轴。');
   fine.push(ctx.multi
@@ -554,6 +580,7 @@ function renderTiles(ctx) {
 
   box.innerHTML = subjects.map(s => {
     const w = windowStats(s);
+    const rateLabel = s.kind === 'version' ? '版本滚动累计好评率' : '窗口好评率';
     const onlineNote = !w.onlineLive ? '窗口已结束 · 在线无法回溯'
       : w.onlinePoints ? `${fmt(w.online)} 在线 · ${w.onlinePoints} 个采集点`
       : '在线尚未采集';
@@ -561,7 +588,7 @@ function renderTiles(ctx) {
       <div class="k"><span class="swatch" style="background:${s.color}"></span>${s.label}${infoBtn('daily_avg')}</div>
       <div class="v">${w.dailyAvg != null ? w.dailyAvg.toFixed(1) : '—'}<span class="unit">条/日</span></div>
       <div class="n">${deltaHtml(w.delta7)} ${w.delta7 != null ? '近 7 日对比前 7 日' : '窗口内日均新增评测'}</div>
-      <div class="n" style="margin-top:2px">窗口好评率 ${pct(w.rate)} · ${fmt(w.reviews)} 条 / ${w.days} 天</div>
+      <div class="n" style="margin-top:2px">${rateLabel} ${pct(w.rate)} · ${fmt(w.reviews)} 条 / ${w.days} 天</div>
       <div class="n" style="margin-top:2px">${onlineNote}</div>
     </div>`;
   }).join('');
@@ -570,7 +597,7 @@ function renderTiles(ctx) {
 function singleGameTiles(subject) {
   const snap = subject.snap;
   const w = windowStats(subject);
-  const bili = (snap.bilibili || {}).totals || {};
+  const bili = importantBiliSummary(snap);
   const bounds = (snap.events || []).filter(e => e.is_version_boundary);
   const current = bounds[bounds.length - 1];
   const profile = (snap.review_profile || {}).daily || [];
@@ -597,7 +624,7 @@ function singleGameTiles(subject) {
     { k: 'B 站互动率', swatch: color('slot5'), info: 'bili_engagement',
       v: bili.rates && bili.rates.engagement != null
         ? bili.rates.engagement.toFixed(2) : '—', unit: '%',
-      n: bili.videos ? `${bili.videos} 支官方视频 · 点赞+投币+收藏` : '—' },
+      n: bili.videos ? `${bili.videos} 支重点官方视频 · 点赞+投币+收藏` : '—' },
     { k: '当前版本', info: 'version',
       v: current ? current.version_id : '—',
       n: daysSince != null ? `上线 ${daysSince} 天 · ${current.date_local}` : '—' },
@@ -673,7 +700,7 @@ function singleReadout(ctx) {
   } else {
     out.push(`<span class="rank">窗口 ${s.window.start} → ${
       s.openEnded ? '至今' : s.window.end}，共 ${s.days} 天，` +
-      `窗口内 ${fmt(w.reviews)} 条评测、好评率 ${pct(w.rate)}。</span>`);
+      `窗口内 ${fmt(w.reviews)} 条评测、版本滚动累计好评率 ${pct(w.rate)}。</span>`);
   }
   return out;
 }
@@ -695,7 +722,7 @@ function multiReadout(ctx) {
                  `较 ${older.w.dailyAvg.toFixed(1)} 条 ${delta(d, '%')}`);
     }
     if (older.w.rate != null && newer.w.rate != null) {
-      parts.push(`窗口好评率 <b>${newer.w.rate.toFixed(2)}%</b>，` +
+      parts.push(`版本滚动累计好评率 <b>${newer.w.rate.toFixed(2)}%</b>，` +
                  `较 ${older.w.rate.toFixed(2)}% ${delta(newer.w.rate - older.w.rate, 'pp')}`);
     }
     return [
@@ -884,9 +911,11 @@ function renderLangSection(ctx) {
     </tr>`).join('');
     const windowed = shares.some(x => x.share.windowed);
     document.getElementById('langNote').textContent =
-      '各对象窗口内评测的语言构成，按 7 天分桶汇总。' +
-      (windowed ? '版本对象只统计落在该版本窗口内的分桶，因此两列是各自的结构，不是同一个全局值。'
-                : '不同对象的回填起点不同，占比反映的是各自窗口内的结构，不是同一时间段的对照。');
+      (windowed
+        ? '版本对象从更新日开始计算第 N 周，只汇总版本窗口内的每日评测；首尾周可能不足 7 天。'
+        : '各对象窗口内评测的语言构成，按自然 7 天分桶汇总。') +
+      (windowed ? '不同版本按各自的相对周对齐。'
+                : '不同对象的回填起点不同，占比反映各自窗口内的结构。');
     return;
   }
 
@@ -908,7 +937,7 @@ function renderLangSection(ctx) {
   }
 
   head.innerHTML = `<th>语言</th><th class="num">评测数</th><th style="width:40%">占比</th>
-                    <th class="num">首尾桶变化</th>`;
+                    <th class="num">${subject.kind === 'version' ? '首尾周变化' : '首尾桶变化'}</th>`;
   body.innerHTML = rows.map(([k, v]) => {
     const t = trend.get(k);
     const tText = t == null ? '' :
@@ -928,9 +957,42 @@ function renderLangSection(ctx) {
       <td class="num">${tText}</td>
     </tr>`;
   }).join('');
-  document.getElementById('langNote').textContent =
-    '回填期内全部评测的语言构成，反映 Steam 版本的实际玩家来源。末列为首个 7 天桶与最后一个 7 天桶的占比差；' +
-    '想看结构随时间怎么变，在「自定义轨道」里打开「评测语种结构变化」轨道。';
+  document.getElementById('langNote').textContent = subject.kind === 'version'
+    ? '该版本窗口内全部评测的语言构成；末列为版本第一个相对周与最后一个相对周的占比差。'
+    : '回填期内全部评测的语言构成，反映 Steam 版本的实际玩家来源。末列为首个自然 7 天桶与最后一个自然 7 天桶的占比差；' +
+      '想看结构随时间怎么变，在「自定义轨道」里打开「评测语种结构变化」轨道。';
+}
+
+/* 视频注册表可以保留全量官方投稿，但默认指标只跟随 dashboard.yml
+   声明的重点内容范围，避免卡片口径和视频轨道口径不一致。 */
+function isImportantVideo(video) {
+  const types = config && config.important_video_types;
+  return !Array.isArray(types) || types.includes(video.content_type);
+}
+
+function importantBiliSummary(snap) {
+  const videos = ((snap.bilibili || {}).videos || []).filter(isImportantVideo);
+  const totals = { view: 0, like: 0, coin: 0, favorite: 0 };
+  let counted = 0;
+
+  videos.forEach(video => {
+    const stats = (video.latest || {}).stats;
+    if (!stats) return;
+    counted++;
+    Object.keys(totals).forEach(key => {
+      if (stats[key] != null) totals[key] += stats[key];
+    });
+  });
+
+  const complete = totals.view && [totals.like, totals.coin, totals.favorite]
+    .every(value => value != null);
+  return {
+    videos: counted,
+    rates: complete
+      ? { engagement: (totals.like + totals.coin + totals.favorite) /
+          totals.view * 100 }
+      : null,
+  };
 }
 
 /* ---------- 自定义面板 ---------- */
@@ -1061,7 +1123,11 @@ function renderDataTable(ctx) {
   const evByKey = new Map();
   if (!ctx.multi) {
     (subjects[0].snap.events || []).forEach(e => {
-      const k = axisKeyOf(e.date_local, subjects[0], ctx.axis.align);
+      const k = e.type === 'content'
+        ? videoAxisKeyOf({version_confirmed: e.version_confirmed,
+                          version_id: e.version_id, pubdate: e.date_local},
+                         subjects[0], ctx.axis.align)
+        : axisKeyOf(e.date_local, subjects[0], ctx.axis.align);
       if (k === null) return;
       const arr = evByKey.get(k) || [];
       if (e.is_version_boundary) arr.push(`★ ${e.version_id} 版本更新`);
@@ -1125,7 +1191,8 @@ function exportCsv() {
 function exportVideosCsv() {
   const rows = [];
   subjects.forEach(s => {
-    const push = (platform, locale, videos, idKey) => (videos || []).forEach(v => {
+      const push = (platform, locale, videos, idKey) => (videos || [])
+        .filter(isImportantVideo).forEach(v => {
       const stats = (v.latest || {}).stats || {};
       const rates = (v.latest || {}).rates || {};
       rows.push({
@@ -1204,7 +1271,8 @@ function renderSources(ctx) {
 
   const onlinePts = subjects.map(s =>
     (s.snap.online_series || []).filter(o => o.value != null).length);
-  const ramps = subjects.flatMap(s => ((s.snap.bilibili || {}).videos || []));
+  const ramps = subjects.flatMap(s =>
+    ((s.snap.bilibili || {}).videos || []).filter(isImportantVideo));
   const rampReady = ramps.filter(v => (v.ramp || {}).available).length;
 
   // 版本对象要报它自己那段窗口，不是整个游戏的回填覆盖 ——

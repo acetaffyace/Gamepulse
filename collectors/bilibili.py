@@ -20,22 +20,25 @@ from collectors.common import (  # noqa: E402
     OBSERVED,
     UNAVAILABLE,
     get_json,
+    load_curated_video_pairs,
     load_games,
     load_videos,
     log_collection,
-    official_mid,
+    official_mids,
     polite_sleep,
     save_raw,
     session,
     today_local,
     upsert_series,
+    upsert_video_subset_series,
 )
 
 VIEW_URL = "https://api.bilibili.com/x/web-interface/view"
 HEADERS = {"Referer": "https://www.bilibili.com/"}
 
 
-def fetch_video(sess, bvid: str, expected_mid: int | None) -> tuple[dict, dict]:
+def fetch_video(sess, bvid: str,
+                expected_mid: int | set[int] | None) -> tuple[dict, dict]:
     payload, status = get_json(sess, VIEW_URL, {"bvid": bvid},
                                headers=HEADERS)
     if status != "ok" or not payload:
@@ -51,8 +54,11 @@ def fetch_video(sess, bvid: str, expected_mid: int | None) -> tuple[dict, dict]:
     mid = owner.get("mid")
 
     note = ""
-    if expected_mid is not None and mid != expected_mid:
-        note = f"owner_mismatch:got={mid},expected={expected_mid}"
+    expected_mids = ({expected_mid} if isinstance(expected_mid, int)
+                     else set(expected_mid or []))
+    if expected_mids and mid not in expected_mids:
+        expected = ",".join(str(value) for value in sorted(expected_mids))
+        note = f"owner_mismatch:got={mid},expected_any={expected}"
 
     return {
         "bvid": bvid,
@@ -72,15 +78,18 @@ def fetch_video(sess, bvid: str, expected_mid: int | None) -> tuple[dict, dict]:
     }, payload
 
 
-def collect_game(game_id: str, date_local: str) -> dict:
-    videos = load_videos(game_id)
+def collect_game(game_id: str, date_local: str,
+                 curated_only: bool = True) -> dict:
+    videos = (load_curated_video_pairs(game_id) if curated_only
+              else load_videos(game_id))
     if not videos:
-        log_collection("bilibili", game_id, date_local, "skipped", "no_active_videos")
-        print(f"[skip] {game_id}: bilibili_videos.yml 中没有 active: true 的视频")
+        reason = "no_curated_videos" if curated_only else "no_active_videos"
+        log_collection("bilibili", game_id, date_local, "skipped", reason)
+        print(f"[skip] {game_id}: 没有可采集的 B 站视频")
         return {}
 
     sess = session()
-    expected_mid = official_mid(game_id)
+    expected_mid = official_mids(game_id)
     results, raws = [], {}
 
     for entry in videos:
@@ -93,6 +102,7 @@ def collect_game(game_id: str, date_local: str) -> dict:
             "version_id": entry.get("version_id"),
             "version_confirmed": entry.get("version_confirmed", False),
             "content_type": entry.get("content_type"),
+            "pair_id": entry.get("pair_id"),
         })
         results.append(measured)
         raws[bvid] = raw
@@ -106,11 +116,12 @@ def collect_game(game_id: str, date_local: str) -> dict:
 
     save_raw("bilibili", game_id, date_local, raws)
     record = {"date_local": date_local, "game_id": game_id, "videos": results}
-    action = upsert_series(game_id, "bilibili", record)
+    action = (upsert_video_subset_series(game_id, "bilibili", record, "bvid")
+              if curated_only else upsert_series(game_id, "bilibili", record))
 
     ok = sum(1 for r in results if r["status"] == OBSERVED)
     log_collection("bilibili", game_id, date_local, action,
-                   f"observed={ok}/{len(results)}")
+                   f"observed={ok}/{len(results)};curated_only={curated_only}")
     print(f"[{action}] {game_id} {date_local}：{ok}/{len(results)} 个视频采集成功")
     return record
 
@@ -119,6 +130,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="采集 B 站登记视频的公开播放数据")
     parser.add_argument("--game", help="game_id；省略则采集所有 active 游戏")
     parser.add_argument("--date", default=today_local(), help="YYYY-MM-DD，默认今天")
+    parser.add_argument("--all-registered", action="store_true",
+                        help="采集注册表全部 active 视频，默认只采 video_pairs.yml 白名单")
     args = parser.parse_args()
 
     if args.game:
@@ -127,7 +140,7 @@ def main() -> int:
         game_ids = [g["game_id"] for g in load_games() if g.get("active")]
 
     for game_id in game_ids:
-        collect_game(game_id, args.date)
+        collect_game(game_id, args.date, curated_only=not args.all_registered)
     return 0
 
 

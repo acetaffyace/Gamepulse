@@ -41,6 +41,11 @@ class TestExtractVersion(unittest.TestCase):
             extract_version('Ver. 1.3 "Rising from the Moonlit Fog" Patch Notes'),
             "1.3")
 
+    def test_kuro_compact_prefix(self):
+        self.assertEqual(
+            extract_version("New Content in Wuthering Waves V2.6: X"),
+            "2.6")
+
     def test_chinese_style(self):
         self.assertEqual(extract_version("《绝区零》3.2版本PV"), "3.2")
 
@@ -119,6 +124,22 @@ class TestBuildEvents(unittest.TestCase):
                 {"date_local": "2026-09-14", "items": [item]}]
         events = build_events(news, [], {})
         self.assertEqual(len(events), 1)
+
+    def test_duplicate_version_updates_with_different_gids_keep_earliest(self):
+        news = [{"date_local": "2025-10-10", "items": [
+            {"gid": "later", "title": "New Content in Wuthering Waves Version 2.7: X",
+             "feedname": "steam_community_announcements",
+             "date_local": "2025-10-10", "url": "http://later"},
+        ]}, {"date_local": "2025-10-09", "items": [
+            {"gid": "earlier", "title": "New Content in Wuthering Waves Version 2.7: X",
+             "feedname": "steam_community_announcements",
+             "date_local": "2025-10-09", "url": "http://earlier"},
+        ]}]
+        events = build_events(news, [], {})
+        boundaries = [e for e in events if e.get("is_version_boundary")]
+        self.assertEqual(len(boundaries), 1)
+        self.assertEqual(boundaries[0]["version_id"], "2.7")
+        self.assertEqual(boundaries[0]["date_local"], "2025-10-09")
 
 
 if __name__ == "__main__":
