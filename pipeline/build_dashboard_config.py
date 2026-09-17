@@ -52,7 +52,10 @@ ADAPTER_SHAPES = {
 # 所以在这里对 lane.content_types 做一次白名单校验。
 CONTENT_TYPES = {
     "version_trailer", "character_trailer", "character_demo",
-    "season_teaser", "ep", "other",
+    "character_ep", "season_teaser", "ep", "other",
+    # 已存在于注册表的非默认展示类型，保留在 schema 中但不进入
+    # important_video_types，避免它们被误删或被误判为未知值。
+    "theme_mv", "animation_short", "behind_the_scenes",
 }
 
 # 一条轨道声明的纵轴标尺。前端按 id 分支取数，写错就会静默退回默认标尺，
@@ -257,6 +260,7 @@ def main() -> int:
         "palette": config.get("palette") or {},
         "share_ramp": config.get("share_ramp") or [],
         "share_other": config.get("share_other"),
+        "important_video_types": config.get("important_video_types") or [],
         "lanes": lanes,
         "presets": config.get("presets") or {},
         "adapters": sorted(ADAPTER_SHAPES),

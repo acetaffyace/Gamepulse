@@ -100,6 +100,64 @@ class TestLanguageShare(unittest.TestCase):
         self.assertEqual(first["shares"]["english"], 100.0)
         self.assertEqual(second["shares"]["russian"], 100.0)
 
+    def test_version_buckets_restart_at_update_day(self):
+        """版本相对周不能把更新日前的自然周数据带进来。"""
+        reviews = (
+            [review("2026-07-01", 60, 60, language="english")] * 5
+            + [review("2026-07-03", 60, 60, language="russian")] * 2
+            + [review("2026-07-04", 60, 60, language="japanese")] * 3
+            + [review("2026-07-10", 60, 60, language="koreana")] * 4
+            + [review("2026-07-12", 60, 60, language="english")] * 2
+        )
+        daily = rp.daily_profile(reviews, collected_at="2026-07-14")
+        series = rp.version_language_share_series(
+            daily,
+            [
+                {"date_local": "2026-07-03", "version_id": "2.0"},
+                {"date_local": "2026-07-12", "version_id": "2.1"},
+            ],
+        )
+
+        first = series[0]
+        self.assertEqual(first["date_local"], "2026-07-03")
+        self.assertEqual(first["end_local"], "2026-07-11")
+        self.assertEqual([b["relative_week"] for b in first["buckets"]], [1, 2])
+        self.assertEqual(first["buckets"][0]["start"], "2026-07-03")
+        self.assertEqual(first["buckets"][0]["end"], "2026-07-09")
+        self.assertEqual(first["overall_total"], 9)
+        self.assertEqual(first["overall"].get("english", 0), 0)
+        self.assertEqual(first["overall"].get("russian", 0), 2)
+        self.assertEqual(first["overall"].get("japanese", 0), 3)
+        self.assertEqual(first["buckets"][1]["start"], "2026-07-10")
+        self.assertEqual(first["buckets"][1]["end"], "2026-07-11")
+        self.assertEqual(first["buckets"][1]["days_with_reviews"], 1)
+
+    def test_version_cumulative_rate_restarts_at_update_day(self):
+        """版本累计好评率的分子分母都不能带入更新日前的评测。"""
+        reviews = (
+            [review("2026-07-01", 60, 60, voted_up=False)] * 10
+            + [review("2026-07-03", 60, 60, voted_up=True)] * 3
+            + [review("2026-07-04", 60, 60, voted_up=False)]
+            + [review("2026-07-05", 60, 60, voted_up=True)] * 2
+        )
+        daily = rp.daily_profile(reviews, collected_at="2026-07-06")
+        series = rp.version_cumulative_review_rate(
+            daily,
+            [
+                {"date_local": "2026-07-03", "version_id": "2.0"},
+                {"date_local": "2026-07-06", "version_id": "2.1"},
+            ],
+        )
+
+        first = series[0]["series"]
+        self.assertEqual(first[0]["date_local"], "2026-07-03")
+        self.assertEqual(first[0]["value"], 100.0)
+        self.assertEqual(first[0]["total_reviews"], 3)
+        self.assertEqual(first[1]["value"], 75.0)
+        self.assertEqual(first[1]["total_reviews"], 4)
+        self.assertEqual(first[2]["value"], round(5 / 6 * 100, 2))
+        self.assertEqual(first[2]["total_reviews"], 6)
+
 
 class TestVersionWindows(unittest.TestCase):
     def _daily(self):

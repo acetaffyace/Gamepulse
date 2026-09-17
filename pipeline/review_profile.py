@@ -246,6 +246,164 @@ def language_share_series(daily: list[dict], bucket_days: int = 7) -> dict:
     }
 
 
+def version_language_share_series(daily: list[dict], boundaries: list[dict],
+                                  bucket_days: int = 7) -> list[dict]:
+    """按版本更新日为 day 1，计算版本内的语种相对周。
+
+    全局 ``language_share`` 使用自然日历周，适合看整个游戏的长期变化；
+    版本对比不能直接复用那些桶，因为版本边界可能切穿一个自然周。
+    这里从更新日重新起桶：第 1 周 = 更新日到第 7 天，第 2 周 = 第 8～14 天，
+    并把每个版本的窗口截在下一个版本更新日前一天。首尾桶可以不足 7 天，
+    但不会混入相邻版本的数据。
+    """
+    if not daily or not boundaries:
+        return []
+
+    from datetime import date, timedelta
+
+    by_date = {d["date_local"]: d for d in daily}
+    dates = sorted(by_date)
+    first_day = date.fromisoformat(dates[0])
+    last_day = date.fromisoformat(dates[-1])
+
+    # 所有版本使用同一组主要语种，保证跨版本的图例和列可以直接比较。
+    overall_languages: Counter = Counter()
+    for day in daily:
+        overall_languages.update(day.get("languages") or {})
+    top = [lang for lang, _ in overall_languages.most_common(TOP_LANGUAGES)]
+
+    ordered = sorted(
+        (b for b in boundaries if b.get("date_local")),
+        key=lambda b: b["date_local"],
+    )
+    out: list[dict] = []
+    for i, boundary in enumerate(ordered):
+        start = date.fromisoformat(boundary["date_local"])
+        next_start = (
+            date.fromisoformat(ordered[i + 1]["date_local"])
+            if i + 1 < len(ordered) else None
+        )
+        window_end = (next_start - timedelta(days=1)) if next_start else last_day
+        # 快照前的版本可能早于评测回填起点；保留版本相对周编号，
+        # 但只把实际存在的每日数据纳入汇总。
+        data_start = max(start, first_day)
+        data_end = min(window_end, last_day)
+        in_window = [
+            by_date[d] for d in dates
+            if data_start <= date.fromisoformat(d) <= data_end
+        ] if data_start <= data_end else []
+
+        overall: Counter = Counter()
+        for day in in_window:
+            overall.update(day.get("languages") or {})
+
+        buckets: list[dict] = []
+        cursor = start
+        while cursor <= window_end:
+            bucket_end = min(cursor + timedelta(days=bucket_days - 1), window_end)
+            chunk = [
+                by_date[d] for d in dates
+                if cursor <= date.fromisoformat(d) <= bucket_end
+            ]
+            counts: Counter = Counter()
+            for day in chunk:
+                counts.update(day.get("languages") or {})
+            total = sum(counts.values())
+            if total:
+                other = total - sum(counts.get(lang, 0) for lang in top)
+                relative_week = ((cursor - start).days // bucket_days) + 1
+                buckets.append({
+                    "start": cursor.isoformat(),
+                    "end": bucket_end.isoformat(),
+                    "relative_week": relative_week,
+                    "days_with_reviews": len(chunk),
+                    "reviews": total,
+                    "shares": {
+                        lang: _share(counts.get(lang, 0), total) for lang in top
+                    } | {"other": _share(other, total)},
+                    "counts": {lang: counts.get(lang, 0) for lang in top},
+                    "status": RECONSTRUCTED,
+                })
+            cursor = bucket_end + timedelta(days=1)
+
+        out.append({
+            "version_id": boundary.get("version_id"),
+            "date_local": start.isoformat(),
+            "end_local": window_end.isoformat(),
+            "bucket_days": bucket_days,
+            "relative": True,
+            "languages": top + ["other"],
+            "overall": {lang: overall[lang] for lang in top},
+            "overall_total": sum(overall.values()),
+            "data_start": data_start.isoformat() if in_window else None,
+            "data_end": data_end.isoformat() if in_window else None,
+            "data_days": len(in_window),
+            "buckets": buckets,
+            "status": RECONSTRUCTED,
+        })
+    return out
+
+
+def version_cumulative_review_rate(daily: list[dict],
+                                   boundaries: list[dict]) -> list[dict]:
+    """从各版本更新日开始重算累计好评率。
+
+    ``daily`` 可以是评测回填日表，也可以是 dashboard 的 review_history；
+    后者使用 ``new_positive`` / ``new_reviews`` 字段。全局累计好评率从评测
+    回填起点开始累计，不能直接拿来画单个版本；版本对象需要自己的累计分子
+    和分母，并在下一版更新日前截断。
+    """
+    if not daily or not boundaries:
+        return []
+
+    from datetime import date, timedelta
+
+    by_date = {d["date_local"]: d for d in daily}
+    dates = sorted(by_date)
+    last_day = date.fromisoformat(dates[-1])
+    ordered = sorted(
+        (b for b in boundaries if b.get("date_local")),
+        key=lambda b: b["date_local"],
+    )
+
+    out: list[dict] = []
+    for i, boundary in enumerate(ordered):
+        start = date.fromisoformat(boundary["date_local"])
+        next_start = (
+            date.fromisoformat(ordered[i + 1]["date_local"])
+            if i + 1 < len(ordered) else None
+        )
+        window_end = (next_start - timedelta(days=1)) if next_start else last_day
+        positive = 0
+        reviews = 0
+        series: list[dict] = []
+        for key in dates:
+            day = date.fromisoformat(key)
+            if day < start or day > window_end:
+                continue
+            row = by_date[key]
+            positive += (row.get("positive") if "positive" in row
+                         else row.get("new_positive")) or 0
+            reviews += (row.get("reviews") if "reviews" in row
+                        else row.get("new_reviews")) or 0
+            if reviews:
+                series.append({
+                    "date_local": key,
+                    "value": round(positive / reviews * 100, 2),
+                    "total_positive": positive,
+                    "total_reviews": reviews,
+                    "status": RECONSTRUCTED,
+                })
+        out.append({
+            "version_id": boundary.get("version_id"),
+            "date_local": start.isoformat(),
+            "end_local": window_end.isoformat(),
+            "series": series,
+            "status": RECONSTRUCTED,
+        })
+    return out
+
+
 # 参与版本前后对比的字段：既要有量（评测数），也要有质（好评率），
 # 还要有玩家结构（时长分布），否则只能看出「热度变了」，
 # 看不出「来的是什么人」。
@@ -371,7 +529,8 @@ def version_windows(daily: list[dict], boundaries: list[dict],
 
 
 def build(game_id: str, boundaries: list[dict] | None = None,
-          window: int = 7) -> dict | None:
+          window: int = 7,
+          review_history: list[dict] | None = None) -> dict | None:
     """组装一个游戏的完整玩家结构档案。回填文件不存在时返回 None。"""
     reviews, collected_at = load_reviews(game_id)
     if not reviews:
@@ -388,6 +547,12 @@ def build(game_id: str, boundaries: list[dict] | None = None,
                      "days": len(daily)} if daily else None,
         "daily": daily,
         "language_share": language_share_series(daily),
+        "version_language_share": version_language_share_series(
+            daily, boundaries or []),
+        # 与 review_rate 轨道和窗口指标卡使用同一条序列，避免两个重建口径
+        # 在同一版本上出现微小但难以解释的好评率差异。
+        "version_cumulative_review_rate": version_cumulative_review_rate(
+            (review_history or daily), boundaries or []),
         "version_windows": version_windows(daily, boundaries or [], window),
         "caveats": [
             "仅含今天仍然存在的评测，越早的日期越可能低估当日真实值",

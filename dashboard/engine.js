@@ -228,29 +228,82 @@ function axisKeyOf(dateIso, subject, align) {
   return align === 'day0' ? String(daysBetween(subject.day0, dateIso)) : dateIso;
 }
 
-function buildAxis(subjects, align, rangeDays) {
+function buildAxis(subjects, align, rangeDays, videoLanes = []) {
   if (!subjects.length) return { keys: [], align };
+  // 只有启用按发布日期定位的轨道时，版本视频才会把横轴向更新日前扩展。
+  // 每条轨道按自己的来源和内容类型筛选，避免无关平台的视频留下空白区间。
+  const previews = subjects.flatMap(s => prereleaseVideoDates(s, videoLanes));
 
   if (align === 'day0') {
     // 截断到最短的那个窗口：长窗口在短窗口结束后继续延伸，
     // 会被读成「它更持久」，其实只是它有更多天的数据。
     const span = Math.min(...subjects.map(s => s.days || 0));
     const capped = rangeDays ? Math.min(span, rangeDays) : span;
+    const firstDay = previews.length
+      ? Math.min(0, ...previews.map(p => daysBetween(p.subject.day0, p.date))) : 0;
     const keys = [];
-    for (let d = 0; d < Math.max(capped, 1); d++) keys.push(String(d));
+    for (let d = firstDay; d < Math.max(capped, 1); d++) keys.push(String(d));
     return { keys, align, truncatedTo: span };
   }
 
-  const starts = subjects.map(s => s.window.start).filter(Boolean);
+  const starts = subjects.map(s => s.window.start).filter(Boolean)
+    .concat(previews.map(p => p.date));
   const ends = subjects.map(s => s.window.end).filter(Boolean);
   if (!starts.length || !ends.length) return { keys: [], align };
   const all = dateRange(starts.reduce((a, b) => a < b ? a : b),
                         ends.reduce((a, b) => a > b ? a : b));
   const from = rangeDays ? Math.max(0, all.length - rangeDays) : 0;
-  return { keys: all.slice(from), align };
+  // 保留被选中视频轨道实际使用的更新前日期；rangeDays 仍限定更新后的常规区间。
+  const firstPreview = previews.length
+    ? all.indexOf(previews.map(p => p.date).sort()[0]) : -1;
+  const start = firstPreview >= 0 ? Math.min(from, firstPreview) : from;
+  return { keys: all.slice(start), align };
 }
 
 const axisLabelOf = (key, align) => align === 'day0' ? `${key} 天` : key.slice(5);
+
+/* 版本对象通常从更新日开始显示普通指标。若视频轨道把横轴扩展到了
+   更新日前，则把该游戏已有的历史序列映射到同一批负天数；超出横轴的
+   早期历史仍不显示。版本滚动累计线单独使用 axisKeyOf，继续从第 0 天起算。 */
+function dataAxisKeyOf(dateIso, subject, ctx) {
+  const key = axisKeyOf(dateIso, subject, ctx.axis.align);
+  if (key !== null) return key;
+  if (subject.kind !== 'version' || !ctx.includesVideoLanes || !dateIso ||
+      !subject.window.start || dateIso >= subject.window.start ||
+      (subject.window.end && dateIso > subject.window.end)) return null;
+  const preUpdateKey = ctx.axis.align === 'day0'
+    ? String(daysBetween(subject.day0, dateIso)) : dateIso;
+  return ctx.axis.keys.includes(preUpdateKey) ? preUpdateKey : null;
+}
+
+/* 已人工确认属于某版本的视频通常早于正式更新日发布。把这些预告保留在
+   版本图上，横轴从实际发布日期显示。 */
+function prereleaseVideoDates(subject, lanes = []) {
+  if (subject.kind !== 'version') return [];
+  return lanes.flatMap(lane => {
+    const source = resolve(subject.snap, lane.path);
+    const videos = Array.isArray(source) ? source
+      : source && typeof source === 'object'
+        ? Object.values(source).flatMap(locale => locale.videos || [])
+        : [];
+    return videos.filter(v =>
+      (!Array.isArray(lane.content_types) || lane.content_types.includes(v.content_type)) &&
+      v.version_confirmed && v.version_id === subject.versionId &&
+      v.pubdate && v.pubdate < subject.window.start
+    ).map(v => ({ subject, date: v.pubdate }));
+  });
+}
+
+function videoAxisKeyOf(video, subject, align) {
+  const confirmedPreview = subject.kind === 'version' &&
+    video.version_confirmed && video.version_id === subject.versionId &&
+    video.pubdate && video.pubdate < subject.window.start &&
+    (!subject.window.end || video.pubdate <= subject.window.end);
+  if (!confirmedPreview) return axisKeyOf(video.pubdate, subject, align);
+  return align === 'day0'
+    ? String(daysBetween(subject.day0, video.pubdate))
+    : video.pubdate;
+}
 
 /* ---------- 取数适配器 ----------
  *
@@ -320,37 +373,34 @@ function filterVideos(list, subject, lane) {
 }
 
 /* 语种构成必须按**对象自己的窗口**重算。
-   review_profile.language_share.overall 是整个回填期的总计，直接拿来对比
-   两个版本，两列会是同一组数字 —— 看上去像「结构完全没变」，其实是
-   两边都在显示同一个全局值。这里按窗口筛出分桶再重新汇总。 */
+   游戏对象继续使用自然 7 日桶；版本对象使用 pipeline 按版本更新日
+   重新起算的相对周（第 1 周 = 更新日到第 7 天）。不能从自然周桶里
+   挑重叠桶，否则版本边界会把相邻版本的评测整桶带进来。 */
 function languageShareFor(subject) {
-  const share = (subject.snap.review_profile || {}).language_share || {};
+  const profile = subject.snap.review_profile || {};
+  const share = profile.language_share || {};
   if (subject.kind !== 'version') return share;
 
   const w = subject.window;
-  const inWin = (share.buckets || []).filter(b => b.end >= w.start && b.start <= w.end);
-  if (!inWin.length) {
+  const versionShare = (profile.version_language_share || [])
+    .find(v => v.date_local === w.start);
+  if (versionShare) {
+    return { ...versionShare, windowed: true, relative: true };
+  }
+
+  // 旧快照没有相对周数据时宁可显示为空，也不要退回旧的整桶重叠算法。
+  if (!(profile.daily || []).length) {
     return { languages: share.languages || [], overall: {}, overall_total: 0,
              buckets: [], windowed: true };
   }
-
-  const overall = {};
-  inWin.forEach(b => Object.entries(b.counts || {}).forEach(([k, v]) => {
-    overall[k] = (overall[k] || 0) + v;
-  }));
-  return {
-    languages: share.languages || [],
-    overall,
-    overall_total: Object.values(overall).reduce((a, b) => a + b, 0),
-    buckets: inWin,
-    windowed: true,
-  };
+  return { languages: share.languages || [], overall: {}, overall_total: 0,
+           buckets: [], windowed: true };
 }
 
 function alignRows(rows, subject, ctx) {
   const by = new Map();
   (rows || []).forEach(r => {
-    const k = axisKeyOf(r.date_local, subject, ctx.axis.align);
+    const k = dataAxisKeyOf(r.date_local, subject, ctx);
     if (k !== null) by.set(k, r);
   });
   return by;
@@ -367,23 +417,50 @@ const ADAPTERS = {
     ctx.subjects.forEach(subject => {
       const rows = resolve(subject.snap, lane.path) || [];
       if (rows.length) any = true;
+      const versionProfile = lane.id === 'review_rate' && subject.kind === 'version'
+        ? ((subject.snap.review_profile || {}).version_cumulative_review_rate || [])
+            .find(v => v.date_local === subject.window.start)
+        : null;
+      const versionBy = new Map((versionProfile && versionProfile.series || [])
+        .map(r => [axisKeyOf(r.date_local, subject, ctx.axis.align), r]));
       const by = alignRows(rows, subject, ctx);
       defs.forEach(def => {
+        const isGlobalCumulative = lane.id === 'review_rate' &&
+          subject.kind === 'version' && def.field === 'cumulative_review_rate';
+        const name = isGlobalCumulative ? '全局累计好评率' : def.name;
+        const values = ctx.axis.keys.map(k => {
+          const r = by.get(k);
+          const v = r ? r[def.field] : null;
+          return (v === undefined) ? null : scale(v);
+        });
+        if (values.some(v => v != null)) any = true;
         out.push({
-          name: seriesName(subject, def, lane, ctx.multi),
+          name: ctx.multi ? `${subject.label} · ${name}` : name,
           subject,
           kind: lane.chart === 'bar' ? 'bar' : 'line',
           color: ctx.multi ? subject.color : color(def.color || lane.color),
           width: def.width, opacity: def.opacity, smooth: def.smooth,
           dashed: def.dashed, endLabel: def.end_label && !ctx.multi ? true : def.end_label,
           symbol: lane.symbol,
-          values: ctx.axis.keys.map(k => {
-            const r = by.get(k);
-            const v = r ? r[def.field] : null;
-            return (v === undefined) ? null : scale(v);
-          }),
+          values,
         });
       });
+
+      // 版本对象额外增加一条从版本第一天重新起算的滚动累计线；
+      // 全局累计线保留，便于看出版本自身口碑与游戏整体存量口碑的差异。
+      if (lane.id === 'review_rate' && subject.kind === 'version') {
+        const values = ctx.axis.keys.map(k => {
+          const r = versionBy.get(k);
+          return r ? scale(r.value) : null;
+        });
+        if (values.some(v => v != null)) any = true;
+        out.push({
+          name: ctx.multi ? `${subject.label} · 版本滚动累计好评率`
+                          : '版本滚动累计好评率',
+          subject, kind: 'line', color: ctx.multi ? subject.color : color('slot5'),
+          width: 2.8, smooth: true, endLabel: !ctx.multi, values,
+        });
+      }
     });
     return { series: out, empty: !any };
   },
@@ -401,7 +478,7 @@ const ADAPTERS = {
       if (videos.length) any = true;
       const keys = new Set(ctx.axis.keys);
       const points = videos.map(v => {
-        const k = axisKeyOf(v.pubdate, subject, ctx.axis.align);
+        const k = videoAxisKeyOf(v, subject, ctx.axis.align);
         if (k === null || !keys.has(k)) return null;
         const value = ((v.latest || {})[bag] || {})[lane.field];
         return value == null ? null : { key: k, value, meta: { ...v, subject } };
@@ -456,7 +533,7 @@ const ADAPTERS = {
       seenPerSubject.set(subject.key, i + 1);
       const by = new Map(v.ramp.points.map(p => [String(p.day), p[lane.field] ?? p.view]));
       return {
-        name: `${ctx.multi ? subject.label + ' · ' : ''}${v.title || v.bvid}`,
+        name: `${ctx.multi ? subject.label + ' · ' : ''}${compactVideoLabel(v, subject)}`,
         subject, kind: 'line',
         color: shade(subject.color, shadeFor(i, countPerSubject.get(subject.key))),
         width: 1.8,
@@ -526,7 +603,7 @@ const ADAPTERS = {
           ? all[Math.floor(all.length / 2)] : null;
 
         const points = videos.map(v => {
-          const k = axisKeyOf(v.pubdate, subject, ctx.axis.align);
+          const k = videoAxisKeyOf(v, subject, ctx.axis.align);
           if (k === null || !keys.has(k)) return null;
           const raw = ((v.latest || {})[bag] || {})[lane.field];
           // 对数轴不接受 0 与负数；这类点是「没采到」而不是「值为 0」
@@ -578,7 +655,7 @@ const ADAPTERS = {
       videos.forEach(v => (v.points || []).forEach(p => {
         const d = (p.deltas || {})[lane.field];
         if (d == null) return;
-        const k = axisKeyOf(p.date_local, subject, ctx.axis.align);
+        const k = videoAxisKeyOf({ ...v, pubdate: p.date_local }, subject, ctx.axis.align);
         if (k === null) return;
         sums.set(k, (sums.get(k) || 0) + d);
         if ((p.span_days || 1) > 1) spans.set(k, p.span_days);
@@ -618,9 +695,9 @@ const ADAPTERS = {
     return { series: out, empty: !any };
   },
 
-  /* 语种构成堆叠面积。分桶是 7 天日历窗口，把桶内每一天都填成该桶的占比，
-     因此这条轨道呈现的是阶梯而不是逐日曲线 —— 日粒度的语种占比在低评测量
-     的日子里噪声极大。 */
+  /* 语种构成堆叠面积。游戏对象是自然 7 天窗口；版本对象是从更新日
+     重新起算的相对周。把桶内每一天都填成该桶的占比，因此轨道呈现阶梯，
+     而不是低评测量下噪声很大的逐日曲线。 */
   stacked_share(lane, ctx) {
     if (ctx.multi) {
       return { series: [], empty: true,
@@ -661,6 +738,9 @@ const ADAPTERS = {
         }),
       })),
       empty: false,
+      note: subject.kind === 'version'
+        ? '按版本更新日计第 N 周 · 首尾周可能不足 7 天'
+        : null,
     };
   },
 
@@ -678,7 +758,9 @@ const ADAPTERS = {
     const buckets = (share && share.buckets) || [];
     if (buckets.length < 2) {
       return { series: [], empty: true,
-               note: '该窗口内不足两个 7 天分桶，算不出结构变化' };
+               note: subject.kind === 'version'
+                 ? '该版本内不足两个相对周，算不出结构变化'
+                 : '该窗口内不足两个 7 天分桶，算不出结构变化' };
     }
 
     const base = buckets[0].shares;
@@ -712,7 +794,9 @@ const ADAPTERS = {
         }),
       })),
       empty: false,
-      note: `基线 ${buckets[0].start} · 变化最大的 ${langs.length} 个语种`,
+      note: subject.kind === 'version'
+        ? `基线第 ${buckets[0].relative_week || 1} 周 · 变化最大的 ${langs.length} 个语种`
+        : `基线 ${buckets[0].start} · 变化最大的 ${langs.length} 个语种`,
     };
   },
 };
@@ -930,8 +1014,12 @@ function renderPulse(chart, el, lanes, ctx) {
       } : { show: false },
       splitLine: { show: false },
       axisPointer: { label: { show: showLabel,
-        formatter: p => (ownAxis || ctx.axis.align === 'day0')
-          ? `第 ${p.value} 天` : p.value,
+        formatter: p => ownAxis
+          ? `发布后第 ${p.value} 天`
+          : ctx.axis.align === 'day0'
+            ? (Number(p.value) < 0 && ctx.subjects.some(s => s.kind === 'version')
+              ? `正式更新前 ${Math.abs(Number(p.value))} 天` : `第 ${p.value} 天`)
+            : p.value,
         backgroundColor: C.primary, fontFamily: FONT } },
     });
 
@@ -1040,7 +1128,9 @@ function buildTooltip(params, laneData, ctx) {
      </div>` + (extra ? `<div style="margin-left:15px;color:${C.muted};font-size:11px">${extra}</div>` : '');
 
   const head = ctx.axis.align === 'day0'
-    ? `起点后第 ${key} 天` + (ctx.multi ? '' : ` · ${dateForKey(key, ctx.subjects[0])}`)
+    ? (Number(key) < 0 && ctx.subjects.some(s => s.kind === 'version')
+      ? `正式更新前 ${Math.abs(Number(key))} 天`
+      : `起点后第 ${key} 天`) + (ctx.multi ? '' : ` · ${dateForKey(key, ctx.subjects[0])}`)
     : key;
   let s = `<div style="font-weight:600;margin-bottom:6px">${head}</div>`;
   let any = false;
@@ -1060,7 +1150,7 @@ function buildTooltip(params, laneData, ctx) {
             ? `<br>${fmt(p.raw)} · 本语区中位数 ${fmt(p.median)}` : '';
           const extra = def.kind === 'marks'
             ? ''
-            : `${(m.title || '').slice(0, 42)}${m.content_type ? ' · ' + CONTENT_LABEL[m.content_type] : ''}${scaleNote}`;
+            : `${m.title ? compactVideoLabel(m, m.subject || def.subject) : ''}${scaleNote}`;
           s += row(def.color, def.kind === 'marks' ? `${def.name} 版本更新` : def.name,
                    def.kind === 'marks' ? (m.label || '') : toText(p.value), extra);
         });
@@ -1099,7 +1189,138 @@ const CONTENT_LABEL = {
   version_trailer: '版本 PV',
   character_trailer: '角色 PV',
   character_demo: '角色演示',
+  character_ep: '角色 EP',
   season_teaser: '季前瞻',
   ep: 'EP',
+  theme_mv: '主题曲 MV',
+  animation_short: '动画短片',
+  behind_the_scenes: '幕后',
   other: '其他',
 };
+
+function roleVideoKind(video) {
+  const title = video.title || '';
+  const type = video.content_type;
+  if (type === 'character_ep') return 'ep';
+  if (type === 'character_demo') return 'demo';
+  if (type === 'character_trailer') return 'pv';
+  if (type === 'season_teaser' && /character\s+(?:teaser|pv)|角色\s*PV/i.test(title)) return 'pv';
+  if (/\bcharacter\s+short\b/i.test(title)) return 'short';
+  if (/\banimated\s+short\b/i.test(title)) return 'animated_short';
+  return null;
+}
+
+function cleanVideoName(value) {
+  return String(value || '')
+    .replace(/^(?:zenless zone zero|wuthering waves|nte(?: global)?)[\s|｜丨ح]*/i, '')
+    .replace(/^《[^》]+》\s*/u, '')
+    .split(/[◇◆]/u)[0]
+    .replace(/^[\s"'“”‘’「『【(\[{|｜丨ح:：·-]+/u, '')
+    .replace(/[\s"'“”‘’」』】)\]}|｜丨ح:：·-]+$/u, '')
+    .trim();
+}
+
+function roleNameFromTitle(video, kind) {
+  const title = String(video.title || '').replace(/\s+/g, ' ').trim();
+  const cjk = '[\\p{Script=Han}\\p{Script=Hiragana}\\p{Script=Katakana}]{1,12}';
+  const cjkPattern = kind === 'demo'
+    ? new RegExp(`(?:^|[》】])\\s*(${cjk})\\s*角色(?:展示|演示|实机战斗)`, 'u')
+    : kind === 'pv'
+      ? new RegExp(`(?:^|[》】])\\s*(${cjk})\\s*(?:角色)?PV`, 'iu')
+      : kind === 'ep'
+        ? new RegExp(`(?:^|[》】])\\s*(${cjk})\\s*(?:角色)?EP`, 'iu')
+        : null;
+  const cjkMatch = cjkPattern && title.match(cjkPattern);
+  if (cjkMatch) return cleanVideoName(cjkMatch[1]);
+
+  const beforeRole = title.match(/^(.+?)\s+character\s+(?:demo|teaser|pv|trailer|short)\b/i);
+  if (beforeRole) return cleanVideoName(beforeRole[1]);
+
+  const episodeName = title.match(/[—–-]\s*([^—–-]+?)\s+EP\b/i);
+  if (episodeName) return cleanVideoName(episodeName[1]);
+  const leadingEpisode = title.match(/^(.+?)\s+EP\b/i);
+  if (leadingEpisode) return cleanVideoName(leadingEpisode[1]);
+  if (kind === 'ep') {
+    const episodeSuffix = title.match(/[—–]\s*([^—–]+)$/u);
+    if (episodeSuffix) return cleanVideoName(episodeSuffix[1]);
+  }
+
+  const showcase = title.match(/(?:combat|resonator combat)\s+showcase\s*[|｜丨ح]\s*([^|｜丨ح]+)/i);
+  if (showcase) return cleanVideoName(showcase[1]);
+
+  const end = title.split(/[|｜丨ح]/u).pop();
+  return cleanVideoName(end);
+}
+
+function registeredChineseCharacterName(video, subject, kind) {
+  if (video.character_name) return String(video.character_name).trim();
+  const records = (subject && subject.snap && subject.snap.bilibili && subject.snap.bilibili.videos) || [];
+  if (!video.pubdate || !records.length) return '';
+  const target = Date.parse(`${video.pubdate}T00:00:00Z`);
+  const candidates = records
+    .filter(v => v.character_name && roleVideoKind(v) === kind && v.pubdate)
+    .map(v => ({name: String(v.character_name).trim(),
+                days: Math.abs(Date.parse(`${v.pubdate}T00:00:00Z`) - target) / 86400000}))
+    .filter(v => v.days <= 1)
+    .sort((a, b) => a.days - b.days);
+  if (!candidates.length) return '';
+  const nearest = candidates.filter(v => v.days === candidates[0].days);
+  const names = [...new Set(nearest.map(v => v.name))];
+  return names.length === 1 ? names[0] : '';
+}
+
+function compactVideoLabel(video, subject) {
+  if (video.short_title || video.display_title) return String(video.short_title || video.display_title).trim();
+  const title = String(video.title || '').replace(/\s+/g, ' ').trim();
+  const type = video.content_type;
+  const roleKind = roleVideoKind(video);
+
+  if (roleKind) {
+    const name = registeredChineseCharacterName(video, subject, roleKind) ||
+      (video.character_name ? String(video.character_name).trim() : roleNameFromTitle(video, roleKind));
+    if ((roleKind === 'short' || roleKind === 'animated_short')) {
+      const part = title.match(/(?:ver\.?|part)\s*(\d+)/i);
+      const label = roleKind === 'short' ? '角色短片' : '动画短片';
+      return `${name ? name + ' ' : ''}${label}${part ? ' ' + part[1] : ''}`;
+    }
+    if (roleKind === 'ep' && !name && /theme song|主题曲/i.test(title)) return '主题曲 MV';
+    const suffix = {ep: 'EP', pv: 'PV', demo: '角色展示'}[roleKind];
+    return `${name || '角色'} ${suffix}`;
+  }
+
+  const ver = title.match(/\b(?:version|ver(?:sion)?\.?|v)\s*(\d+(?:\.\d+)+)\b|\b(\d+\.\d+)\s*版本/i);
+  const version = (ver && (ver[1] || ver[2])) || String(video.version_id || '').replace(/^v/i, '');
+  if (version && (type === 'version_trailer' || type === 'season_teaser')) {
+    if (/preview\s+recap/i.test(title)) {
+      const topic = cleanVideoName(title.split(/[|｜丨ح]/u).pop())
+        .replace(/^(?:new|updated)\s+/i, '')
+        .replace(/^(?:water\s+)?(?:vehicle|region|district)\s*[-:：]\s*/i, '')
+        .slice(0, 20);
+      return `${version}版本回顾${topic ? ' · ' + topic : ''}`;
+    }
+    if (/special\s+program|preview\s+special\s+(?:broadcast|program)|前瞻特別節目|前瞻特别节目/i.test(title)) {
+      return `${version}版本前瞻`;
+    }
+    if (/now live|goes live|is live|上线|上線|正式リリース|출시/i.test(title)) return `${version}版本上线`;
+    if (/geographic preview|地理预览|地理預覽/i.test(title)) return `${version}版本地图预览`;
+    if (/new region gameplay demo/i.test(title)) return `${version}版本区域实机`;
+    if (/preview\s+recap/i.test(title)) return `${version}版本回顾`;
+    if (/teaser|\bPV\b|official trailer|预告/i.test(title)) return `${version}版本PV`;
+    return `${version}版本`;
+  }
+
+  if (type === 'version_trailer') return '版本 PV';
+  if (type === 'season_teaser') {
+    if (/steam release announcement/i.test(title)) return 'Steam 版上线';
+    if (/collab|collaboration|联动/i.test(title)) return '联动 PV';
+    if (/summer|夏日|夏季/i.test(title)) return '夏日 PV';
+    if (/worldview|世界观/i.test(title)) return '世界观 PV';
+    if (/world tour/i.test(title)) return '世界巡游 PV';
+    if (/xuanfang trailer/i.test(title)) {
+      const name = cleanVideoName(title.split(/[|｜丨ح]/u).pop());
+      return `${name || '主题'} PV`;
+    }
+    return '主题 PV';
+  }
+  return CONTENT_LABEL[type] || '官方视频';
+}

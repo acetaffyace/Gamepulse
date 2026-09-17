@@ -18,6 +18,8 @@ from collectors.common import (  # noqa: E402
     DATA_DIR,
     get_game,
     load_games,
+    load_curated_video_pairs,
+    load_yaml,
     read_series,
     today_local,
     write_json,
@@ -34,10 +36,10 @@ OBSERVED_LABEL = "observed"
 # 这 5 个色位已通过 validate_palette 的相邻对与全对检查。
 SLOT_COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#4a3aa7", "#e87ba4"]
 
-# 官方公告标题里的版本号，例如 Version 3.2 "Their Secret Histories"
+# 官方公告标题里的版本号，例如 Version 3.2、Ver. 1.3、V2.6
 VERSION_PATTERNS = [
-    # 覆盖 "Version 1.4" 与完美世界使用的缩写 "Ver. 1.3"
-    re.compile(r"\bVer(?:sion)?\.?\s+(\d+\.\d+)", re.I),
+    # 覆盖 "Version 1.4"、"Ver. 1.3" 与库洛使用的 "V2.6"
+    re.compile(r"\bV(?:er(?:sion)?)?\.?\s*(\d+\.\d+)", re.I),
     re.compile(r"(\d+\.\d+)\s*版本"),
 ]
 
@@ -112,9 +114,12 @@ def extract_version(title: str) -> str | None:
 def build_events(news_records: list[dict], price_points: list[dict],
                  videos: dict[str, dict],
                  yt_videos: dict[str, dict] | None = None,
-                 build_records: list[dict] | None = None) -> list[dict]:
+                 build_records: list[dict] | None = None,
+                 version_updates: dict[str, dict] | None = None) -> list[dict]:
     events: list[dict] = []
     seen_gids: set[str] = set()
+    version_boundaries: dict[str, dict] = {}
+    version_updates = version_updates or {}
 
     # 版本事件：来自 Steam 官方公告
     for rec in news_records:
@@ -130,7 +135,7 @@ def build_events(news_records: list[dict], price_points: list[dict],
             if not version:
                 continue
             kind, suffix = classify_news(title)
-            events.append({
+            event = {
                 "date_local": item["date_local"],
                 "type": kind,
                 "label": f"{version} {suffix}",
@@ -141,7 +146,53 @@ def build_events(news_records: list[dict], price_points: list[dict],
                 "source": "steam_news",
                 "source_url": item.get("url"),
                 "evidence": OBSERVED_LABEL,
-            })
+            }
+            if kind == "version_update":
+                # 公告发布时间常以 UTC 存储，可能比客户端正式开放日早一天。
+                # 对清单中人工核验过的版本，使用该游戏 Steam 区实际更新时间。
+                update = version_updates.get(version) or {}
+                release_at = update.get("steam_start_at")
+                release_date = (release_at[:10] if release_at else
+                                update.get("steam_start_date"))
+                if release_date:
+                    event["announcement_date_local"] = event["date_local"]
+                    event["date_local"] = release_date
+                    event["source_url"] = (update.get("steam_source_url")
+                                           or event["source_url"])
+                    event["evidence"] = "manual"
+                    if release_at:
+                        event["update_at"] = release_at
+                # Steam 偶尔会用不同 gid 重复发布同一版本公告；一个版本
+                # 只能有一个更新分界线，保留最早的官方日期作为起点。
+                previous = version_boundaries.get(version)
+                if (previous is None
+                        or event["date_local"] < previous["date_local"]):
+                    version_boundaries[version] = event
+            else:
+                events.append(event)
+
+    # 若官方 Steam 新闻流没有收录该公告，仍以清单里的已核验正式开放日
+    # 建立边界，避免版本对比窗口因新闻缺项而错位。计划中的未来版本没有
+    # Steam 开放日，不会提前成为分界线。
+    for version, update in version_updates.items():
+        release_at = update.get("steam_start_at")
+        release_date = (release_at[:10] if release_at else
+                        update.get("steam_start_date"))
+        if not release_date or version in version_boundaries:
+            continue
+        version_boundaries[version] = {
+            "date_local": release_date,
+            "type": "version_update",
+            "label": f"{version} 版本更新",
+            "title": f"{version} 版本正式开放（人工核验）",
+            "version_id": version,
+            "is_version_boundary": True,
+            "source": "official_version_schedule",
+            "source_url": update.get("steam_source_url"),
+            "evidence": "manual",
+            **({"update_at": release_at} if release_at else {}),
+        }
+    events.extend(version_boundaries.values())
 
     # 内容事件：来自 B 站官方视频发布日
     for slot in videos.values():
@@ -214,12 +265,44 @@ def build(game_id: str) -> dict:
     bili = read_series(game_id, "bilibili")
     youtube = read_series(game_id, "youtube")
     online_hourly = read_series(game_id, "steam_online")
+    online_history = read_series(game_id, "steamdb_online")
     builds = read_series(game_id, "steam_build")
 
     review_history = read_series(game_id, "review_history")
     price_points = metrics.price_series(steam)
     videos = metrics.video_series(bili, platform="bilibili")
     yt_videos = metrics.video_series(youtube, platform="youtube", id_key="video_id")
+
+    # The curated manifest is the source of truth for scope, content type,
+    # character, version, and cross-platform pairing. Older collected rows may
+    # carry stale or mechanically assigned metadata, so overlay the confirmed
+    # mapping before constructing charts and events.
+    pairs = load_curated_video_pairs(game_id)
+    pair_by_bvid = {p["bvid"]: p for p in pairs}
+    pair_by_yt_id = {
+        video_id: {**pair, "locale": locale}
+        for pair in pairs
+        for locale, video_id in (pair.get("youtube") or {}).items()
+        if video_id
+    }
+
+    def apply_pair_metadata(slot: dict, pair: dict) -> dict:
+        return {
+            **slot,
+            "pair_id": pair.get("pair_id"),
+            "character_id": pair.get("character_id"),
+            "character_name": pair.get("character_name"),
+            "version_id": pair.get("version_id"),
+            "version_confirmed": pair.get("version_confirmed", False),
+            "content_type": pair.get("content_type"),
+        }
+
+    videos = {vid: apply_pair_metadata(slot, pair_by_bvid[vid])
+              for vid, slot in videos.items() if vid in pair_by_bvid}
+    yt_videos = {
+        vid: apply_pair_metadata(slot, pair_by_yt_id[vid])
+        for vid, slot in yt_videos.items() if vid in pair_by_yt_id
+    }
 
     # 按语区分组。**刻意不提供跨语区的 videos / totals。**
     # 同一支 PV 在 global/ja/ko/zh-tw 是四个不同的 video_id，合计播放量会把
@@ -240,12 +323,23 @@ def build(game_id: str) -> dict:
 
     issues = quality.check(steam, bili)
 
-    events = build_events(news, price_points, videos, yt_videos, builds)
+    version_updates = ((load_yaml("video_pairs.yml").get("version_updates")
+                        or {}).get(game_id) or {})
+    events = build_events(news, price_points, videos, yt_videos, builds,
+                          version_updates=version_updates)
 
     # 版本前后对比用官方公告确认的版本更新日做基准。构建号事件不做基准：
     # 一次版本更新会伴随多次热更构建，用它切窗口会把同一个版本切成好几段。
     boundaries = [e for e in events if e.get("is_version_boundary")]
-    profile = review_profile.build(game_id, boundaries)
+    profile = review_profile.build(game_id, boundaries,
+                                   review_history=review_history)
+
+    # SteamDB daily history is a dedicated source: do not append it to
+    # steam.jsonl, whose rows also carry review and price snapshots.
+    # Keep the project's newer official observation when both sources
+    # contain the same date (the CSV can end partway through today).
+    online_by_date = {r["date_local"]: r for r in online_history}
+    online_by_date.update({r["date_local"]: r for r in steam})
 
     # 回填的评测历史与逐日采集分开存放：前者是 reconstructed（只含今天仍存在
     # 的评测，早期日期偏低），后者是 observed。两者不可混成一条线。
@@ -272,7 +366,9 @@ def build(game_id: str) -> dict:
             "region": game.get("region"),
         },
         "coverage": metrics.coverage(steam),
-        "online_series": metrics.online_series(steam),
+        "online_series": metrics.online_series(
+            [online_by_date[d] for d in sorted(online_by_date)]
+        ),
         # 小时级采样聚合出的日峰值/谷值/峰谷比。单点日采只能得到
         # 「某一时刻的在线数」，分不出「盘子变大」和「采样撞上高峰」。
         "online_daily": metrics.online_daily(online_hourly),
@@ -310,6 +406,9 @@ def build(game_id: str) -> dict:
             {"name": "Steam 当前在线人数", "label": "observed",
              "url": "https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/",
              "note": "平台同时在线观测值，不是 DAU"},
+            {"name": "SteamDB 历史在线人数图表", "label": "third_party",
+             "url": f"https://steamdb.info/app/{game.get('steam_app_id')}/charts/",
+             "note": "历史日序列来自 SteamDB 图表导出；Players 为日点位，Average Players 保留在原始序列中"},
             {"name": "Steam 评测汇总", "label": "observed",
              "url": f"https://store.steampowered.com/appreviews/{game.get('steam_app_id')}",
              "note": "好评率为派生指标；新增评测为讨论热度代理"},
@@ -344,8 +443,8 @@ def version_catalog(snapshot: dict) -> list[dict]:
     这样每个版本各占一段互不重叠的区间，用它自己的更新日做 day0 对齐时，
     「3.1 的第 7 天」和「3.2 的第 7 天」才是同一件事。
 
-    版本号会重复（例如鸣潮 2.7 在相邻两天各有一条更新公告），所以对外的
-    唯一键取更新日期而不是版本号。
+    同一版本的重复官方公告已在 build_events 中合并，因此这里的唯一键仍取
+    更新日期；版本号本身只用于展示，不假设跨游戏唯一。
     """
     bounds = [e for e in snapshot.get("events", [])
               if e.get("is_version_boundary") and e.get("date_local")]

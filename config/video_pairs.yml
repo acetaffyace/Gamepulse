@@ -1,0 +1,113 @@
+# Curated official video pairs for the shared comparison window.
+# Only the four user-selected formats are included; localized YouTube uploads
+# stay separate and map to the corresponding Bilibili post where available.
+scope:
+  start_date: '2026-06-17'
+  end_date: '2026-09-17'
+  content_types: [version_trailer, character_trailer, character_demo, character_ep]
+  excluded_titles: ['群星交错', '决战时刻｜翼刃出鞘']
+
+# Dates below mean the client becomes available in the listed regional context.
+# Steam's article timestamp can fall on the prior UTC date; the dates here use
+# the official UTC+8 release/maintenance date when one is stated.
+version_updates:
+  wuthering_waves:
+    '3.5':
+      steam_start_date: '2026-07-10'
+      cn_start_date: '2026-07-10'
+      status: released
+      steam_source_url: 'https://store.steampowered.com/news/app/3513350/view/1836506165584478'
+      cn_source_url: 'https://store.steampowered.com/news/app/3513350/view/1836506165584478'
+    '3.6':
+      steam_start_date: '2026-08-20'
+      cn_start_date: '2026-08-20'
+      status: released
+      steam_source_url: 'https://store.steampowered.com/news/app/3513350/view/1841579228663631'
+      cn_source_url: 'https://store.steampowered.com/news/app/3513350/view/1841579228663631'
+  zenless_zone_zero:
+    '3.0':
+      steam_start_at: '2026-06-17T06:00:00+08:00'
+      cn_start_at: '2026-06-17T06:00:00+08:00'
+      status: released
+      steam_source_url: 'https://store.steampowered.com/news/app/4162040/'
+      cn_source_url: 'https://store.steampowered.com/news/app/4162040/'
+    '3.1':
+      steam_start_at: '2026-07-29T06:00:00+08:00'
+      cn_start_at: '2026-07-29T06:00:00+08:00'
+      status: released
+      steam_source_url: 'https://store.steampowered.com/news/app/4162040/view/1839041357038306'
+      cn_source_url: 'https://store.steampowered.com/news/app/4162040/view/1839041357038306'
+    '3.2':
+      steam_start_at: '2026-09-09T06:00:00+08:00'
+      cn_start_at: '2026-09-09T06:00:00+08:00'
+      status: released
+      steam_source_url: 'https://zenless.hoyoverse.com/en-us/news/166000?catchSpider=1&lang=en-us&page=news'
+      cn_source_url: 'https://zenless.hoyoverse.com/en-us/news/165978?catchSpider=1'
+  neverness_to_everness:
+    '1.2':
+      cn_start_at: '2026-07-02T06:00:00+08:00'
+      steam_start_date: '2026-07-08'
+      status: released
+      cn_source_url: 'https://yh.wanmei.com/news/gamebroad/20260701/262943.html'
+      steam_source_url: 'https://store.steampowered.com/app/4508340/NTE_Neverness_to_Everness/'
+    '1.3':
+      cn_start_at: '2026-08-13T06:00:00+08:00'
+      steam_start_at: '2026-08-19T06:00:00+08:00'
+      status: released
+      cn_source_url: 'https://yh.wanmei.com/news/gamebroad/20260812/263538.html'
+      steam_source_url: 'https://nte.perfectworld.com/de/article/news/gamenews/20260817/263609.html'
+    '1.4':
+      cn_start_date: '2026-09-24'
+      status: scheduled_as_of_2026_09_17
+      cn_source_url: 'https://yh.wanmei.com/m/news/gamebroad/20260916/264202.html'
+      steam_source_url: 'https://steamcommunity.com/app/4508340/allnews/?l=schinese'
+
+# version_id is a manual campaign assignment. Character assets published before
+# a patch inherit the upcoming/current patch based on the official character/version campaign.
+videos:
+  # Wuthering Waves: Yangyang/Suisui are 3.5; Qingxiao/Jingran are 3.6.
+  - {pair_id: ww_3_5_yangyang_pv, game_id: wuthering_waves, bvid: BV1ZKMe61Eth, pubdate: '2026-07-08', content_type: character_trailer, character_id: yangyang_xuanling, character_name: '秧秧·玄翎', version_id: '3.5', version_confirmed: true, youtube: {global: GSmZaEASKjU, ja: LCMhyI3hqJM, ko: bhu09u62vCA, zh-tw: DzCWLW2hfAU}}
+  - {pair_id: ww_3_5_yangyang_demo, game_id: wuthering_waves, bvid: BV1mtTD6rEtQ, pubdate: '2026-07-06', content_type: character_demo, character_id: yangyang_xuanling, character_name: '秧秧·玄翎', version_id: '3.5', version_confirmed: true, youtube: {global: LczEBLHeu24, ja: VV0DPvWZIF4, ko: HYRsBNBLjd8, zh-tw: f1c07GeIqc8}}
+  - {pair_id: ww_3_5_yangyang_ep, game_id: wuthering_waves, bvid: BV1NbM36aEtm, pubdate: '2026-07-09', content_type: character_ep, character_id: yangyang_xuanling, character_name: '秧秧·玄翎', version_id: '3.5', version_confirmed: true, youtube: {global: yOP9ABdZHfw, ja: DQ53dcgLloY, ko: X7oDOKE6_LM, zh-tw: STBS3Juwlqc}}
+  - {pair_id: ww_3_5_suisui_pv, game_id: wuthering_waves, bvid: BV1MQ3c62EVc, pubdate: '2026-07-28', content_type: character_trailer, character_id: suisui, character_name: '穗穗', version_id: '3.5', version_confirmed: true, youtube: {global: c6njTc7ySiU, ja: W2C_Gm_ZLoI, ko: 0Lv9dQF_H-0, zh-tw: jZG9ExLh_Ok}}
+  - {pair_id: ww_3_5_suisui_demo, game_id: wuthering_waves, bvid: BV1hN3G6mEcB, pubdate: '2026-07-26', content_type: character_demo, character_id: suisui, character_name: '穗穗', version_id: '3.5', version_confirmed: true, youtube: {global: prTbk_McKqk, ja: aObn6jk-JjE, ko: MI9VlrLP_d4, zh-tw: Wo3aamcBhMA}}
+  - {pair_id: ww_3_5_suisui_ep, game_id: wuthering_waves, bvid: BV1Ao3Y6YE1T, pubdate: '2026-07-29', content_type: character_ep, character_id: suisui, character_name: '穗穗', version_id: '3.5', version_confirmed: true, youtube: {global: wtk8NOzyX9s, ja: eUTZ5dC3X_s, ko: EESGj5IHkuk, zh-tw: bppRayElV0s}}
+  - {pair_id: ww_3_6_version_pv, game_id: wuthering_waves, bvid: BV1Jcub6BEqB, pubdate: '2026-08-07', content_type: version_trailer, character_id: null, character_name: null, version_id: '3.6', version_confirmed: true, youtube: {global: ksCqVD10Cqc, ja: XJ1fsp-grKU, ko: vppnY87dmVI, zh-tw: Tsqz5Ovd7K8}}
+  - {pair_id: ww_3_6_qingxiao_demo, game_id: wuthering_waves, bvid: BV1q2b86sEZz, pubdate: '2026-08-17', content_type: character_demo, character_id: qingxiao, character_name: '清宵', version_id: '3.6', version_confirmed: true, youtube: {global: op22gIZneCk, ja: 4lIqoWDyYac, ko: LXyAMnO246U, zh-tw: qjIo9UBzsac}}
+  - {pair_id: ww_3_6_qingxiao_pv, game_id: wuthering_waves, bvid: BV1GFbk6LEVm, pubdate: '2026-08-18', content_type: character_trailer, character_id: qingxiao, character_name: '清宵', version_id: '3.6', version_confirmed: true, youtube: {global: mT86JXY6oEw, ja: 9FGd5M2AWxE, ko: fybKvkz0Izs, zh-tw: c6nXIvXtg_o}}
+  - {pair_id: ww_3_6_qingxiao_ep, game_id: wuthering_waves, bvid: BV1G48g68Ej1, pubdate: '2026-08-20', content_type: character_ep, character_id: qingxiao, character_name: '清宵', version_id: '3.6', version_confirmed: true, youtube: {global: qaVli_4qiVs, ja: ginxiqFK_9I, ko: nFIALXGCJlc, zh-tw: RPPy8JeSHiU}}
+  - {pair_id: ww_3_6_jingran_demo, game_id: wuthering_waves, bvid: BV1PTbL6REMT, pubdate: '2026-09-06', content_type: character_demo, character_id: jingran, character_name: '景燃', version_id: '3.6', version_confirmed: true, youtube: {global: AYOqDVuCKMk, ja: YlyWXSiFOW8, ko: ZcNZAjDGc8U, zh-tw: G4kqTjmzE9g}}
+  - {pair_id: ww_3_6_jingran_pv, game_id: wuthering_waves, bvid: BV1uMbg6SEnL, pubdate: '2026-09-08', content_type: character_trailer, character_id: jingran, character_name: '景燃', version_id: '3.6', version_confirmed: true, youtube: {global: djzijQBFN4A, ja: LE85nS4XHkU, ko: wRupj1mzBQE, zh-tw: j2S5UcrTGlg}}
+  - {pair_id: ww_3_6_jingran_ep, game_id: wuthering_waves, bvid: BV1tDbG6ZEDp, pubdate: '2026-09-09', content_type: character_ep, character_id: jingran, character_name: '景燃', version_id: '3.6', version_confirmed: true, youtube: {global: x-94Q2zfinI, ja: 2lW6Z58FgUU, ko: 1wnZkEn_cF8, zh-tw: p0E89-28N98}}
+
+  # Zenless Zone Zero: Nomu is 3.0; Remielle/Sigrid are 3.1; Claret is 3.2.
+  - {pair_id: zzz_3_0_nomu_demo, game_id: zenless_zone_zero, bvid: BV1W1Tp6xEhT, pubdate: '2026-07-03', content_type: character_demo, character_id: nuomu, character_name: '诺姆', version_id: '3.0', version_confirmed: true, youtube: {global: J_N2ZDxTsEw, ja: nOxQ5M4iNF4, ko: Fe6qUR_mwqY, zh-tw: tvyCheX4Jv8}}
+  - {pair_id: zzz_3_0_nomu_ep, game_id: zenless_zone_zero, bvid: BV1WdTS6eECV, pubdate: '2026-07-06', content_type: character_ep, character_id: nuomu, character_name: '诺姆', version_id: '3.0', version_confirmed: true, youtube: {global: QBGEahKfeco, ja: 6M68P3j4kd0, ko: 7wbWVxWgipI, zh-tw: eyVeQfUW0b8}}
+  - {pair_id: zzz_3_1_version_pv, game_id: zenless_zone_zero, bvid: BV1uiNd69EYU, pubdate: '2026-07-17', content_type: version_trailer, character_id: null, character_name: null, version_id: '3.1', version_confirmed: true, youtube: {global: vY4sE1Pt8TY, ja: b1gmhh_NRv4, ko: NYDOxzal1Iw, zh-tw: YCF6A1XZ_Wg}}
+  - {pair_id: zzz_3_1_remielle_demo, game_id: zenless_zone_zero, bvid: BV11Aga6oENR, pubdate: '2026-07-24', content_type: character_demo, character_id: leimiaier, character_name: '蕾米埃尔', version_id: '3.1', version_confirmed: true, youtube: {global: ZOHQFFSFtHc, ja: VlHWf2i3nvU, ko: 062lmW9LBX4, zh-tw: 5hjguLA0Ezc}}
+  - {pair_id: zzz_3_1_remielle_ep, game_id: zenless_zone_zero, bvid: BV1jhgf6pEJw, pubdate: '2026-07-27', content_type: character_ep, character_id: leimiaier, character_name: '蕾米埃尔', version_id: '3.1', version_confirmed: true, youtube: {global: U-is5u-WYVg, ja: ELEygcxEt2I, ko: P3wosXmk6ng, zh-tw: xkm3ote4ThI}}
+  - {pair_id: zzz_3_1_sigrid_demo, game_id: zenless_zone_zero, bvid: BV1bWgA6SEnT, pubdate: '2026-08-14', content_type: character_demo, character_id: sigrid, character_name: '希格莉德', version_id: '3.1', version_confirmed: true, youtube: {global: 3IyJbHQvHhA, ja: YuOjMdevW0Q, ko: BtY69rjSk3U, zh-tw: sAcRD9-92yg}}
+  - {pair_id: zzz_3_1_sigrid_pv, game_id: zenless_zone_zero, bvid: BV1Qfb86LEC5, pubdate: '2026-08-17', content_type: character_trailer, character_id: sigrid, character_name: '希格莉德', version_id: '3.1', version_confirmed: true, youtube: {global: HHL6KTgTEdU, ja: null, ko: TBmfX4Kq7HI, zh-tw: 1WWfNunroHk}, missing_locale_reason: {ja: 'No matching character PV on the official Japanese channel by the cutoff date.'}}
+  - {pair_id: zzz_3_2_version_pv, game_id: zenless_zone_zero, bvid: BV1vRtA6gE5m, pubdate: '2026-08-28', content_type: version_trailer, character_id: null, character_name: null, version_id: '3.2', version_confirmed: true, youtube: {global: 4O-Iq8lj9_k, ja: kxtutUwwpPs, ko: yetSPykOiv4, zh-tw: woJii0zXL_E}}
+  - {pair_id: zzz_3_2_claret_demo, game_id: zenless_zone_zero, bvid: BV1wote6gEQ1, pubdate: '2026-09-04', content_type: character_demo, character_id: kelaray, character_name: '克拉蕾', version_id: '3.2', version_confirmed: true, youtube: {global: VjNhciBWgug, ja: _Q6RmpJjZHs, ko: 24Ed9TlA2bo, zh-tw: GwxDbVo9ghs}}
+  - {pair_id: zzz_3_2_claret_ep, game_id: zenless_zone_zero, bvid: BV1C9b76cEks, pubdate: '2026-09-06', content_type: character_ep, character_id: kelaray, character_name: '克拉蕾', version_id: '3.2', version_confirmed: true, youtube: {global: Ln0ilmPqXU0, ja: 90xJpX0eNdg, ko: Hd9EcHAMfzE, zh-tw: t_3_QQ28YWM}}
+
+  # Neverness to Everness: 1.2 was live in CN on Jul 2; Steam began on Jul 8.
+  # 1.3 was live in CN on Aug 13 and on Steam/global on Aug 19. Linko remains 1.3.
+  - {pair_id: nte_1_2_kaeisi_pv, game_id: neverness_to_everness, bvid: BV18dEr6DErw, pubdate: '2026-06-17', content_type: character_trailer, character_id: kaeisi, character_name: '卡厄斯', version_id: '1.2', version_confirmed: true, youtube: {global: Kb5fBm2PQX8, ja: Ud0F8heLjhE, ko: h-9aYm_pHpg, zh-tw: CIhEkkBbQ5U}}
+  - {pair_id: nte_1_2_kaeisi_ep, game_id: neverness_to_everness, bvid: BV1tcEk67EBB, pubdate: '2026-06-18', content_type: character_ep, character_id: kaeisi, character_name: '卡厄斯', version_id: '1.2', version_confirmed: true, youtube: {global: gi6mWXSXKJA, ja: KGoDbvpCLr8, ko: P5nVjvK77L8, zh-tw: oBjHFj0Mqck}}
+  - {pair_id: nte_1_2_version_pv, game_id: neverness_to_everness, bvid: BV1Bo736yE99, pubdate: '2026-06-27', content_type: version_trailer, character_id: null, character_name: null, version_id: '1.2', version_confirmed: true, youtube: {global: sPzcTPn20nM, ja: 1XaWp_9ke5Q, ko: 4-s1-EmbfD8, zh-tw: prUM4AQeKFw}}
+  - {pair_id: nte_1_2_zhenhong_demo, game_id: neverness_to_everness, bvid: BV11f7J6LEwU, pubdate: '2026-06-28', content_type: character_demo, character_id: zhenhong, character_name: '真红', version_id: '1.2', version_confirmed: true, youtube: {global: xhtK9ndjYyQ, ja: OM0SC7C_HRs, ko: gCEDmvPYIDQ, zh-tw: 3Ohd4rnMxQw}}
+  - {pair_id: nte_1_2_zhenhong_pv, game_id: neverness_to_everness, bvid: BV12iKU6eEyj, pubdate: '2026-07-01', content_type: character_trailer, character_id: zhenhong, character_name: '真红', version_id: '1.2', version_confirmed: true, youtube: {global: F-3Xi1WPkDI, ja: jPMhcDv6iEk, ko: _58_RuRkIBc, zh-tw: JVbiC_KZzLM}}
+  - {pair_id: nte_1_2_zhenhong_ep, game_id: neverness_to_everness, bvid: BV1xiKU6eED2, pubdate: '2026-07-02', content_type: character_ep, character_id: zhenhong, character_name: '真红', version_id: '1.2', version_confirmed: true, youtube: {global: Grsp-p1GTd8, ja: sXgSang7EHk, ko: 4JzkNFYx84U, zh-tw: sPAdRBfwzwU}}
+  - {pair_id: nte_1_2_yiluoyi_demo, game_id: neverness_to_everness, bvid: BV1YLKH6PEPP, pubdate: '2026-07-19', content_type: character_demo, character_id: yiluoyi, character_name: '伊洛伊', version_id: '1.2', version_confirmed: true, youtube: {global: osugYx-57nM, ja: rsI9Did3UKU, ko: TPaCG_IOqiA, zh-tw: B23mEGfMo5c}}
+  - {pair_id: nte_1_2_yiluoyi_pv, game_id: neverness_to_everness, bvid: BV1VVKH6vEnH, pubdate: '2026-07-22', content_type: character_trailer, character_id: yiluoyi, character_name: '伊洛伊', version_id: '1.2', version_confirmed: true, youtube: {global: 1rrbEC1tjeY, ja: HvRUmrFZf6A, ko: jS6v2Mc83QI, zh-tw: VJ4i31nV9z0}}
+  - {pair_id: nte_1_2_yiluoyi_ep, game_id: neverness_to_everness, bvid: BV1YVKH6vEdg, pubdate: '2026-07-23', content_type: character_ep, character_id: yiluoyi, character_name: '伊洛伊', version_id: '1.2', version_confirmed: true, youtube: {global: tC23rqFA5GE, ja: WRXo-i-pqtU, ko: R1KM6gL_A6E, zh-tw: SpoGkCGrajs}}
+  - {pair_id: nte_1_3_version_pv, game_id: neverness_to_everness, bvid: BV1egM16kE9D, pubdate: '2026-08-09', content_type: version_trailer, character_id: null, character_name: null, version_id: '1.3', version_confirmed: true, youtube: {global: ujNMazNWZ7Y, ja: _RXqS5toyBs, ko: chg-544uuIA, zh-tw: 2fUUUYHD444}}
+  - {pair_id: nte_1_3_canhong_demo, game_id: neverness_to_everness, bvid: BV15gM16kE1g, pubdate: '2026-08-10', content_type: character_demo, character_id: canhong, character_name: '残虹', version_id: '1.3', version_confirmed: true, youtube: {global: HMMs8yOOiB0, ja: iJoVck3yxP4, ko: b7XDjnBiLn0, zh-tw: 4h9fiazmdKM}}
+  - {pair_id: nte_1_3_canhong_pv, game_id: neverness_to_everness, bvid: BV1y1uq6zEud, pubdate: '2026-08-12', content_type: character_trailer, character_id: canhong, character_name: '残虹', version_id: '1.3', version_confirmed: true, youtube: {global: YrnBbpyQikM, ja: FS__2f33HwI, ko: YsQ3xPhoHAA, zh-tw: ibXDBgVcuoQ}}
+  - {pair_id: nte_1_3_canhong_ep, game_id: neverness_to_everness, bvid: BV1W1uq6zEdG, pubdate: '2026-08-13', content_type: character_ep, character_id: canhong, character_name: '残虹', version_id: '1.3', version_confirmed: true, youtube: {global: CLCefj2AnX8, ja: l0OiOi6iXOw, ko: pAxHS7mEGU0, zh-tw: BXVw3uKezng}}
+  - {pair_id: nte_1_3_lingke_demo, game_id: neverness_to_everness, bvid: BV1UU4C6kEam, pubdate: '2026-08-30', content_type: character_demo, character_id: lingke, character_name: '灵可', version_id: '1.3', version_confirmed: true, youtube: {global: P1uz4ozEPXw, ja: 7vGC44C8vc4, ko: 0qNrlJxgoIg, zh-tw: hhM6ArRKN5g}}
+  - {pair_id: nte_1_3_lingke_pv, game_id: neverness_to_everness, bvid: BV1jVtt6LEjP, pubdate: '2026-09-02', content_type: character_trailer, character_id: lingke, character_name: '灵可', version_id: '1.3', version_confirmed: true, youtube: {global: DrLalNRXZaM, ja: 3HiEI58Pfro, ko: vRA5-KTBh4Q, zh-tw: X4piyMEfwUQ}}
+  - {pair_id: nte_1_3_lingke_ep, game_id: neverness_to_everness, bvid: BV18btt6NEJw, pubdate: '2026-09-03', content_type: character_ep, character_id: lingke, character_name: '灵可', version_id: '1.3', version_confirmed: true, youtube: {global: ySbEeNXQYC8, ja: 5XafJKkVrRk, ko: Qj-WzFGj8_E, zh-tw: B0aTQrX6cxk}}
+  - {pair_id: nte_1_4_version_pv, game_id: neverness_to_everness, bvid: BV1jWej6hET5, pubdate: '2026-09-17', content_type: version_trailer, character_id: null, character_name: null, version_id: '1.4', version_confirmed: true, youtube: {global: null, ja: null, ko: null, zh-tw: null}, missing_locale_reason: {global: 'No matching official version PV by 2026-09-17; the Global channel had a preview program, which is a different format.', ja: 'No matching official version PV by 2026-09-17.', ko: 'No matching official version PV by 2026-09-17.', zh-tw: 'No matching official version PV by 2026-09-17.'}}
