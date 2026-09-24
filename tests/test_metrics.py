@@ -28,6 +28,47 @@ class TestReviewRate(unittest.TestCase):
         self.assertIsNone(metrics.review_rate(None, 100))
         self.assertIsNone(metrics.review_rate(50, None))
 
+    def test_daily_series_uses_steam_store_summary(self):
+        out = metrics.review_rate_series([
+            {"date_local": "2026-09-21", "total_reviews": 56053,
+             "total_positive": 49114},
+            {"date_local": "2026-09-22", "total_reviews": 56111,
+             "total_positive": 49154},
+        ])
+        self.assertEqual(out[-1]["value"], 87.6)
+        self.assertEqual(out[-1]["total_reviews"], 56111)
+
+
+class TestOnlineFallback(unittest.TestCase):
+    def test_unavailable_official_point_keeps_observed_fallback(self):
+        steam = [
+            {"date_local": "2026-09-17", "current_players": None},
+            {"date_local": "2026-09-18", "current_players": 300},
+            {"date_local": "2026-09-20", "current_players": None},
+        ]
+        steamdb = [
+            {"date_local": "2026-09-17", "current_players": 200,
+             "source": "steamdb_chart"},
+            {"date_local": "2026-09-18", "current_players": 250,
+             "source": "steamdb_chart"},
+        ]
+        hourly = [
+            {"date_local": "2026-09-17", "hour_local": 12, "players": 180},
+            {"date_local": "2026-09-19", "hour_local": 11, "players": 100},
+            {"date_local": "2026-09-19", "hour_local": 12, "players": None},
+            {"date_local": "2026-09-19", "hour_local": 13, "players": 110},
+        ]
+        merged = metrics.merge_online_observations(steam, steamdb, hourly)
+        by_date = {r["date_local"]: r for r in metrics.online_series(merged)}
+
+        self.assertEqual(by_date["2026-09-17"]["value"], 200)
+        self.assertEqual(by_date["2026-09-17"]["source"], "steamdb_chart")
+        self.assertEqual(by_date["2026-09-18"]["value"], 300)
+        self.assertEqual(by_date["2026-09-18"]["source"], "steam_official")
+        self.assertEqual(by_date["2026-09-19"]["value"], 110)
+        self.assertEqual(by_date["2026-09-19"]["hour_local"], 13)
+        self.assertIsNone(by_date["2026-09-20"]["value"])
+
 
 class TestNewReviewSeries(unittest.TestCase):
     def test_first_point_has_no_baseline(self):
@@ -74,6 +115,52 @@ class TestNewReviewSeries(unittest.TestCase):
         # 第三天应相对第一天计算，跨度 2 天
         self.assertEqual(out[2]["value"], 60)
         self.assertEqual(out[2]["span_days"], 2)
+
+
+class TestReviewChartSeries(unittest.TestCase):
+    def test_unified_chart_fields_keep_measurement_basis_at_cutover(self):
+        history = [
+            {"date_local": "2026-09-01", "new_reviews": 3,
+             "daily_review_rate": 66.67, "cumulative_review_rate": 80.0},
+            {"date_local": "2026-09-02", "new_reviews": 4,
+             "daily_review_rate": 75.0, "cumulative_review_rate": 78.0},
+        ]
+        steam = [
+            {"date_local": "2026-09-02", "total_reviews": 100,
+             "total_positive": 80},
+            {"date_local": "2026-09-03", "total_reviews": 110,
+             "total_positive": 90},
+            {"date_local": "2026-09-05", "total_reviews": 130,
+             "total_positive": 105},
+        ]
+
+        out = metrics.review_chart_series(history, steam)
+        by_date = {row["date_local"]: row for row in out}
+
+        self.assertEqual(list(by_date), sorted(by_date))
+        self.assertEqual(by_date["2026-09-01"]["backfill_new_reviews"], 3)
+        self.assertEqual(by_date["2026-09-01"]["backfill_daily_review_rate"], 66.67)
+        self.assertEqual(by_date["2026-09-01"]["chart_review_count"], 3)
+        self.assertEqual(by_date["2026-09-01"]["chart_review_count_basis"],
+                         "surviving_review_backfill")
+        self.assertIsNone(by_date["2026-09-02"]["steam_net_change"])
+        self.assertIsNone(by_date["2026-09-02"]["steam_cumulative_review_rate"])
+        self.assertEqual(by_date["2026-09-02"]["chart_review_count"], 4)
+        self.assertEqual(by_date["2026-09-02"]["display_cumulative_review_rate"], 78.0)
+        self.assertEqual(by_date["2026-09-03"]["steam_net_change"], 10)
+        self.assertEqual(by_date["2026-09-03"]["steam_net_span_days"], 1)
+        self.assertEqual(by_date["2026-09-03"]["steam_cumulative_review_rate"], 81.82)
+        self.assertEqual(by_date["2026-09-03"]["chart_review_count"], 10)
+        self.assertEqual(by_date["2026-09-03"]["chart_review_count_basis"],
+                         "steam_net_change")
+        self.assertEqual(by_date["2026-09-03"]["display_cumulative_review_rate"], 81.82)
+        self.assertEqual(by_date["2026-09-03"]["display_cumulative_review_rate_basis"],
+                         "steam_global")
+        self.assertEqual(by_date["2026-09-05"]["steam_net_change"], 20)
+        self.assertEqual(by_date["2026-09-05"]["steam_net_span_days"], 2)
+        self.assertIsNone(by_date["2026-09-05"]["chart_review_count"])
+        self.assertEqual(by_date["2026-09-05"]["chart_review_count_span_days"], 2)
+        self.assertIsNone(by_date["2026-09-05"]["backfill_new_reviews"])
 
 
 class TestVideoSeries(unittest.TestCase):

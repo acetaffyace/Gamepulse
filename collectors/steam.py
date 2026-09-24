@@ -27,6 +27,7 @@ from collectors.common import (  # noqa: E402
     load_games,
     log_collection,
     polite_sleep,
+    read_series,
     save_raw,
     session,
     today_local,
@@ -38,6 +39,23 @@ REVIEWS_URL = "https://store.steampowered.com/appreviews/{appid}"
 DETAILS_URL = "https://store.steampowered.com/api/appdetails"
 SEARCH_URL = "https://store.steampowered.com/api/storesearch/"
 NEWS_URL = "https://api.steampowered.com/ISteamNews/GetNewsForApp/v2/"
+
+REVIEW_FIELDS = (
+    "total_reviews", "total_positive", "total_negative",
+    "review_score_desc", "reviews_status",
+)
+
+
+def retain_same_day_reviews(record: dict, existing: dict | None) -> bool:
+    """A failed rerun cannot erase a successful review sample from today."""
+    if (not existing or existing.get("reviews_status") != OBSERVED
+            or record.get("reviews_status") == OBSERVED):
+        return False
+    failure_note = record.get("reviews_note") or "unavailable"
+    for field in REVIEW_FIELDS:
+        record[field] = existing.get(field)
+    record["reviews_note"] = f"retained_earlier_same_day;retry={failure_note}"
+    return True
 
 
 def fetch_players(sess, appid: int) -> tuple[dict, dict]:
@@ -181,6 +199,10 @@ def collect_game(game: dict, date_local: str) -> dict:
     record["news_count"] = len(news)
     record["news_status"] = OBSERVED if news else UNAVAILABLE
 
+    existing = next((r for r in read_series(game_id, "steam")
+                     if r.get("date_local") == date_local), None)
+    retained_reviews = retain_same_day_reviews(record, existing)
+
     save_raw("steam", game_id, date_local, {
         "players": raw_players, "reviews": raw_reviews,
         "price": raw_price, "news": raw_news,
@@ -192,7 +214,8 @@ def collect_game(game: dict, date_local: str) -> dict:
     ok_fields = sum(1 for k in ("current_players_status", "reviews_status", "price_status")
                     if record.get(k) == OBSERVED)
     log_collection("steam", game_id, date_local, action,
-                   f"observed_fields={ok_fields}/3;news={len(news)}")
+                   f"observed_fields={ok_fields}/3;news={len(news)}"
+                   f";retained_reviews={retained_reviews}")
 
     print(f"[{action}] {game_id} {date_local}")
     print(f"  在线      : {record['current_players']} ({record['current_players_status']})")
@@ -222,8 +245,15 @@ def main() -> int:
         print("没有可采集的游戏：games.yml 中没有 active: true 的条目")
         return 1
 
+    failed_reviews = []
     for game in games:
-        collect_game(game, args.date)
+        record = collect_game(game, args.date)
+        if game.get("steam_app_id") and record.get("reviews_status") != OBSERVED:
+            failed_reviews.append(game["game_id"])
+    if failed_reviews:
+        print("评测汇总采集失败，等待评测回填任务恢复："
+              + ", ".join(failed_reviews))
+        return 1
     return 0
 
 

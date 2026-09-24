@@ -61,6 +61,45 @@ def review_rate(positive: int | None, total: int | None) -> float | None:
     return round(positive / total * 100, 2)
 
 
+def merge_online_observations(steam_records: list[dict],
+                              steamdb_records: list[dict],
+                              hourly_records: list[dict]) -> list[dict]:
+    """Prefer valid official daily points, then SteamDB, then hourly samples.
+
+    An unavailable official request cannot erase an observed fallback value.
+    The hourly fallback is the latest successful point of that date, not a DAU.
+    """
+    by_date = {
+        row["date_local"]: row
+        for row in steamdb_records
+        if row.get("current_players") is not None
+    }
+    for sample in sorted(hourly_records,
+                         key=lambda r: (r.get("date_local", ""),
+                                        r.get("hour_local", -1))):
+        if sample.get("players") is None:
+            continue
+        date_local = sample["date_local"]
+        by_date.setdefault(date_local, {
+            "date_local": date_local,
+            "current_players": sample["players"],
+            "source": "steam_hourly_fallback",
+            "hour_local": sample.get("hour_local"),
+        })
+        if by_date[date_local].get("source") == "steam_hourly_fallback":
+            by_date[date_local] = {
+                "date_local": date_local,
+                "current_players": sample["players"],
+                "source": "steam_hourly_fallback",
+                "hour_local": sample.get("hour_local"),
+            }
+    for row in steam_records:
+        date_local = row["date_local"]
+        if row.get("current_players") is not None or date_local not in by_date:
+            by_date[date_local] = {**row, "source": "steam_official"}
+    return [by_date[d] for d in sorted(by_date)]
+
+
 def online_series(steam_records: list[dict]) -> list[dict]:
     out = []
     for rec in steam_records:
@@ -69,6 +108,8 @@ def online_series(steam_records: list[dict]) -> list[dict]:
             "date_local": rec["date_local"],
             "value": value,
             "status": OBSERVED if value is not None else UNAVAILABLE,
+            "source": rec.get("source", "steam_official"),
+            "hour_local": rec.get("hour_local"),
         })
     return out
 
@@ -160,6 +201,71 @@ def new_review_series(steam_records: list[dict]) -> list[dict]:
         if cur_total is not None:
             prev_total, prev_date = cur_total, cur_date
 
+    return out
+
+
+def review_chart_series(review_history: list[dict],
+                        steam_records: list[dict]) -> list[dict]:
+    history = {
+        row["date_local"]: row
+        for row in sorted(review_history, key=lambda r: r.get("date_local", ""))
+        if row.get("date_local")
+    }
+    history_end = max(history, default="")
+    steam_changes = {
+        row["date_local"]: row
+        for row in new_review_series(steam_records)
+        if row.get("date_local")
+    }
+    steam_rates = {
+        row["date_local"]: row
+        for row in review_rate_series(steam_records)
+        if row.get("date_local")
+    }
+    dates = sorted(set(history) | set(steam_changes) | set(steam_rates))
+    out = []
+    for date_local in dates:
+        backfill = history.get(date_local)
+        is_live = not history_end or date_local > history_end
+        change = steam_changes.get(date_local) if is_live else None
+        rate = steam_rates.get(date_local) if is_live else None
+        daily_change = (change or {}).get("value") if (
+            (change or {}).get("span_days") == 1
+        ) else None
+        out.append({
+            "date_local": date_local,
+            "backfill_new_reviews": (backfill or {}).get("new_reviews"),
+            "backfill_daily_review_rate": (backfill or {}).get("daily_review_rate"),
+            "backfill_cumulative_review_rate": (backfill or {}).get("cumulative_review_rate"),
+            "steam_net_change": (change or {}).get("value"),
+            "steam_net_span_days": (change or {}).get("span_days"),
+            "steam_cumulative_review_rate": (rate or {}).get("value"),
+            "steam_total_reviews": (rate or {}).get("total_reviews"),
+            "chart_review_count": (
+                (backfill or {}).get("new_reviews")
+                if (backfill or {}).get("new_reviews") is not None
+                else daily_change
+            ),
+            "chart_review_count_basis": (
+                "surviving_review_backfill"
+                if (backfill or {}).get("new_reviews") is not None
+                else "steam_net_change" if daily_change is not None
+                else None
+            ),
+            "chart_review_count_span_days": (change or {}).get("span_days"),
+            "display_cumulative_review_rate": (
+                (backfill or {}).get("cumulative_review_rate")
+                if backfill is not None
+                else (rate or {}).get("value")
+            ),
+            "display_cumulative_review_rate_basis": (
+                "surviving_review_backfill"
+                if backfill is not None and
+                   (backfill or {}).get("cumulative_review_rate") is not None
+                else "steam_global" if (rate or {}).get("value") is not None
+                else None
+            ),
+        })
     return out
 
 

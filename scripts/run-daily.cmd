@@ -27,7 +27,5 @@ echo ================================================== >> "%LOG%"
 python collect.py >> "%LOG%" 2>&1
 set RC=%ERRORLEVEL%
 
-python pipeline\build_dashboard_config.py >> "%LOG%" 2>&1
-
 echo exit_code=%RC% >> "%LOG%"
 endlocal & exit /b %RC%

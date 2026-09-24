@@ -197,10 +197,11 @@ YouTube 观众和 Steam 玩家是同一群人，两者放一起才有因果讨�
 
 ```
 每小时  :05   steam_online.py        → 在线人数采样（轻，3 游戏 72 次/天）
-每日  13:20   collect.py             → Steam 汇总 + B 站 + YouTube 全量
-每日  13:40   *_discover.py          → B 站/YouTube 官方新视频发现 → 写入候选表
-每周日 14:00  steam_reviews_backfill → 刷新评测历史（重，不必每天）
-每次采集后    build_snapshot + quality → 失败/异常写 alerts.json，看板顶部红条显示
+每日  13:20   collect.py             → Steam 汇总 + 构建号 + B 站 + YouTube
+每次 collect  build_snapshot + build_dashboard_config → 快照 + 看板轨道配置
+每日  17:00   collect.py --only review_backfill --incremental-review-backfill → 补近期评测
+每周日 18:00  collect.py --only review_backfill → 全量校准评测明细；失败一小时后重试
+页面每分钟    检查 data/index.json 的 build_id；变更后自动重载
 ```
 
 - 幂等：当天重复运行覆盖当天记录，可安全补跑（现有 `upsert_series` 已保证）；

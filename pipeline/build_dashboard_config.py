@@ -30,6 +30,7 @@ from collectors.common import (  # noqa: E402
     DATA_DIR,
     load_games,
     load_yaml,
+    now_iso,
     write_json,
 )
 import json  # noqa: E402
@@ -266,6 +267,12 @@ def main() -> int:
         "adapters": sorted(ADAPTER_SHAPES),
     }
     write_json(DATA_DIR / "dashboard_config.json", out)
+    index_path = DATA_DIR / "index.json"
+    if index_path.exists():
+        with index_path.open("r", encoding="utf-8") as fh:
+            index = json.load(fh)
+        index["build_id"] = now_iso()
+        write_json(index_path, index)
 
     enabled = [lane["id"] for lane in lanes if lane.get("enabled")]
     print(f"已生成 dashboard_config.json："
