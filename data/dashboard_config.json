@@ -27,51 +27,59 @@
   "lanes": [
     {
       "id": "new_reviews",
-      "title": "每日新增评测",
-      "subtitle": "回填重建 · 讨论热度代理",
+      "title": "每日评测变化",
+      "subtitle": "历史回填接续 Steam 总量净变化 · 统一柱色",
       "adapter": "series",
-      "path": "review_history",
-      "field": "new_reviews",
+      "path": "review_chart_series",
       "chart": "bar",
       "color": "slot1",
       "height": 140,
       "unit": "count",
       "enabled": true,
-      "caveat": "仅含今天仍存在的评测，越早的日期越可能低估"
+      "series": [
+        {
+          "field": "chart_review_count",
+          "name": "评测数变化",
+          "color": "slot1"
+        }
+      ],
+      "caveat": "历史回填按创建日统计上次全量时仍存续的评测并每日补近期评测，今天的值只截至运行时；旧评测删改每周全量校准。实时段只画相邻两日 Steam 总评测数净变化；跨日净变化不冒充单日柱"
     },
     {
       "id": "review_rate",
       "title": "好评率",
-      "subtitle": "当日 / 全局累计 / 版本滚动累计（版本对象专属）",
+      "subtitle": "历史回填接续 Steam 全局累计好评率 · 悬停查看口径",
       "adapter": "series",
-      "path": "review_history",
+      "path": "review_chart_series",
       "chart": "line",
       "height": 110,
       "unit": "percent",
       "enabled": true,
-      "compare_field": "cumulative_review_rate",
+      "compare_field": "display_cumulative_review_rate",
       "series": [
         {
-          "field": "daily_review_rate",
-          "name": "当日好评率",
+          "field": "backfill_daily_review_rate",
+          "name": "回填当日好评率",
           "color": "slot2",
           "width": 1.5,
           "opacity": 0.75
         },
         {
-          "field": "cumulative_review_rate",
-          "name": "累计好评率",
+          "field": "display_cumulative_review_rate",
+          "name": "累计好评率（回填 → Steam）",
           "color": "slot3",
-          "width": 2.5,
+          "width": 2.6,
           "smooth": true,
+          "connect_nulls": false,
           "end_label": true
         }
-      ]
+      ],
+      "caveat": "对比版本时实线是游戏全局累计好评率、虚线是各版本从更新日起的滚动累计好评率。回填段以上次全量样本加每日增量重建，旧评测删改每周校准；后续段接 Steam 全局采样率，接续点有口径切换"
     },
     {
       "id": "online",
       "title": "Steam 同时在线人数",
-      "subtitle": "逐日观测 / SteamDB 历史回填 · 平台同时在线，非 DAU",
+      "subtitle": "Steam 日点 / SteamDB / 小时采样兜底 · 平台同时在线，非 DAU",
       "adapter": "series",
       "path": "online_series",
       "field": "value",
@@ -81,7 +89,7 @@
       "unit": "count",
       "enabled": true,
       "symbol": true,
-      "caveat": "当前值来自 Steam 官方接口；历史段来自 SteamDB 图表日点位，二者都是平台同时在线观测，不是 DAU"
+      "caveat": "同日优先用有效的 Steam 官方日采样，其次用 SteamDB 图表点位，最后用当天最新的有效小时采样。来源与采样时刻可能不同；都是平台同时在线观测，不是 DAU"
     },
     {
       "id": "online_band",

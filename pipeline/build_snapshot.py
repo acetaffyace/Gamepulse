@@ -334,12 +334,10 @@ def build(game_id: str) -> dict:
     profile = review_profile.build(game_id, boundaries,
                                    review_history=review_history)
 
-    # SteamDB daily history is a dedicated source: do not append it to
-    # steam.jsonl, whose rows also carry review and price snapshots.
-    # Keep the project's newer official observation when both sources
-    # contain the same date (the CSV can end partway through today).
-    online_by_date = {r["date_local"]: r for r in online_history}
-    online_by_date.update({r["date_local"]: r for r in steam})
+    # Keep a valid SteamDB or hourly point when the official daily request
+    # timed out. Null must never replace an already observed value.
+    online_observations = metrics.merge_online_observations(
+        steam, online_history, online_hourly)
 
     # 回填的评测历史与逐日采集分开存放：前者是 reconstructed（只含今天仍存在
     # 的评测，早期日期偏低），后者是 observed。两者不可混成一条线。
@@ -366,15 +364,14 @@ def build(game_id: str) -> dict:
             "region": game.get("region"),
         },
         "coverage": metrics.coverage(steam),
-        "online_series": metrics.online_series(
-            [online_by_date[d] for d in sorted(online_by_date)]
-        ),
+        "online_series": metrics.online_series(online_observations),
         # 小时级采样聚合出的日峰值/谷值/峰谷比。单点日采只能得到
         # 「某一时刻的在线数」，分不出「盘子变大」和「采样撞上高峰」。
         "online_daily": metrics.online_daily(online_hourly),
         "online_hourly": online_hourly[-168:],   # 只带最近 7×24 个采样点进前端
         "review_series": metrics.review_rate_series(steam),
         "new_review_series": metrics.new_review_series(steam),
+        "review_chart_series": metrics.review_chart_series(review_history, steam),
         # 回填序列：标记 reconstructed
         "review_history": review_history,
         "review_history_coverage": ({

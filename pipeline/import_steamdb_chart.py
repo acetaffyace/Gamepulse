@@ -26,7 +26,7 @@ from collectors.common import load_games, series_path  # noqa: E402
 
 
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
-APP_ID_PATTERN = re.compile(r"steamdb_chart_(\d+)\.csv$", re.I)
+APP_ID_PATTERN = re.compile(r"steamdb_chart_(\d+)(?: \(\d+\))?\.csv$", re.I)
 
 
 def parse_game_file(spec: str) -> tuple[str, Path]:

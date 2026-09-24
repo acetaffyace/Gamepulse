@@ -495,6 +495,7 @@ const ADAPTERS = {
     const defs = seriesDefsFor(lane, ctx.multi);
     const out = [];
     let any = false;
+    const reviewLag = [];
 
     ctx.subjects.forEach(subject => {
       const rows = resolve(subject.snap, lane.path) || [];
@@ -507,9 +508,6 @@ const ADAPTERS = {
         .map(r => [axisKeyOf(r.date_local, subject, ctx.axis.align), r]));
       const by = alignRows(rows, subject, ctx);
       defs.forEach(def => {
-        const isGlobalCumulative = lane.id === 'review_rate' &&
-          subject.kind === 'version' && def.field === 'cumulative_review_rate';
-        const name = isGlobalCumulative ? '全局累计好评率' : def.name;
         const values = ctx.axis.keys.map(k => {
           const r = by.get(k);
           const v = r ? r[def.field] : null;
@@ -517,13 +515,15 @@ const ADAPTERS = {
         });
         if (values.some(v => v != null)) any = true;
         out.push({
-          name: ctx.multi ? `${subject.label} · ${name}` : name,
+          name: ctx.multi ? `${subject.label} · ${def.name}` : def.name,
           subject,
           kind: lane.chart === 'bar' ? 'bar' : 'line',
           color: ctx.multi ? subject.color : color(def.color || lane.color),
           width: def.width, opacity: def.opacity, smooth: def.smooth,
-          dashed: def.dashed, endLabel: def.end_label && !ctx.multi ? true : def.end_label,
+          dashed: def.dashed, connectNulls: def.connect_nulls,
+          endLabel: def.end_label && !ctx.multi ? true : def.end_label,
           symbol: lane.symbol,
+          metaByKey: new Map(ctx.axis.keys.map(k => [k, by.get(k)]).filter(([, r]) => r)),
           values,
         });
       });
@@ -531,6 +531,14 @@ const ADAPTERS = {
       // 版本对象额外增加一条从版本第一天重新起算的滚动累计线；
       // 全局累计线保留，便于看出版本自身口碑与游戏整体存量口碑的差异。
       if (lane.id === 'review_rate' && subject.kind === 'version') {
+        const lastVersionDate = versionProfile?.series?.at(-1)?.date_local;
+        const lastVisibleKey = ctx.axis.keys.filter(k =>
+          ctx.axis.align === 'day0'
+            ? Number(k) >= 0 && Number(k) < subject.days
+            : k >= subject.window.start && k <= subject.window.end).at(-1);
+        if (lastVisibleKey && !versionBy.has(lastVisibleKey)) {
+          reviewLag.push(`${subject.label} 截至 ${lastVersionDate || '暂无数据'}`);
+        }
         const values = ctx.axis.keys.map(k => {
           const r = versionBy.get(k);
           return r ? scale(r.value) : null;
@@ -539,12 +547,18 @@ const ADAPTERS = {
         out.push({
           name: ctx.multi ? `${subject.label} · 版本滚动累计好评率`
                           : '版本滚动累计好评率',
-          subject, kind: 'line', color: ctx.multi ? subject.color : color('slot5'),
-          width: 2.8, smooth: true, endLabel: !ctx.multi, values,
+        subject, kind: 'line', color: ctx.multi ? subject.color : color('slot5'),
+          width: 2.8, smooth: true, dashed: true,
+          endLabel: !ctx.multi, values,
         });
       }
     });
-    return { series: out, empty: !any };
+    return {
+      series: out,
+      empty: !any,
+      note: reviewLag.length
+        ? `版本滚动好评率待回填：${reviewLag.join('、')}` : null,
+    };
   },
 
   /* 视频散点：x = 发布日（或发布时该对象的第几天），y = 当前累计值或互动率。
@@ -621,12 +635,13 @@ const ADAPTERS = {
         width: 1.8,
         dashed: !v.ramp.available,
         symbol: true,
+        connectNulls: true,
         meta: v,
         values: axisKeys.map(k => by.has(k) ? by.get(k) : null),
       };
     });
 
-    const note = `${picked.length} 支视频 · 横轴为各自发布后天数（独立于上方轨道）` +
+    const note = `${picked.length} 支视频 · 按视频分别连线 · 只连接实际采样点` +
       (partial ? ` · ${partial} 支缺起跑段，画为虚线` : '');
     return { series, empty: false, note, axisKeys, axisUnit: 'day' };
   },
@@ -673,12 +688,13 @@ const ADAPTERS = {
             ? shade(subject.color, shadeFor(index, counts.get(subject.key)))
             : videoGroupColor(group, subject, ctx, index, picked.length),
           width: 1.8, dashed: !video.ramp.available, symbol: true,
+          connectNulls: true,
           meta: video,
           values: axisKeys.map(k => byDay.has(k) ? byDay.get(k) : null),
           categoryKey: group.key, categoryLabel: group.label,
         });
       });
-      const note = `${picked.length} 支视频 · 横轴为发布后第 N 天` +
+      const note = `${picked.length} 支视频 · 按语区/视频分别连线 · 只连接实际采样点` +
         (partial ? ` · ${partial} 支缺少起跑段` : '');
       return { series: out, empty: false, note, axisKeys, axisUnit: 'day' };
     }
@@ -1030,10 +1046,7 @@ function laneTitle(lane, top, note, thin) {
 }
 
 /* 一条轨道画得出来、但覆盖率极低时，必须把「数据还在积累」和
-   「这个指标本来就低」区分开。典型是 Steam 同时在线：它无法回填，
-   只能从开始采集那天往后长，90 天的横轴上目前只有 2 个点 ——
-   而它在默认预设里，新用户第一眼看到的就是一条近乎空白的轨道。
-   散点轨道（视频）天然稀疏，不参与这个判断。 */
+   「这个指标本来就低」区分开。散点轨道（视频）天然稀疏，不参与这个判断。 */
 const THIN_COVERAGE = 0.25;
 
 function coverageOf(built, ctx) {
@@ -1147,7 +1160,7 @@ function buildLaneSeries(def, laneIndex, ctx, isFirst, ownAxis) {
     showSymbol: !!def.symbol,
     symbolSize: 7,
     smooth: !!def.smooth,
-    connectNulls: false,
+    connectNulls: !!def.connectNulls,
     areaStyle: def.area ? { opacity: def.opacity ?? .85 } : undefined,
     lineStyle: {
       color: def.color,
@@ -1209,7 +1222,7 @@ function renderPulse(chart, el, lanes, ctx) {
     xAxes.push({
       gridIndex: i, type: 'category',
       data: built.axisKeys || ctx.axis.keys,
-      boundaryGap: lane.chart === 'bar',
+      boundaryGap: true,
       axisLine: { lineStyle: { color: C.baseline } },
       axisTick: { show: false },
       axisLabel: showLabel ? {
@@ -1321,6 +1334,11 @@ function renderPulse(chart, el, lanes, ctx) {
 function buildTooltip(params, laneData, ctx) {
   if (!params.length) return '';
   const key = String(params[0].axisValue);
+  const activeOwnAxis = laneData.find(({ built }, laneIndex) => built.axisKeys &&
+    (params.some(param => built.series.some(def => def.name === param.seriesName)) ||
+     params.some(param => param.axisDim === 'x' && Number(param.axisIndex) === laneIndex)));
+  const visibleLanes = activeOwnAxis ? [activeOwnAxis]
+    : laneData.filter(({ built }) => !built.axisKeys);
   // 悬停在自带横轴的轨道上时，key 可能不在共享轴里 —— 这不是错误，
   // 下面按轨道各自的刻度取值
   const at = ctx.axis.keys.indexOf(key);
@@ -1332,7 +1350,9 @@ function buildTooltip(params, laneData, ctx) {
        <span style="margin-left:auto;font-weight:600;font-variant-numeric:tabular-nums">${value}</span>
      </div>` + (extra ? `<div style="margin-left:15px;color:${C.muted};font-size:11px">${extra}</div>` : '');
 
-  const head = ctx.axis.align === 'day0'
+  const head = activeOwnAxis
+    ? `发布后第 ${key} 天`
+    : ctx.axis.align === 'day0'
     ? (Number(key) < 0 && ctx.subjects.some(s => s.kind === 'version')
       ? `正式更新前 ${Math.abs(Number(key))} 天`
       : `起点后第 ${key} 天`) + (ctx.multi ? '' : ` · ${dateForKey(key, ctx.subjects[0])}`)
@@ -1340,7 +1360,7 @@ function buildTooltip(params, laneData, ctx) {
   let s = `<div style="font-weight:600;margin-bottom:6px">${head}</div>`;
   let any = false;
 
-  laneData.forEach(({ lane, built }) => {
+  visibleLanes.forEach(({ lane, built }) => {
     const toText = tipFmt(built.valueUnit || lane.unit);
     // 自带横轴的轨道要按自己的刻度找下标，不能用共享轴的
     const laneAt = built.axisKeys ? built.axisKeys.indexOf(key) : at;
@@ -1366,8 +1386,37 @@ function buildTooltip(params, laneData, ctx) {
       if (v == null) return;
       any = true;
       const span = def.spans && def.spans.get(key);
+      const rowMeta = def.metaByKey && def.metaByKey.get(key);
+      const extra = [];
+      if (span) extra.push(`跨 ${span} 天的增量，不是单日值`);
+      if (lane.id === 'new_reviews') {
+        if (rowMeta?.chart_review_count_basis === 'surviving_review_backfill') {
+          extra.push('历史回填：全量样本加近期增量，旧评测删改每周校准');
+        } else if (rowMeta?.chart_review_count_basis === 'steam_net_change') {
+          extra.push('Steam 总评测数净变化（新增与删除相抵）');
+          if (rowMeta.chart_review_count_span_days > 1) {
+            extra.push(`跨 ${rowMeta.chart_review_count_span_days} 天采样`);
+          }
+        }
+      }
+      if (lane.id === 'review_rate' && def.field === 'display_cumulative_review_rate') {
+        if (rowMeta?.display_cumulative_review_rate_basis === 'surviving_review_backfill') {
+          extra.push('历史回填样本累计好评率');
+        } else if (rowMeta?.display_cumulative_review_rate_basis === 'steam_global') {
+          extra.push('Steam 全局采样好评率；与历史回填口径不同');
+        }
+      }
+      if (lane.id === 'online' && rowMeta?.source) {
+        if (rowMeta.source === 'steamdb_chart') {
+          extra.push('SteamDB 图表日点');
+        } else if (rowMeta.source === 'steam_hourly_fallback') {
+          extra.push(`当天 ${rowMeta.hour_local ?? '—'}:00 小时采样兜底`);
+        } else if (rowMeta.source === 'steam_official') {
+          extra.push('Steam 官方日采样');
+        }
+      }
       s += row(def.color, def.name, toText(v),
-               span ? `跨 ${span} 天的增量，不是单日值` : '');
+               extra.join(' · '));
     });
   });
 

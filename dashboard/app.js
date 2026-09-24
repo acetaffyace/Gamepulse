@@ -14,6 +14,8 @@ const VIEW_STATE_VERSION = 5;
 let config = null;            // dashboard_config.json
 let catalog = [];             // index.json 的 games，即对比对象目录
 const snapCache = new Map();  // game_id -> snapshot
+const onlineHistoryCache = new Map();
+let snapshotBuildId = null;
 let chart = null;
 
 let subjects = [];            // 当前对比对象（长度 1 即单游戏）
@@ -136,19 +138,19 @@ function color(slot) {
    这些话原本全都挤在页面最底部那段 400 字里 —— 离它解释的数字有三屏远。 */
 const METRIC_INFO = {
   online: { t: 'Steam 同时在线',
-    d: '平台同时在线测值，不是 DAU，也不是总玩家数。<b>无法回填</b>：只能从开始采集那天往后逐日积累，所以采集点数量决定了这条曲线有多长。' },
-  cum_rate: { t: '累计好评率',
-    d: '好评 / 全部评测，口径是<b>今天仍然存在</b>的评测。这是存量指标，评测基数越大，单日事件对它的影响越小 —— 想看短期变化请看「当日好评率」。' },
-  avg7: { t: '近 7 日均新增评测',
-    d: '新增评测量用作<b>讨论热度的代理</b>，不是玩家数。百分比是最近 7 天日均与前 7 天日均之比。' },
+    d: '平台同时在线测值，不是 DAU，也不是总玩家数。同日优先使用有效的 Steam 官方观测，其次是 SteamDB Players 点位，最后用当天最新的有效小时采样兜底；这些都不是全天均值。' },
+  cum_rate: { t: 'Steam 全局累计好评率',
+    d: 'Steam appreviews 每日返回的全局好评数 ÷ 总评测数，统计当前仍存在的评测。每日采集后会更新；版本滚动好评率另由评测明细回填重建。' },
+  avg7: { t: '近 7 日日均评测变化',
+    d: '有历史明细时使用当前仍存活的评测回填数；否则按 Steam 总评测数相邻采集值计算净变化。百分比比较最近与前一组 7 个有值日点的日均变化；两种口径不可混比。' },
   playtime: { t: '评测者中位时长',
     d: '写下评测那一刻已游玩的时长。取最近 14 天里有值的那些天的中位数 —— 单日样本量太小，逐日看噪声压过信号。' },
   bili_engagement: { t: 'B 站互动率',
     d: '（点赞+投币+收藏）/ 播放。<b>截面比值</b>，不受推荐位与频道体量影响，是跨视频唯一公平的比法；播放量不是。' },
   version: { t: '当前版本',
     d: '版本更新日取自 Steam 官方公告，构建号来自 SteamCMD 第三方镜像（仅作旁证）。事件只表示时间节点，不表示因果。' },
-  daily_avg: { t: '窗口内日均新增评测',
-    d: '该对象<b>自己完整窗口</b>内的新增评测 ÷ 天数。窗口长度不同的对象之间，日均与比率可比，<b>绝对量不可比</b>。' },
+  daily_avg: { t: '窗口内日均评测变化',
+    d: '优先显示该对象窗口内历史回填评测数 ÷ 覆盖天数；没有回填时显示 Steam 总评测数净变化 ÷ 观测跨度。两种口径不可直接混比，卡片和表格会标出来源。' },
   window_table: { t: '窗口对照',
     d: '每个对象统计的是它自己的完整窗口，不受图上「时间范围」与起点对齐截断的影响。窗口之外该游戏可能仍在运营，不代表数值为 0。' },
   version_table: { t: '版本更新前后 7 天对比',
@@ -173,15 +175,64 @@ const LANG_LABEL = {
 
 /* ---------- 快照加载 ---------- */
 
+async function steamDbOnlineOf(gameId) {
+  if (!onlineHistoryCache.has(gameId)) {
+    const url = `../data/series/${gameId}/steamdb_online.jsonl`;
+    const pending = fetch(url).then(async response => {
+      if (!response.ok) {
+        if (response.status === 404) return [];
+        throw new Error(`${url} returned HTTP ${response.status}`);
+      }
+      const text = await response.text();
+      return text.split(/\r?\n/).filter(Boolean).map((line, index) => {
+        let row;
+        try {
+          row = JSON.parse(line);
+        } catch {
+          throw new Error(`${url}:${index + 1} is not valid JSONL`);
+        }
+        const value = row.current_players == null ? null : Number(row.current_players);
+        const average = row.average_players == null ? null : Number(row.average_players);
+        return {
+          date_local: row.date_local,
+          value: Number.isFinite(value) ? value : null,
+          status: row.current_players_status || 'observed',
+          source: 'steamdb_chart',
+          average_players: Number.isFinite(average) ? average : null,
+        };
+      }).filter(row => typeof row.date_local === 'string' && row.date_local);
+    }).catch(error => {
+      console.warn(`SteamDB history unavailable for ${gameId}:`, error);
+      return [];
+    });
+    onlineHistoryCache.set(gameId, pending);
+  }
+  return onlineHistoryCache.get(gameId);
+}
+
+async function updateCatalogOnlineDate(entry) {
+  const history = await steamDbOnlineOf(entry.game_id);
+  const latestDate = history.map(row => row.date_local).sort().at(-1);
+  if (latestDate && latestDate > (entry.snapshot_date || '')) {
+    entry.snapshot_date = latestDate;
+    const currentVersion = (entry.versions || []).find(version => version.open_ended);
+    if (currentVersion) {
+      currentVersion.end_local = latestDate;
+      currentVersion.days = daysBetween(currentVersion.date_local, latestDate) + 1;
+    }
+  }
+  return entry.snapshot_date;
+}
+
 /* 快照是最容易缺失的一环（体积最大，且忘了跑 pipeline 就没有），
    却原本是全链路里唯一没有错误处理的 fetch —— 失败时页面会永远停在
    「正在加载快照…」，只在控制台留一句 Failed to fetch。 */
 async function snapshotOf(gameId) {
   if (!snapCache.has(gameId)) {
-    const url = `../data/snapshot_${gameId}.json`;
+    const url = `../data/snapshot_${gameId}.json?build=${encodeURIComponent(snapshotBuildId || 'latest')}`;
     let res;
     try {
-      res = await fetch(url);
+      res = await fetch(url, { cache: 'no-store' });
     } catch (e) {
       throw new LoadError(`读不到 ${url}`,
         'HTTP 服务必须从<b>项目根目录</b>启动，而不是 dashboard/ 子目录；' +
@@ -192,7 +243,22 @@ async function snapshotOf(gameId) {
         `快照文件不存在或不可读。先运行 <code>python pipeline/build_snapshot.py</code> 生成它。`);
     }
     try {
-      snapCache.set(gameId, await res.json());
+      const snapshot = await res.json();
+      const onlineByDate = new Map(
+        (await steamDbOnlineOf(gameId)).map(row => [row.date_local, row]));
+      (snapshot.online_series || []).forEach(row => {
+        const fallback = onlineByDate.get(row.date_local);
+        if (row.value != null || !fallback || fallback.value == null) {
+          onlineByDate.set(row.date_local, row);
+        }
+      });
+      snapshot.online_series = [...onlineByDate.values()]
+        .sort((a, b) => a.date_local.localeCompare(b.date_local));
+      const latestOnlineDate = snapshot.online_series.at(-1)?.date_local;
+      if (latestOnlineDate && latestOnlineDate > snapshot.snapshot_date) {
+        snapshot.snapshot_date = latestOnlineDate;
+      }
+      snapCache.set(gameId, snapshot);
     } catch (e) {
       throw new LoadError(`${url} 不是合法 JSON`,
         '快照可能写到一半被中断了，重新运行 <code>python pipeline/build_snapshot.py</code>。');
@@ -438,11 +504,8 @@ function clearDashboardState(message) {
 
   document.querySelector('#dataTable thead tr').innerHTML = `
     <th>日期</th>
-    <th class="num">新增评测</th>
-    <th class="num">好评</th>
-    <th class="num">差评</th>
-    <th class="num">当日好评率</th>
-    <th class="num">累计好评率</th>
+    <th class="num">历史回填 / Steam净变化</th>
+    <th class="num">Steam 全局累计好评率</th>
     <th class="num">Steam 同时在线</th>
     <th>事件</th>`;
   document.querySelector('#dataTable tbody').innerHTML = '';
@@ -588,7 +651,7 @@ async function refresh() {
 /* ---------- 图例 ----------
  *
  * 单对象时不画图例：那时图例的每一项都是轨道标题的复述
- * （「每日新增评测」「当日好评率」…），已经印在图里各轨道的左上角，
+ * （「每日评测净增」「Steam 全局累计好评率」…），已经印在图里各轨道的左上角，
  * 而它却是整页最宽的一块文字。单对象下唯一有增量的是轨道的 caveat，
  * 那个跟着轨道标题走更合适。
  *
@@ -705,38 +768,82 @@ function renderLegend(ctx) {
 
 function windowStats(subject) {
   const w = subject.window;
-  const rows = (subject.snap.review_history || [])
+  const rows = (subject.snap.review_chart_series || [])
     .filter(r => r.date_local >= w.start && r.date_local <= w.end);
-  const reviews = rows.reduce((s, r) => s + (r.new_reviews || 0), 0);
-  const positive = rows.reduce((s, r) => s + (r.new_positive || 0), 0);
-  // 在线人数只有「现在」这一个观测值，无法回溯。已经结束的版本窗口
-  // 拿当前在线来代表，会让两个历史版本显示出同一个数 —— 那不是它们
-  // 各自窗口里的在线，只是今天的在线。所以窗口已结束时一律留空。
-  const live = subject.kind !== 'version' || subject.openEnded;
-  const online = live
-    ? (subject.snap.online_series || []).filter(o => o.value != null) : [];
+  const historicalRows = rows.filter(r => r.backfill_new_reviews != null);
+  const historicalReviews = historicalRows.length
+    ? historicalRows.reduce((s, r) => s + r.backfill_new_reviews, 0) : null;
+  const observedRows = (subject.snap.new_review_series || [])
+    .filter(r => r.date_local >= w.start && r.date_local <= w.end && r.value != null)
+    .map(r => ({
+    date_local: r.date_local,
+    value: r.value,
+    span_days: r.span_days,
+  }));
+  const reviews = observedRows.length
+    ? observedRows.reduce((s, r) => s + r.value, 0) : null;
+  const days = observedRows.reduce((s, r) => s + (r.span_days || 0), 0);
+  const storeRows = (subject.snap.review_series || [])
+    .filter(r => r.date_local >= w.start && r.date_local <= w.end);
+  const latestStore = storeRows.at(-1);
+  const versionProfile = subject.kind === 'version'
+    ? ((subject.snap.review_profile || {}).version_cumulative_review_rate || [])
+        .find(v => v.date_local === w.start)
+    : null;
+  const versionRows = (versionProfile?.series || [])
+    .filter(r => r.date_local >= w.start && r.date_local <= w.end);
+  const latestVersion = versionRows.at(-1);
+  const online = (subject.snap.online_series || []).filter(o =>
+    o.value != null && o.date_local >= w.start && o.date_local <= w.end);
   const versions = (subject.snap.events || []).filter(
     e => e.is_version_boundary && e.date_local >= w.start && e.date_local <= w.end);
 
-  const last7 = rows.slice(-7), prev7 = rows.slice(-14, -7);
-  const avg = a => a.length ? a.reduce((s, r) => s + (r.new_reviews || 0), 0) / a.length : null;
+  const useHistory = historicalRows.length > 0;
+  const displayRows = useHistory
+    ? historicalRows.map(r => ({ value: r.backfill_new_reviews, span_days: 1 }))
+    : observedRows;
+  const displayDays = useHistory ? historicalRows.length : days;
+  const displayReviews = useHistory ? historicalReviews : reviews;
+  const dailyAvgBasis = useHistory ? 'surviving_review_backfill' : 'steam_net_change';
+  const last7 = displayRows.slice(-7), prev7 = displayRows.slice(-14, -7);
+  const avg = a => {
+    const span = a.reduce((s, r) => s + (r.span_days || 0), 0);
+    return span ? a.reduce((s, r) => s + r.value, 0) / span : null;
+  };
   const a7 = avg(last7), p7 = avg(prev7);
 
   return {
-    days: rows.length,
+    days,
     reviews,
-    dailyAvg: rows.length ? reviews / rows.length : null,
-    rate: reviews ? positive / reviews * 100 : null,
-    cumRate: rows.length ? rows[rows.length - 1].cumulative_review_rate : null,
-    totalReviews: rows.length ? rows[rows.length - 1].cumulative_reviews : null,
+    historicalDays: historicalRows.length,
+    historicalReviews,
+    dailyAvg: displayDays ? displayReviews / displayDays : null,
+    dailyAvgBasis,
+    dailyAvgDays: displayDays,
+    rate: subject.kind === 'version'
+      ? (latestVersion?.date_local === w.end ? latestVersion.value : null)
+      : latestStore?.value ?? null,
+    cumRate: latestStore?.value ?? null,
+    totalReviews: latestStore?.total_reviews ?? null,
     online: online.length ? online[online.length - 1].value : null,
+    onlineDate: online.length ? online[online.length - 1].date_local : null,
     onlinePoints: online.length,
-    onlineLive: live,
     versions: versions.length,
     versionList: versions,
     avg7: a7,
     delta7: (a7 != null && p7) ? (a7 - p7) / p7 * 100 : null,
   };
+}
+
+function reviewWindowSummary(stats) {
+  const parts = [];
+  if (stats.historicalDays) {
+    parts.push(`历史回填存活评测 ${fmt(stats.historicalReviews)} 条 / ${stats.historicalDays} 天`);
+  }
+  if (stats.days) {
+    parts.push(`Steam 净变化 ${fmt(stats.reviews)} 条 / ${stats.days} 天`);
+  }
+  return parts.length ? parts.join('；') : '窗口内暂无评测数据';
 }
 
 const deltaHtml = d => d == null ? ''
@@ -758,15 +865,18 @@ function renderTiles(ctx) {
 
   box.innerHTML = subjects.map(s => {
     const w = windowStats(s);
-    const rateLabel = s.kind === 'version' ? '版本滚动累计好评率' : '窗口好评率';
-    const onlineNote = !w.onlineLive ? '窗口已结束 · 在线无法回溯'
-      : w.onlinePoints ? `${fmt(w.online)} 在线 · ${w.onlinePoints} 个采集点`
-      : '在线尚未采集';
+    const avgBasis = w.dailyAvgBasis === 'surviving_review_backfill'
+      ? '回填存活评测' : 'Steam 净变化';
+    const rateLabel = s.kind === 'version' ? '版本回填累计好评率' : 'Steam 全局累计好评率';
+    const onlineNote = w.onlinePoints
+      ? `${fmt(w.online)} 窗口末在线 · ${w.onlineDate} · ${w.onlinePoints} 个日点`
+      : '窗口内暂无在线日点';
     return `<div class="tile">
       <div class="k"><span class="swatch" style="background:${s.color}"></span>${s.label}${infoBtn('daily_avg')}</div>
       <div class="v">${w.dailyAvg != null ? w.dailyAvg.toFixed(1) : '—'}<span class="unit">条/日</span></div>
-      <div class="n">${deltaHtml(w.delta7)} ${w.delta7 != null ? '近 7 日对比前 7 日' : '窗口内日均新增评测'}</div>
-      <div class="n" style="margin-top:2px">${rateLabel} ${pct(w.rate)} · ${fmt(w.reviews)} 条 / ${w.days} 天</div>
+      <div class="n">${deltaHtml(w.delta7)} ${w.delta7 != null ? '近 7 日对比前 7 日' : `窗口内${avgBasis}日均 · ${w.dailyAvgDays} 天`}</div>
+      <div class="n" style="margin-top:2px">${rateLabel} ${pct(w.rate)}</div>
+      <div class="n" style="margin-top:2px">${reviewWindowSummary(w)}</div>
       <div class="n" style="margin-top:2px">${onlineNote}</div>
     </div>`;
   }).join('');
@@ -789,11 +899,12 @@ function singleGameTiles(subject) {
   const tiles = [
     { k: 'Steam 同时在线', swatch: color('slot7'), info: 'online',
       v: w.onlinePoints ? fmt(w.online) : '—',
-      n: w.onlinePoints ? `${w.onlinePoints} 个采集点 · 历史不可回填` : '尚未采集' },
+      n: w.onlinePoints ? `${w.onlinePoints} 个日点 · 更新至 ${w.onlineDate}` : '暂无在线日点' },
     { k: '累计好评率', swatch: color('slot3'), info: 'cum_rate',
       v: w.cumRate != null ? w.cumRate.toFixed(2) : '—', unit: '%',
       n: w.totalReviews != null ? `${fmt(w.totalReviews)} 条评测` : '—' },
-    { k: '近 7 日均新增评测', swatch: color('slot1'), info: 'avg7',
+    { k: w.dailyAvgBasis === 'surviving_review_backfill' ? '近 7 日均回填存活评测' : '近 7 日日均评测净变化',
+      swatch: color('slot1'), info: 'avg7',
       v: w.avg7 != null ? w.avg7.toFixed(1) : '—',
       n: w.delta7 != null ? `${deltaHtml(w.delta7)} 对比前 7 日` : '—' },
     { k: '评测者中位时长', swatch: color('slot2'), info: 'playtime',
@@ -858,7 +969,9 @@ function singleReadout(ctx) {
   const trend = w.delta7 != null
     ? `，较前 7 日 ${delta(w.delta7, '%')}`
     : '';
-  out.push(`<b>${s.label}</b> 近 7 日均新增评测 <b>${
+  const avg7Label = w.dailyAvgBasis === 'surviving_review_backfill'
+    ? '近 7 日均回填存活评测' : '近 7 日日均评测净变化';
+  out.push(`<b>${s.label}</b> ${avg7Label} <b>${
     w.avg7 != null ? w.avg7.toFixed(1) : '—'}</b> 条${trend}。` +
     (w.cumRate != null
       ? ` 累计好评率 <b>${w.cumRate.toFixed(2)}%</b>（${fmt(w.totalReviews)} 条评测）。`
@@ -873,12 +986,12 @@ function singleReadout(ctx) {
       const vs = avgGap
         ? `，该游戏近 ${Math.min(bounds.length, 6)} 个版本的平均间隔是 ${avgGap} 天`
         : '';
-      out.push(`<span class="rank">当前版本 <b>${cur.version_id}</b> 已上线 ${since} 天${vs}。</span>`);
+      out.push(`<span class="rank">当前版本 <b>${cur.version_id}</b> 已上线 ${since} 天${vs}。所选窗口：${reviewWindowSummary(w)}。</span>`);
     }
   } else {
     out.push(`<span class="rank">窗口 ${s.window.start} → ${
       s.openEnded ? '至今' : s.window.end}，共 ${s.days} 天，` +
-      `窗口内 ${fmt(w.reviews)} 条评测、版本滚动累计好评率 ${pct(w.rate)}。</span>`);
+      `${reviewWindowSummary(w)}、版本回填累计好评率 ${pct(w.rate)}。</span>`);
   }
   return out;
 }
@@ -894,19 +1007,26 @@ function multiReadout(ctx) {
     const [older, newer] = stats.slice()
       .sort((a, b) => a.s.day0 < b.s.day0 ? -1 : 1);
     const parts = [];
-    if (older.w.dailyAvg && newer.w.dailyAvg != null) {
+    if (older.w.dailyAvg && newer.w.dailyAvg != null &&
+        older.w.dailyAvgBasis === newer.w.dailyAvgBasis) {
       const d = (newer.w.dailyAvg - older.w.dailyAvg) / older.w.dailyAvg * 100;
-      parts.push(`日均新增评测 <b>${newer.w.dailyAvg.toFixed(1)}</b> 条，` +
+      const label = newer.w.dailyAvgBasis === 'surviving_review_backfill'
+        ? '日均回填存活评测' : '日均 Steam 评测净变化';
+      parts.push(`${label} <b>${newer.w.dailyAvg.toFixed(1)}</b> 条，` +
                  `较 ${older.w.dailyAvg.toFixed(1)} 条 ${delta(d, '%')}`);
     }
     if (older.w.rate != null && newer.w.rate != null) {
       parts.push(`版本滚动累计好评率 <b>${newer.w.rate.toFixed(2)}%</b>，` +
                  `较 ${older.w.rate.toFixed(2)}% ${delta(newer.w.rate - older.w.rate, 'pp')}`);
     }
+    const basisNote = older.w.dailyAvgBasis === newer.w.dailyAvgBasis
+      ? (newer.w.dailyAvgBasis === 'surviving_review_backfill'
+          ? '回填数统计当前仍存活的评测。'
+          : 'Steam 评测净变化包含新增评测与删除评测。')
+      : '两个窗口的评测数口径不同，日均值不作直接比较。';
     return [
-      `<b>${newer.s.label}</b> 相对 <b>${older.s.label}</b>：${parts.join('，')}。`,
-      `<span class="rank">两个窗口分别为 ${older.s.days} 天与 ${newer.s.days} 天；` +
-      `版本更新同时带来新玩家涌入与老玩家回流，评测量变化包含两者。</span>`,
+      `<b>${newer.s.label}</b> 相对 <b>${older.s.label}</b>：${parts.length ? parts.join('，') : '暂无同口径可比数据'}。`,
+      `<span class="rank">两个窗口分别为 ${older.s.days} 天与 ${newer.s.days} 天；${basisNote}</span>`,
     ];
   }
 
@@ -917,12 +1037,20 @@ function multiReadout(ctx) {
     return `${label}：` + rows.map((x, i) =>
       `<b>${x.s.label}</b> ${fmtv(x.w[key])}`).join(' <span class="rank">></span> ') + '。';
   };
+  const oneDailyBasis = new Set(stats.filter(x => x.w.dailyAvg != null)
+    .map(x => x.w.dailyAvgBasis)).size === 1;
+  const dailyLabel = stats[0].w.dailyAvgBasis === 'surviving_review_backfill'
+    ? '窗口内日均回填存活评测' : '窗口内日均 Steam 评测净变化';
+  const oneRateBasis = new Set(stats.map(x => x.s.kind)).size === 1;
+  const rateLabel = stats[0].s.kind === 'version'
+    ? '版本回填累计好评率' : 'Steam 全局累计好评率';
 
   return [
-    rank('dailyAvg', v => v.toFixed(1) + ' 条/日', '窗口内日均新增评测'),
-    rank('rate', v => v.toFixed(2) + '%', '窗口好评率'),
-    `<span class="rank">窗口长度与回填起点各不相同，<b>绝对量不可直接比</b>，` +
-    `上面这两项（日均、比率）才是可比的。</span>`,
+    oneDailyBasis ? rank('dailyAvg', v => v.toFixed(1) + ' 条/日', dailyLabel) : null,
+    oneRateBasis ? rank('rate', v => v.toFixed(2) + '%', rateLabel) : null,
+    `<span class="rank">窗口长度与回填起点各不相同；只对同口径的日均值和好评率排序。` +
+    `${oneDailyBasis ? '' : '评测日均值口径不同，已省略排名。'}` +
+    `${oneRateBasis ? '' : '好评率口径不同，已省略排名。'}</span>`,
   ].filter(Boolean);
 }
 
@@ -940,11 +1068,13 @@ function renderWindowTable(ctx) {
       <td><span class="swatch" style="display:inline-block;width:8px;height:8px;
            border-radius:2px;background:${s.color};margin-right:6px"></span>${s.label}
           <div class="muted" style="font-size:11px">${s.window.start} → ${s.window.end}</div></td>
-      <td class="num">${fmt(w.reviews)}</td>
-      <td class="num"><b>${w.dailyAvg != null ? w.dailyAvg.toFixed(1) : '—'}</b></td>
+      <td class="num">${w.days ? `Steam ${fmt(w.reviews)} / ${w.days}天` : 'Steam —'}
+        <div class="muted" style="font-size:11px">回填存活评测 ${w.historicalDays ? fmt(w.historicalReviews) : '—'} / ${w.historicalDays}天</div></td>
+      <td class="num"><b>${w.dailyAvg != null ? w.dailyAvg.toFixed(1) : '—'}</b>
+        <div class="muted" style="font-size:11px">${w.dailyAvgBasis === 'surviving_review_backfill' ? '回填存活评测' : 'Steam 净变化'} / ${w.dailyAvgDays}天</div></td>
       <td class="num">${pct(w.rate)}</td>
       <td class="num">${w.onlinePoints ? fmt(w.online)
-        : `<span class="muted" title="${w.onlineLive ? '尚未采集' : '窗口已结束，在线人数无法回溯'}">—</span>`}</td>
+        : `<span class="muted" title="窗口内暂无在线日点">—</span>`}</td>
       <td class="num">${w.versions}</td>
     </tr>`;
   }).join('');
@@ -1592,7 +1722,8 @@ function renderSources(ctx) {
   // 否则「鸣潮 3.5」和「鸣潮 3.6」会并排显示同一个 444 天
   const covLines = subjects.map(s => {
     if (s.kind === 'version') {
-      return `${s.label} ${s.days} 天（${s.window.start} 起）`;
+      const end = s.snap.review_history_coverage?.end || '暂无';
+      return `${s.label} ${s.days} 天（${s.window.start} 起，明细至 ${end}）`;
     }
     const cov = s.snap.review_history_coverage;
     return `${s.label} ${cov ? cov.days + ' 天（' + cov.start + ' 起）' : '—'}`;
@@ -1602,11 +1733,13 @@ function renderSources(ctx) {
      价值的部分（把口径讲清楚的看板不多），但那种形式的必然结果是没人读。
      改成：三条最要紧的常驻 + 其余折叠，每条独立成行。 */
   const items = [
-    `<b>评测历史是重建的，不是原始记录。</b>由 Steam appreviews 游标翻页回填
-     （${covLines}），只含<b>今天仍然存在</b>的评测 —— 被删除或隐藏的不会出现，
-     因此越早的日期越可能低估当日真实值。`,
-    `<b>Steam 同时在线人数无法回填。</b>SteamDB 不可程序化访问、SteamCharts 未收录该 App，
-     只能从开始采集那天往后逐日积累，目前各对象分别有 ${onlinePts.join(' / ')} 个采集点。`,
+    `<b>Steam 累计评测数与全局好评率来自每日汇总。</b>每日采集 appreviews 的总评测数、好评数；评测柱优先用明细回填，尚未回填的实时段只画相邻两日总数净变化，跨日合计不放在单日柱。`,
+    `<b>逐日评测明细历史是回填重建的，不是原始记录。</b>由 Steam appreviews 游标翻页回填
+     （${covLines}）；上次全量样本每日补入近期评测，旧评测的删除或编辑每周全量校准。
+     版本滚动累计好评率只画到明细覆盖日。`,
+    `<b>Steam 同时在线日点来自官方采样、SteamDB 和小时采样。</b>同日先取有效的
+     官方观测，再取 SteamDB Players 点位，最后用当天最新的有效小时采样兜底；
+     它不代表全天均值、DAU 或总玩家数。目前各对象分别有 ${onlinePts.join(' / ')} 个日点。`,
     `<b>所有事件只表示时间节点，不表示因果关系。</b>版本更新竖线取自 Steam 官方公告，
      构建号来自 SteamCMD 第三方镜像（仅作旁证）。`,
   ];
@@ -1644,7 +1777,8 @@ async function boot() {
   window.addEventListener('resize', () => chart.resize());
 
   const loading = document.getElementById('loading');
-  config = await fetch('../data/dashboard_config.json').then(r => r.json()).catch(() => null);
+  config = await fetch(`../data/dashboard_config.json?build=${Date.now()}`, { cache: 'no-store' })
+    .then(r => r.json()).catch(() => null);
   if (!config) {
     fail('读不到 ../data/dashboard_config.json',
       '先运行 <code>python pipeline/build_dashboard_config.py</code> 编译轨道配置。' +
@@ -1652,24 +1786,30 @@ async function boot() {
     return;
   }
 
-  const idx = await fetch('../data/index.json').then(r => r.json()).catch(() => null);
+  const idx = await fetch(`../data/index.json?build=${Date.now()}`, { cache: 'no-store' })
+    .then(r => r.json()).catch(() => null);
+  snapshotBuildId = idx?.build_id || null;
   catalog = (idx && idx.games) || [];
   if (!catalog.length) {
     fail('没有可用快照',
-      '先运行 <code>python collect.py</code> 采集，再运行 ' +
-      '<code>python pipeline/build_snapshot.py</code> 生成快照。');
+      '先运行 <code>python collect.py</code> 完成采集、快照和看板配置生成。');
     return;
   }
+
+  const updatedDates = await Promise.all(catalog.map(updateCatalogOnlineDate));
+  const displayDate = updatedDates.filter(Boolean).sort().at(-1) || idx.generated_at;
 
   const wantedKeys = restoreView();
   const keys = (wantedKeys && wantedKeys.length) ? wantedKeys : [catalog[0].game_id];
   subjects = paintSubjects(keys.map(k => subjectFromKey(catalog, k)).filter(Boolean));
   if (!subjects.length) subjects = [makeGameSubject(catalog[0])];
 
-  document.getElementById('metaDate').textContent = idx.generated_at;
+  document.getElementById('metaDate').textContent = displayDate;
   document.getElementById('metaBadges').innerHTML =
     `<span class="badge live"><span class="dot"></span>逐日采集 observed</span>
-     <span class="badge recon" style="margin-left:6px"><span class="dot"></span>评测历史 reconstructed</span>`;
+     <span class="badge recon" style="margin-left:6px"><span class="dot"></span>SteamDB 在线历史日点</span>
+     <span class="badge recon" style="margin-left:6px"><span class="dot"></span>评测历史 reconstructed</span>
+     <span class="badge live" style="margin-left:6px"><span class="dot"></span>新快照自动刷新</span>`;
 
   // 添加对比对象
   const addSel = document.getElementById('subjectAdd');
@@ -1832,6 +1972,27 @@ async function boot() {
   loading.classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
   chart.resize();
+  watchForSnapshotUpdates(snapshotBuildId);
+}
+
+function watchForSnapshotUpdates(currentBuildId) {
+  let checking = false;
+  window.setInterval(async () => {
+    if (checking || document.hidden) return;
+    checking = true;
+    try {
+      const response = await fetch(`../data/index.json?check=${Date.now()}`, {
+        cache: 'no-store',
+      });
+      if (!response.ok) return;
+      const latest = (await response.json()).build_id;
+      if (latest && latest !== currentBuildId) window.location.reload();
+    } catch (e) {
+      // Keep the current dashboard visible during temporary local-server failures.
+    } finally {
+      checking = false;
+    }
+  }, 60_000);
 }
 
 /* ---------- ⓘ 气泡与 toast ---------- */

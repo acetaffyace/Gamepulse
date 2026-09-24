@@ -26,8 +26,8 @@
     --marker:         #9a978c;
     --border:         rgba(11,11,11,0.10);
 
-    --series-new-reviews: #2a78d6;  /* slot 1 blue    每日新增评测 */
-    --series-rate-daily:  #eb6834;  /* slot 2 orange  当日好评率 */
+    --series-new-reviews: #2a78d6;  /* slot 1 blue    每日评测净增 */
+    --series-rate-daily:  #eb6834;  /* slot 2 orange  保留色位 */
     --series-rate-cum:    #1baf7a;  /* slot 3 aqua    累计好评率 */
     --series-online:      #4a3aa7;  /* slot 7 violet  Steam 同时在线 */
     --series-video:       #e87ba4;  /* slot 5 magenta B 站官方视频 */
@@ -576,9 +576,9 @@
         <p class="card-note" id="cmpWindowNote" style="margin-bottom:12px"></p>
         <div class="table-wrap"><table id="cmpTable"><thead><tr>
           <th>对比对象</th>
-          <th class="num">窗口内评测</th>
-          <th class="num">日均</th>
-          <th class="num">窗口好评率</th>
+          <th class="num">Steam净变化 / 回填存活评测</th>
+          <th class="num">日均评测变化</th>
+          <th class="num">Steam 累计 / 版本回填好评率</th>
           <th class="num">当前在线</th>
           <th class="num">版本</th>
         </tr></thead><tbody></tbody></table></div>
@@ -626,11 +626,8 @@
       <div style="max-height:420px; overflow:auto">
         <table id="dataTable"><thead><tr>
           <th>日期</th>
-          <th class="num">新增评测</th>
-          <th class="num">好评</th>
-          <th class="num">差评</th>
-          <th class="num">当日好评率</th>
-          <th class="num">累计好评率</th>
+          <th class="num">评测净增</th>
+          <th class="num">Steam 全局累计好评率</th>
           <th class="num">Steam 同时在线</th>
           <th>事件</th>
         </tr></thead><tbody></tbody></table>
@@ -650,7 +647,7 @@
 </div>
 
 <!-- 版本参数避免本地静态服务继续复用旧的引擎脚本缓存。 -->
-<script src="engine.js?v=20260917-video-config-3"></script>
-<script src="app.js?v=20260917-video-config-3"></script>
+<script src="engine.js?v=20260922-steam-freshness-4"></script>
+<script src="app.js?v=20260922-steam-freshness-4"></script>
 </body>
 </html>

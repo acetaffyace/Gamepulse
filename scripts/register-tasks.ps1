@@ -5,8 +5,8 @@
 #   直接返回 HTTP 412），Steam 商店接口也会按 IP 跳区，导致同一个指标
 #   在不同日子来自不同地区口径。数据一致性比"云端自动跑"重要得多。
 #
-# 代价：关机的时段会漏采。漏采的日期在曲线上是断点，由 quality 检查标出来，
-#   不插值、不填 0 —— 这比一条看起来连续、实际上是编出来的曲线诚实。
+# 代价：关机的时段会漏采。评测创建日可由后续回填补齐；无法回填的观测
+#   仍在曲线上留空，由 quality 检查标出，不插值或编造在线人数。
 #
 # 用法（普通权限即可，任务注册在当前用户下）：
 #   powershell -ExecutionPolicy Bypass -File scripts\register-tasks.ps1
@@ -24,18 +24,27 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $daily = Join-Path $root "scripts\run-daily.cmd"
 $hourly = Join-Path $root "scripts\run-hourly.cmd"
+$reviewRecovery = Join-Path $root "scripts\run-review-recovery.cmd"
+$weeklyReviews = Join-Path $root "scripts\run-weekly-review-backfill.cmd"
 
 $TASK_DAILY = "GamePulse-Daily"
 $TASK_HOURLY = "GamePulse-HourlyOnline"
+$TASK_REVIEW_RECOVERY = "GamePulse-ReviewRecovery"
+$TASK_WEEKLY_REVIEWS = "GamePulse-WeeklyReviewBackfill"
 
 function Show-Status {
-    foreach ($name in @($TASK_DAILY, $TASK_HOURLY)) {
-        $task = Get-ScheduledTask -TaskName $name -ErrorAction SilentlyContinue
-        if (-not $task) {
-            Write-Host ("  {0,-26} 未注册" -f $name)
+    foreach ($name in @($TASK_DAILY, $TASK_HOURLY, $TASK_REVIEW_RECOVERY, $TASK_WEEKLY_REVIEWS)) {
+        try {
+            $task = Get-ScheduledTask -TaskName $name -ErrorAction Stop
+            $info = Get-ScheduledTaskInfo -TaskName $name -ErrorAction Stop
+        } catch {
+            if ($_.CategoryInfo.Category -eq "ObjectNotFound") {
+                Write-Host ("  {0,-26} 未注册" -f $name)
+            } else {
+                Write-Warning ("  {0} 状态查询失败：{1}" -f $name, $_.Exception.Message)
+            }
             continue
         }
-        $info = Get-ScheduledTaskInfo -TaskName $name
         Write-Host ("  {0,-26} {1}  上次 {2}  结果 {3}  下次 {4}" -f `
             $name, $task.State, $info.LastRunTime, $info.LastTaskResult, $info.NextRunTime)
     }
@@ -49,7 +58,7 @@ if ($Status) {
 }
 
 if ($Remove) {
-    foreach ($name in @($TASK_DAILY, $TASK_HOURLY)) {
+    foreach ($name in @($TASK_DAILY, $TASK_HOURLY, $TASK_REVIEW_RECOVERY, $TASK_WEEKLY_REVIEWS)) {
         if (Get-ScheduledTask -TaskName $name -ErrorAction SilentlyContinue) {
             Unregister-ScheduledTask -TaskName $name -Confirm:$false
             Write-Host "已删除 $name"
@@ -58,7 +67,7 @@ if ($Remove) {
     exit 0
 }
 
-foreach ($path in @($daily, $hourly)) {
+foreach ($path in @($daily, $hourly, $reviewRecovery, $weeklyReviews)) {
     if (-not (Test-Path $path)) { throw "找不到 $path" }
 }
 
@@ -95,6 +104,33 @@ Register-ScheduledTask -TaskName $TASK_HOURLY `
     -Settings $settings -Principal $principal -Force | Out-Null
 Write-Host "已注册 $TASK_HOURLY（每小时第 5 分钟）"
 
+# 每日仅抓近期评测，修复临时接口超时留下的日缺口，
+# 同时把版本滚动好评率追到当天。失败时计划任务一小时后自动重试一次。
+$recoverySettings = New-ScheduledTaskSettingsSet `
+    -StartWhenAvailable `
+    -DontStopIfGoingOnBatteries `
+    -AllowStartIfOnBatteries `
+    -DontStopOnIdleEnd `
+    -ExecutionTimeLimit (New-TimeSpan -Hours 2) `
+    -RestartCount 1 `
+    -RestartInterval (New-TimeSpan -Hours 1) `
+    -MultipleInstances IgnoreNew
+$recoveryAction = New-ScheduledTaskAction -Execute $reviewRecovery -WorkingDirectory $root
+$recoveryTrigger = New-ScheduledTaskTrigger -Daily -At "17:00"
+Register-ScheduledTask -TaskName $TASK_REVIEW_RECOVERY `
+    -Action $recoveryAction -Trigger $recoveryTrigger `
+    -Settings $recoverySettings -Principal $principal -Force | Out-Null
+Write-Host "已注册 $TASK_REVIEW_RECOVERY（每天 17:00，失败后重试一次）"
+
+# 每周全量重新枚举仍存活的评测，校准日增量暂时保留的删除/编辑差异。
+# 全量接口偶尔提前结束；采集器会拒绝部分结果，旧历史继续可用。
+$weeklyAction = New-ScheduledTaskAction -Execute $weeklyReviews -WorkingDirectory $root
+$weeklyTrigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday -At "18:00"
+Register-ScheduledTask -TaskName $TASK_WEEKLY_REVIEWS `
+    -Action $weeklyAction -Trigger $weeklyTrigger `
+    -Settings $recoverySettings -Principal $principal -Force | Out-Null
+Write-Host "已注册 $TASK_WEEKLY_REVIEWS（每周日 18:00）"
+
 Write-Host "`n当前状态：`n"
 Show-Status
 
@@ -102,9 +138,10 @@ Write-Host @"
 
 提示
   · 日志在 data\logs\，按日期分文件；
+  · 每天 17:00 增量回填近期评测；每周日 18:00 全量校准；失败会重试并保留旧数据；
   · YouTube 需要 API Key 才会采集。计划任务读不到你终端里 set 的变量，
     要用 setx 写进用户环境变量：  setx YOUTUBE_API_KEY "你的密钥"
     设完要重新注册任务或重启，任务才能读到；
-  · 关机时段会漏采，漏采日期在图上是断点，不会被插值或填 0；
+  · 关机时段的评测创建日可回填；无法回填的在线观测仍留空，不插值或填 0；
   · 随时可以手动补跑：python collect.py
 "@
