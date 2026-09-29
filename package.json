@@ -1,0 +1,9 @@
+{
+  "name": "gamepulse-dashboard",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/*.test.cjs",
+    "test:browser": "node tests/dashboard-browser.cjs"
+  },
+  "devDependencies": { "playwright": "1.58.1" }
+}

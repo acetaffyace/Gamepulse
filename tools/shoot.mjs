@@ -51,7 +51,7 @@ async function shoot(browser, preset, label, subjectKeys = subjectsArg,
   // 轨道自检：每条启用轨道的每个系列有多少个非空点
   const lanes = await page.evaluate(() => {
     const ctx = buildCtx();
-    return activeLanes().map(lane => {
+    return activeLanes().filter(lane => lane.adapter !== 'video_compare').map(lane => {
       const built = ADAPTERS[lane.adapter](lane, ctx);
       return {
         id: lane.id,
@@ -63,7 +63,14 @@ async function shoot(browser, preset, label, subjectKeys = subjectsArg,
                            : (s.values || []).filter(v => v != null).length,
         })),
       };
-    });
+    }).concat(videoViews.map(view => {
+      const rows = VideoModel.prepare(selectedVideoRecords(view, ctx), view);
+      return { id: 'video-' + view.id, height: view.height,
+        note: view.mode === 'age' ? '发布同龄要求完整日采样；缺失视图是明确空态' : '',
+        series: rows.filter(r => r.points.some(p => p.value != null)).map(r => ({
+          name: r.source + ' · ' + r.name, points: r.points.filter(p => p.value != null).length,
+        })) };
+    }));
   });
 
   const subjectInfo = await page.evaluate(() => ({
@@ -75,7 +82,7 @@ async function shoot(browser, preset, label, subjectKeys = subjectsArg,
   // 轨道标题是用 rich text 拼的，取数对象的字段名写错不会报错，
   // 只会渲染出「undefined 每日…」这种标题。曾经因为改了 laneTitle 的签名
   // 而没同步 compare.js 的调用方，对比视图的第一条轨道标题就变成了 undefined。
-  const titles = await page.evaluate(() => chart.getOption().title.map(t => t.text));
+  const titles = await page.evaluate(() => (chart.getOption().title || []).map(t => t.text));
   const badTitles = titles.filter(t => /undefined|null/.test(t));
 
   mkdirSync(OUT, { recursive: true });

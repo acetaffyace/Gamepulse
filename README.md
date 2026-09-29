@@ -15,14 +15,17 @@
 | 能力 | 实现 |
 | --- | --- |
 | 游戏与版本对比 | 支持多对象选择，按日历日期或各自起点对齐；版本窗口截到共同可比的长度 |
-| 多源时间轴 | 汇集 Steam 评测、同时在线与公告，B 站和 YouTube 官方视频数据 |
+| 多源时间轴 | 汇集 Steam 评测、同时在线与公告；支持 3/7/14 天和自定义窗口 |
+| 视频对比 | 平台/频道语区分面与叠图、同内容联动、累计/追踪增量/发布同龄/每日净增，导出 CSV/PNG |
 | 玩家结构 | 从 Steam 评测明细计算评测者游戏时长与评测语种分布，展示版本前后变化 |
 | 可配置看板 | 指标轨道由 YAML 定义，页面可调整轨道和预设，并导出 CSV、PNG 或视图链接 |
 | 数据质量 | 区分直接观测、回填重建和第三方数据；缺失值保留为空，并提示覆盖范围 |
 
-<a href="dashboard/shots/default.png"><img src="dashboard/shots/default.png" alt="GamePulse 看板总览" width="420"></a>
+<a href="dashboard/shots/video_facets.png"><img src="dashboard/shots/video_facets.png" alt="GamePulse 视频分面对比与同内容联动" width="720"></a>
 
 [查看版本对比截图](dashboard/shots/compare_versions.png) · [查看玩家结构截图](dashboard/shots/player_profile.png) · [技术与数据口径](docs/technical-notes.md)
+
+新版视频区：[分面截图](dashboard/shots/video_facets.png) · [操作与比较口径](docs/dashboard-video-comparison.md)。Pulse 专注于图表观察和对比，详细说明按需展开。
 
 **技术实现：** Python 采集与快照构建；原始时间序列存为 JSONL，页面读取 JSON 快照；前端为原生 JavaScript + ECharts 的静态页面。看板配置会在构建时校验，自动化测试覆盖关键指标与回填逻辑。
 
