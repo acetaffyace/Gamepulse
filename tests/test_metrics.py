@@ -39,36 +39,35 @@ class TestReviewRate(unittest.TestCase):
         self.assertEqual(out[-1]["total_reviews"], 56111)
 
 
-class TestOnlineFallback(unittest.TestCase):
-    def test_unavailable_official_point_keeps_observed_fallback(self):
+class TestOnlineDefinition(unittest.TestCase):
+    """主值只用全天均值；官方瞬时采样单独保存，不按天拼接不同口径。"""
+
+    def test_daily_average_and_spot_are_separate(self):
         steam = [
-            {"date_local": "2026-09-17", "current_players": None},
-            {"date_local": "2026-09-18", "current_players": 300},
-            {"date_local": "2026-09-20", "current_players": None},
+            {"date_local": "2026-09-21", "current_players": 7000,
+             "sampled_at": "2026-09-21T05:20:00+00:00"},
+            {"date_local": "2026-09-23", "current_players": 6500},
+            {"date_local": "2026-09-24", "current_players": None},
         ]
         steamdb = [
-            {"date_local": "2026-09-17", "current_players": 200,
+            {"date_local": "2026-09-21", "current_players": 7776, "average_players": 9246,
              "source": "steamdb_chart"},
-            {"date_local": "2026-09-18", "current_players": 250,
+            {"date_local": "2026-09-22", "current_players": 7908, "average_players": None,
              "source": "steamdb_chart"},
         ]
-        hourly = [
-            {"date_local": "2026-09-17", "hour_local": 12, "players": 180},
-            {"date_local": "2026-09-19", "hour_local": 11, "players": 100},
-            {"date_local": "2026-09-19", "hour_local": 12, "players": None},
-            {"date_local": "2026-09-19", "hour_local": 13, "players": 110},
-        ]
-        merged = metrics.merge_online_observations(steam, steamdb, hourly)
-        by_date = {r["date_local"]: r for r in metrics.online_series(merged)}
+        by_date = {r["date_local"]: r for r in metrics.online_series(
+            metrics.merge_online_observations(steam, steamdb))}
 
-        self.assertEqual(by_date["2026-09-17"]["value"], 200)
-        self.assertEqual(by_date["2026-09-17"]["source"], "steamdb_chart")
-        self.assertEqual(by_date["2026-09-18"]["value"], 300)
-        self.assertEqual(by_date["2026-09-18"]["source"], "steam_official")
-        self.assertEqual(by_date["2026-09-19"]["value"], 110)
-        self.assertEqual(by_date["2026-09-19"]["hour_local"], 13)
-        self.assertIsNone(by_date["2026-09-20"]["value"])
-
+        self.assertEqual(by_date["2026-09-21"]["value"], 9246)
+        self.assertEqual(by_date["2026-09-21"]["source"], "steamdb_average")
+        self.assertEqual(by_date["2026-09-21"]["spot"], 7000)
+        # SteamDB 的单时刻点位不是全天均值，不能顶替主值
+        self.assertNotIn("2026-09-22", by_date)
+        # 只有官方瞬时采样的日期：主值留空，而不是用瞬时值冒充日均
+        self.assertIsNone(by_date["2026-09-23"]["value"])
+        self.assertEqual(by_date["2026-09-23"]["status"], "unavailable")
+        self.assertEqual(by_date["2026-09-23"]["spot"], 6500)
+        self.assertNotIn("2026-09-24", by_date)
 
 class TestNewReviewSeries(unittest.TestCase):
     def test_first_point_has_no_baseline(self):
@@ -252,7 +251,8 @@ class TestOnlineDaily(unittest.TestCase):
                 for h, p in zip(range(n), players)]
 
     def test_peak_trough_and_ratio(self):
-        out = metrics.online_daily(self._samples(8, [10, 20, 30, 40, 35, 25, 15, 12]))
+        players = [10, 20, 30, 40, 35, 25, 15, 12] + [20] * 14
+        out = metrics.online_daily(self._samples(22, players))
         day = out[0]
         self.assertEqual(day["peak"], 40)
         self.assertEqual(day["trough"], 10)
@@ -261,10 +261,10 @@ class TestOnlineDaily(unittest.TestCase):
         self.assertEqual(day["status"], "observed")
 
     def test_thin_sampling_marked_partial(self):
-        """半天的样本算不出真实日峰值，必须标 partial 而不是当作完整日。"""
-        out = metrics.online_daily(self._samples(3, [10, 20, 30]))
+        """白天几个小时的样本算不出真实日峰值，必须标 partial 而不是当作完整日。"""
+        out = metrics.online_daily(self._samples(9, [10, 20, 30, 40, 50, 60, 70, 80, 90]))
         self.assertEqual(out[0]["status"], "partial")
-        self.assertEqual(out[0]["samples"], 3)
+        self.assertEqual(out[0]["samples"], 9)
 
     def test_unavailable_samples_are_skipped_not_zeroed(self):
         samples = self._samples(6, [10, 20, 30, 40, 50, 60])

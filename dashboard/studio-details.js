@@ -84,7 +84,7 @@
       {title:'窗口评测数',unit:'条',values:stats.map(w=>w.dailyAvgBasis==='surviving_review_backfill'?w.historicalReviews:w.reviews),digits:0,valid:sameBasis,tip:BACKFILL_TIP,note:sameBasis?(stats[0].dailyAvgBasis==='surviving_review_backfill'?`${span} · 按发布日回填，已删除的评测不计入`:'Steam 总评测数净变化'):'统计口径不同，暂不计算差值'},
       {title:'窗口日均评测数',unit:'条 / 日',values:stats.map(w=>w.dailyAvg),digits:1,valid:sameBasis,note:'窗口评测数 ÷ 有效覆盖天数'},
       {title:versions?VERSION_RATE_LABEL:'累计好评率',unit:'%',values:stats.map(w=>w.rate),digits:2,valid:pair[0].kind===pair[1].kind,percent:true,note:versions?`${span}内新增评测的好评占比（按发布日回填）；不是游戏整体累计好评率`:'混合对象口径不同，差值仅同类展示'},
-      {title:'窗口末同时在线',unit:'人',values:stats.map(w=>w.onlinePoints?w.online:null),digits:0,valid:false,note:`日点：A ${stats[0].onlineDate||'暂无'} / B ${stats[1].onlineDate||'暂无'} · 采样时刻不同，不计算差值 · 非 DAU`},
+      {title:'窗口日均同时在线',unit:'人',values:stats.map(w=>w.onlineMean),digits:0,valid:stats.every(w=>w.onlinePoints&&w.onlinePoints===w.windowDays),note:stats.every(w=>w.onlinePoints===w.windowDays)?`SteamDB 全天平均的窗口均值 · 两侧均覆盖 ${stats[0].windowDays} 天 · 非 DAU`:`SteamDB 日均覆盖：A ${stats[0].onlinePoints}/${stats[0].windowDays} 天，B ${stats[1].onlinePoints}/${stats[1].windowDays} 天 · 覆盖不全，不计算差值`},
     ];
     $('compareMetrics').innerHTML=rows.map(row=>{
       const [a,b]=row.values;
@@ -103,8 +103,8 @@
     let series=ADAPTERS.series(lane,ctx).series;
     if(compareMetric==='review_rate'&&pair.every(s=>s.kind==='version'))series=series.filter(s=>s.dashed);
     const colors=pair.map(s=>s.color);
-    const label=compareMetric==='new_reviews'?'每日评测数':compareMetric==='online'?'Steam 同时在线':`${VERSION_RATE_LABEL}（自更新日累计）`;
-    $('compareChartNote').textContent=compareMetric==='review_rate'?(pair.every(s=>s.kind==='version')?'各版本从更新日重新累计，终点即上方卡片的版本窗口好评率 · 缺采保留为空':'游戏全局累计好评率 · 历史回填接续观测'):compareMetric==='new_reviews'?'评测数按发布日回填（已删除的评测不计入）/ Steam 净变化 · 颜色代表对比对象':'Steam / SteamDB 日点 · 同一阶段不代表同一采样时刻';
+    const label=compareMetric==='new_reviews'?'每日评测数':compareMetric==='online'?'Steam 日均同时在线':`${VERSION_RATE_LABEL}（自更新日累计）`;
+    $('compareChartNote').textContent=compareMetric==='review_rate'?(pair.every(s=>s.kind==='version')?'各版本从更新日重新累计，终点即上方卡片的版本窗口好评率 · 缺采保留为空':'游戏全局累计好评率 · 历史回填接续观测'):compareMetric==='new_reviews'?'评测数按发布日回填（已删除的评测不计入）/ Steam 净变化 · 颜色代表对比对象':'SteamDB 全天平均同时在线 · 同一口径可直接比较 · 非 DAU';
     $('compareLegend').innerHTML=pair.map((s,i)=>`<span><i style="background:${e(colors[i])}"></i>${i?'B':'A'} · ${e(s.label)}</span>`).join('');
     compareChart.setOption({animation:false,textStyle:{fontFamily:FONT},aria:{enabled:true,label:{description:`${label}：${pair.map((s,i)=>(i?'B ':'A ')+s.label).join('，')}，横轴为${align==='day0'?'各自更新后第 N 天':'日历日期'}`}},title:{text:label,left:8,top:0,textStyle:{fontSize:11,fontWeight:400,color:'#5f6779'}},tooltip:{trigger:'axis',confine:true},grid:{left:12,right:22,top:36,bottom:20,containLabel:true},
       xAxis:{type:'category',data:ctx.axis.keys,boundaryGap:compareMetric==='new_reviews',axisLine:{show:false},axisTick:{show:false},axisLabel:{fontSize:11,color:'#5f6779',formatter:k=>align==='day0'?'D'+k:k.slice(5),hideOverlap:true}},

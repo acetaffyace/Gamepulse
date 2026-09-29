@@ -86,7 +86,7 @@
   for(const [id,parent] of [['cmpTable','windowTableCard'],['cadenceTable','cadenceTableCard'],['versionTable','versionTableCard'],['langTable','langTableCard']]) $(id).closest('.card').id=parent;
   const overview=document.createElement('section');overview.className='studio-overview';overview.setAttribute('aria-label','总览图表');
   overview.innerHTML=`
-    <article class="studio-card studio-chart-card"><div class="studio-card-heading"><div><h2>运营趋势</h2><p id="overviewNote">Steam 公开数据 · 随所选对象与时间范围变化</p></div><select id="demoMetric" aria-label="总览趋势指标"><option value="online">Steam 同时在线</option><option value="new_reviews">每日评测变化</option><option value="review_rate">累计好评率</option></select></div><div class="studio-legend" id="overviewLegend"></div><div id="overviewChart" role="img" aria-label="所选指标的时间趋势图"></div><button class="studio-text-button" data-page-nav="trends">展开完整时间轴 →</button></article>
+    <article class="studio-card studio-chart-card"><div class="studio-card-heading"><div><h2>运营趋势</h2><p id="overviewNote">Steam 公开数据 · 随所选对象与时间范围变化</p></div><select id="demoMetric" aria-label="总览趋势指标"><option value="online">Steam 日均同时在线</option><option value="new_reviews">每日评测变化</option><option value="review_rate">累计好评率</option></select></div><div class="studio-legend" id="overviewLegend"></div><div id="overviewChart" role="img" aria-label="所选指标的时间趋势图"></div><button class="studio-text-button" data-page-nav="trends">展开完整时间轴 →</button></article>
     <article class="studio-card studio-events-card"><div class="studio-card-heading"><h2>版本节点</h2><button class="studio-text-button" data-page-nav="versions">对比 →</button></div><p id="eventScope">所选窗口内的版本更新</p><div class="event-list" id="studioEvents"></div><div class="events-foot">节点表示更新日期，不自动推断因果</div></article>
     <article class="studio-card studio-video-card"><div class="studio-card-heading"><div><h2>官方内容表现</h2><p id="rankScope">角色 PV · 当前累计播放 · 按发布日期筛选</p></div><button class="studio-text-button" data-page-nav="videos">视频分析 →</button></div><div class="ranking-tabs" role="group" aria-label="排行来源"><button data-rank-source="bilibili" aria-pressed="true">B 站</button><button data-rank-source="global" aria-pressed="false">YouTube · 全球</button><button data-rank-source="ja" aria-pressed="false">日语</button><button data-rank-source="ko" aria-pressed="false">韩语</button><button data-rank-source="zh-tw" aria-pressed="false">繁中</button></div><div id="studioRanking"></div></article>
     <article class="studio-card"><div class="studio-card-heading"><h2>数据覆盖</h2><button class="studio-text-button" data-page-nav="sources">详情 →</button></div><p id="qualityScope">所选主对象的数据快照</p><div id="studioQuality"></div></article>`;
@@ -172,12 +172,14 @@
     const metric=$('demoMetric').value;
     const lane={...config.lanes.find(l=>l.id===metric)};
     if(metric==='review_rate')lane.series=lane.series.filter(s=>s.field==='display_cumulative_review_rate');
+    // 多个对象时只画日均；单个对象时附带官方定时采样虚线，补上 SteamDB 导入日之后的几天
+    if(metric==='online'&&subjects.length>1)lane.series=lane.series.filter(s=>s.field==='value');
     const result=ADAPTERS.series(lane,ctx);
     const visible=result.series.filter(s=>!hiddenSubjects.has(s.subject.key));
     // 颜色跟随对象：游戏用 index.json 的游戏色，版本用固定的版本色
     const colors=visible.map(s=>s.subject.color);
     $('overviewLegend').innerHTML=visible.map((s,i)=>`<span style="--mark:${esc(colors[i])}">${esc(s.name)}</span>`).join('');
-    $('overviewNote').textContent=metric==='online'?'Steam 同时在线日点 · 包含第三方历史点位 · 非 DAU':metric==='new_reviews'?'评测数（按发布日回填）/ Steam 净变化 · 缺采保留为空':'游戏全局累计好评率 · 回填接续 Steam 观测';
+    $('overviewNote').textContent=metric==='online'?'实线：SteamDB 全天平均 · 虚线：Steam 官方每日定时采样 · 非 DAU':metric==='new_reviews'?'评测数（按发布日回填）/ Steam 净变化 · 缺采保留为空':'游戏全局累计好评率 · 回填接续 Steam 观测';
     const versionMarks=ctx.multi?[]:(subjects[0].snap.events||[]).filter(e=>e.is_version_boundary).map(e=>({name:`${e.version_id} 更新`,xAxis:axisKeyOf(e.date_local,subjects[0],align)})).filter(e=>ctx.axis.keys.includes(e.xAxis));
     overviewChart.setOption({animation:false,textStyle:{fontFamily:FONT},aria:{enabled:true,label:{description:`${$('demoMetric').selectedOptions[0].textContent}趋势：${visible.map(s=>s.name).join('、')}`}},tooltip:{trigger:'axis',confine:true,backgroundColor:'#fff',borderColor:'#e9e6f0',textStyle:{color:'#515b70',fontSize:11}},grid:{left:8,right:14,top:29,bottom:9,containLabel:true},
       xAxis:{type:'category',data:ctx.axis.keys,boundaryGap:metric==='new_reviews',axisLine:{show:false},axisTick:{show:false},axisLabel:{color:'#5f6779',fontSize:10,formatter:k=>axisLabelOf(k,align),hideOverlap:true}},

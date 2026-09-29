@@ -63,65 +63,52 @@ def review_rate(positive: int | None, total: int | None) -> float | None:
 
 def merge_online_observations(steam_records: list[dict],
                               steamdb_records: list[dict],
-                              hourly_records: list[dict]) -> list[dict]:
-    """Prefer valid official daily points, then SteamDB, then hourly samples.
+                              hourly_records: list[dict] | None = None) -> list[dict]:
+    """日均同时在线为主值，官方定时采样作为旁证，两种口径不拼接。
 
-    An unavailable official request cannot erase an observed fallback value.
-    The hourly fallback is the latest successful point of that date, not a DAU.
+    过去同一条线按「官方日采 → SteamDB 00:00 点位 → 当天最新小时采样」逐日兜底，
+    三者的采样时刻各不相同，曲线在切换来源的那天会出现并不存在的跳变。
+
+    - value：SteamDB 全天平均同时在线（Average Players），唯一可跨版本比较的口径；
+    - spot：Steam 官方接口在每日采集时刻的瞬时在线，只作最近几天的参考。
+
+    小时采样依赖本机开机，夜间通常缺失，算不出全天均值，这里不再用它兜底。
     """
-    by_date = {
-        row["date_local"]: row
-        for row in steamdb_records
-        if row.get("current_players") is not None
-    }
-    for sample in sorted(hourly_records,
-                         key=lambda r: (r.get("date_local", ""),
-                                        r.get("hour_local", -1))):
-        if sample.get("players") is None:
-            continue
-        date_local = sample["date_local"]
-        by_date.setdefault(date_local, {
-            "date_local": date_local,
-            "current_players": sample["players"],
-            "source": "steam_hourly_fallback",
-            "hour_local": sample.get("hour_local"),
+    by_date: dict[str, dict] = {}
+
+    def row(date_local: str) -> dict:
+        return by_date.setdefault(date_local, {
+            "date_local": date_local, "value": None, "source": None,
+            "spot": None, "spot_at": None,
         })
-        if by_date[date_local].get("source") == "steam_hourly_fallback":
-            by_date[date_local] = {
-                "date_local": date_local,
-                "current_players": sample["players"],
-                "source": "steam_hourly_fallback",
-                "hour_local": sample.get("hour_local"),
-            }
-    for row in steam_records:
-        date_local = row["date_local"]
-        if row.get("current_players") is not None or date_local not in by_date:
-            by_date[date_local] = {**row, "source": "steam_official"}
+
+    for rec in steamdb_records:
+        average = rec.get("average_players")
+        if average is not None:
+            r = row(rec["date_local"])
+            r["value"], r["source"] = average, "steamdb_average"
+    for rec in steam_records:
+        players = rec.get("current_players")
+        if players is not None and rec.get("source") != "steamdb_chart":
+            r = row(rec["date_local"])
+            r["spot"], r["spot_at"] = players, rec.get("sampled_at")
     return [by_date[d] for d in sorted(by_date)]
 
 
-def online_series(steam_records: list[dict]) -> list[dict]:
-    out = []
-    for rec in steam_records:
-        value = rec.get("current_players")
-        out.append({
-            "date_local": rec["date_local"],
-            "value": value,
-            "status": OBSERVED if value is not None else UNAVAILABLE,
-            "source": rec.get("source", "steam_official"),
-            "hour_local": rec.get("hour_local"),
-        })
-    return out
+def online_series(rows: list[dict]) -> list[dict]:
+    return [{**r, "status": OBSERVED if r.get("value") is not None else UNAVAILABLE}
+            for r in rows]
 
 
-def online_daily(hourly_records: list[dict], min_samples: int = 6) -> list[dict]:
+def online_daily(hourly_records: list[dict], min_samples: int = 20) -> list[dict]:
     """把小时级采样聚合成日峰值 / 日谷值 / 日均值。
 
     单点日采只能得到「某一时刻的在线数」，无法区分「整体盘子变大」和
     「采样时刻恰好撞上活跃高峰」。小时级采样后，峰谷比与峰值出现时刻
     才有意义 —— 后者还能反过来佐证玩家的地域构成。
 
-    采样数不足 min_samples 的日期标 partial：半天的样本算不出真实日峰值。
+    采样数不足 min_samples 的日期标 partial：小时采样依赖本机开机，夜间常缺，
+    只有白天几个小时的样本算不出真实的日峰值与日谷值。
     """
     by_date: dict[str, list[dict]] = {}
     for rec in hourly_records:

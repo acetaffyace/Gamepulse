@@ -1460,12 +1460,10 @@ function buildTooltip(params, laneData, ctx) {
         }
       }
       if (lane.id === 'online' && rowMeta?.source) {
-        if (rowMeta.source === 'steamdb_chart') {
-          extra.push('SteamDB 图表日点');
-        } else if (rowMeta.source === 'steam_hourly_fallback') {
-          extra.push(`当天 ${rowMeta.hour_local ?? '—'}:00 小时采样兜底`);
-        } else if (rowMeta.source === 'steam_official') {
-          extra.push('Steam 官方日采样');
+        if (def.field === 'spot') {
+          extra.push('Steam 官方采集时刻的瞬时值，非日均');
+        } else if (rowMeta.source === 'steamdb_average') {
+          extra.push('SteamDB 全天平均');
         }
       }
       s += row(def.color, def.name, toText(v),

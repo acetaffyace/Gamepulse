@@ -169,8 +169,8 @@ function color(slot) {
 /* 就近口径：每个指标一条，点 ⓘ 在原地展开。
    这些话原本全都挤在页面最底部那段 400 字里 —— 离它解释的数字有三屏远。 */
 const METRIC_INFO = {
-  online: { t: 'Steam 同时在线',
-    d: '平台同时在线测值，不是 DAU，也不是总玩家数。同日优先使用有效的 Steam 官方观测，其次是 SteamDB Players 点位，最后用当天最新的有效小时采样兜底；这些都不是全天均值。' },
+  online: { t: 'Steam 日均同时在线',
+    d: 'SteamDB 统计的全天平均同时在线人数，是唯一可跨日、跨版本比较的在线口径；需手动导入，更新到最近一次导入日。Steam 官方接口只给采集时刻的瞬时在线，另画成虚线作参考，不与日均拼接。都不是 DAU，也不是总玩家数。' },
   cum_rate: { t: 'Steam 全局累计好评率',
     d: 'Steam appreviews 每日返回的全局好评数 ÷ 总评测数，统计当前仍存在的评测。每日采集后会更新；版本窗口好评率另由评测明细按发布日回填重建，两者不是同一个数。' },
   avg7: { t: '近 7 日日均评测数',
@@ -913,6 +913,8 @@ function windowStats(subject) {
     online: online.length ? online[online.length - 1].value : null,
     onlineDate: online.length ? online[online.length - 1].date_local : null,
     onlinePoints: online.length,
+    onlineMean: online.length
+      ? online.reduce((sum, o) => sum + o.value, 0) / online.length : null,
     versions: versions.length,
     versionList: versions,
     avg7: a7,
@@ -952,8 +954,8 @@ function renderTiles(ctx) {
     const w = windowStats(s);
     const rateLabel = s.kind === 'version' ? VERSION_RATE_LABEL : 'Steam 全局累计好评率';
     const onlineNote = w.onlinePoints
-      ? `${fmt(w.online)} 窗口末在线 · ${w.onlineDate} · ${w.onlinePoints} 个日点`
-      : '窗口内暂无在线日点';
+      ? `${fmt(w.online)} 日均在线 · 截至 ${w.onlineDate} · ${w.onlinePoints} 天`
+      : '窗口内暂无日均在线数据';
     const value = w.dailyAvg != null
       ? `<div class="v">${w.dailyAvg.toFixed(1)}<span class="unit">条/日</span></div>`
       : `<div class="v na">窗口内暂无评测数据</div>`;
@@ -1012,10 +1014,10 @@ function singleGameTiles(subject) {
         na: '样本不足：近 7 个自然日有缺采' };
 
   const tiles = [
-    { k: 'Steam 同时在线', swatch: color('slot7'), info: 'online',
+    { k: 'Steam 日均同时在线', swatch: color('slot7'), info: 'online',
       v: w.onlinePoints ? fmt(w.online) : null,
-      n: `${w.onlinePoints} 个日点 · 更新至 ${w.onlineDate}`,
-      na: '窗口内暂无在线日点' },
+      n: `SteamDB 全天平均 · 截至 ${w.onlineDate}`,
+      na: '窗口内暂无日均在线数据（SteamDB 需手动导入）' },
     { k: 'Steam 全局累计好评率', swatch: color('slot3'), info: 'cum_rate',
       v: w.cumRate != null ? w.cumRate.toFixed(2) : null, unit: '%',
       n: `${fmt(w.totalReviews)} 条评测 · 截至 ${w.cumRateDate}`,
@@ -1862,9 +1864,9 @@ function renderSources(ctx) {
     `<b>逐日评测明细历史是回填重建的，不是原始记录。</b>由 Steam appreviews 游标翻页回填
      （${covLines}）；上次全量样本每日补入近期评测，旧评测的删除或编辑每周全量校准。
      版本窗口好评率只画到明细覆盖日。`,
-    `<b>Steam 同时在线日点来自官方采样、SteamDB 和小时采样。</b>同日先取有效的
-     官方观测，再取 SteamDB Players 点位，最后用当天最新的有效小时采样兜底；
-     它不代表全天均值、DAU 或总玩家数。目前各对象分别有 ${onlinePts.join(' / ')} 个日点。`,
+    `<b>Steam 在线只用一个可比口径：SteamDB 全天平均同时在线。</b>官方接口的每日定时
+     瞬时采样另画虚线，不与日均拼成一条线；它们都不是 DAU 或总玩家数。
+     目前各对象分别有 ${onlinePts.join(' / ')} 天日均数据。`,
     `<b>所有事件只表示时间节点，不表示因果关系。</b>版本更新竖线取自 Steam 官方公告，
      构建号来自 SteamCMD 第三方镜像（仅作旁证）。`,
   ];

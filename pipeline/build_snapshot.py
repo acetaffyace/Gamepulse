@@ -338,7 +338,7 @@ def _build(game_id: str) -> dict:
     # 按语区取数时会整体消失。把数量摆出来，让它成为一个能被发现的问题。
     yt_unassigned = [s for s in yt_videos.values() if not s.get("locale")]
 
-    issues = quality.check(steam, bili)
+    issues = quality.check(steam, bili, today_local())
 
     version_updates = load_yaml("versions.yml").get(game_id) or {}
     events = build_events(news, price_points, videos, yt_videos, builds,
@@ -362,8 +362,7 @@ def _build(game_id: str) -> dict:
 
     # Keep a valid SteamDB or hourly point when the official daily request
     # timed out. Null must never replace an already observed value.
-    online_observations = metrics.merge_online_observations(
-        steam, online_history, online_hourly)
+    online_observations = metrics.merge_online_observations(steam, online_history)
 
     # 回填的评测历史与逐日采集分开存放：前者是 reconstructed（只含今天仍存在
     # 的评测，早期日期偏低），后者是 observed。两者不可混成一条线。
