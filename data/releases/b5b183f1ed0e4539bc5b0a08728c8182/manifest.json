@@ -145,7 +145,7 @@
           "evidence": "manual"
         }
       ],
-      "file": "releases/b2555dc6a02f4e1c85d3dfd0236b7556/snapshot_wuthering_waves.json"
+      "file": "releases/b5b183f1ed0e4539bc5b0a08728c8182/snapshot_wuthering_waves.json"
     },
     {
       "game_id": "zenless_zone_zero",
@@ -192,7 +192,7 @@
           "evidence": "manual"
         }
       ],
-      "file": "releases/b2555dc6a02f4e1c85d3dfd0236b7556/snapshot_zenless_zone_zero.json"
+      "file": "releases/b5b183f1ed0e4539bc5b0a08728c8182/snapshot_zenless_zone_zero.json"
     },
     {
       "game_id": "neverness_to_everness",
@@ -228,11 +228,11 @@
           "evidence": "manual"
         }
       ],
-      "file": "releases/b2555dc6a02f4e1c85d3dfd0236b7556/snapshot_neverness_to_everness.json"
+      "file": "releases/b5b183f1ed0e4539bc5b0a08728c8182/snapshot_neverness_to_everness.json"
     }
   ],
-  "build_id": "b2555dc6a02f4e1c85d3dfd0236b7556",
+  "build_id": "b5b183f1ed0e4539bc5b0a08728c8182",
   "generated_at": "2026-09-29",
-  "published_at": "2026-09-29T06:26:24+00:00",
-  "config_file": "releases/b2555dc6a02f4e1c85d3dfd0236b7556/dashboard_config.json"
+  "published_at": "2026-09-29T07:37:26+00:00",
+  "config_file": "releases/b5b183f1ed0e4539bc5b0a08728c8182/dashboard_config.json"
 }

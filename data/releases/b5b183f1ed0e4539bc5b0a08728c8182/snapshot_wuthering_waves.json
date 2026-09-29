@@ -31,7 +31,7 @@
     },
     "steam_online": {
       "status": "healthy",
-      "last_attempt_at": "2026-09-29T06:05:08+00:00",
+      "last_attempt_at": "2026-09-29T07:05:08+00:00",
       "data_through": "2026-09-29",
       "last_success_at": "2026-09-29",
       "expected": 1,
@@ -3888,13 +3888,13 @@
     {
       "date_local": "2026-09-29",
       "peak": 8209,
-      "trough": 6978,
-      "mean": 7632,
+      "trough": 6874,
+      "mean": 7506,
       "peak_hour": 10,
-      "trough_hour": 14,
-      "peak_trough_ratio": 1.18,
-      "samples": 5,
-      "status": "partial"
+      "trough_hour": 15,
+      "peak_trough_ratio": 1.19,
+      "samples": 6,
+      "status": "observed"
     }
   ],
   "online_hourly": [
@@ -5325,6 +5325,16 @@
       "game_id": "wuthering_waves",
       "steam_app_id": 3513350,
       "players": 6978,
+      "status": "observed",
+      "note": ""
+    },
+    {
+      "sampled_at": "2026-09-29T07:05:08+00:00",
+      "date_local": "2026-09-29",
+      "hour_local": 15,
+      "game_id": "wuthering_waves",
+      "steam_app_id": 3513350,
+      "players": 6874,
       "status": "observed",
       "note": ""
     }
@@ -78800,5 +78810,5 @@
       "note": "评测时游戏时长、评测后游玩时长、语种、购买渠道；仅含今天仍存在的评测，且评测者不是玩家的随机样本"
     }
   ],
-  "build_id": "b2555dc6a02f4e1c85d3dfd0236b7556"
+  "build_id": "b5b183f1ed0e4539bc5b0a08728c8182"
 }

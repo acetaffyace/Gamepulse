@@ -22,7 +22,7 @@
     },
     "youtube": {
       "status": "healthy",
-      "last_attempt_at": "2026-09-29T06:19:43+00:00",
+      "last_attempt_at": "2026-09-29T07:37:18+00:00",
       "data_through": "2026-09-29",
       "last_success_at": "2026-09-29",
       "expected": 64,
@@ -31,7 +31,7 @@
     },
     "steam_online": {
       "status": "healthy",
-      "last_attempt_at": "2026-09-29T06:05:10+00:00",
+      "last_attempt_at": "2026-09-29T07:05:10+00:00",
       "data_through": "2026-09-29",
       "last_success_at": "2026-09-29",
       "expected": 1,
@@ -843,12 +843,12 @@
     {
       "date_local": "2026-09-29",
       "peak": 2390,
-      "trough": 2165,
-      "mean": 2263,
+      "trough": 2154,
+      "mean": 2249,
       "peak_hour": 7,
-      "trough_hour": 14,
-      "peak_trough_ratio": 1.1,
-      "samples": 7,
+      "trough_hour": 15,
+      "peak_trough_ratio": 1.11,
+      "samples": 8,
       "status": "observed"
     }
   ],
@@ -2220,6 +2220,16 @@
       "game_id": "neverness_to_everness",
       "steam_app_id": 4508340,
       "players": 2165,
+      "status": "observed",
+      "note": ""
+    },
+    {
+      "sampled_at": "2026-09-29T07:05:10+00:00",
+      "date_local": "2026-09-29",
+      "hour_local": 15,
+      "game_id": "neverness_to_everness",
+      "steam_app_id": 4508340,
+      "players": 2154,
       "status": "observed",
       "note": ""
     }
@@ -29302,21 +29312,21 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 20,
                 "stats": {
-                  "view": 86496,
-                  "like": 1748,
+                  "view": 86509,
+                  "like": 1747,
                   "comment": 127
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 2472,
-                  "like": 62,
+                  "view": 2485,
+                  "like": 61,
                   "comment": 3
                 },
                 "span_days": 7,
                 "delta_status": "derived",
                 "rates": {
-                  "engagement": 2.1677,
-                  "like": 2.0209,
+                  "engagement": 2.1662,
+                  "like": 2.0194,
                   "comment": 0.1468
                 }
               }
@@ -29325,17 +29335,17 @@
               "date_local": "2026-09-29",
               "days_since_pub": 20,
               "stats": {
-                "view": 86496,
-                "like": 1748,
+                "view": 86509,
+                "like": 1747,
                 "comment": 127
               },
               "rates": {
-                "engagement": 2.1677,
-                "like": 2.0209,
+                "engagement": 2.1662,
+                "like": 2.0194,
                 "comment": 0.1468
               }
             },
-            "latest_view": 86496,
+            "latest_view": 86509,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 6,
@@ -29352,8 +29362,8 @@
                 },
                 {
                   "day": 20,
-                  "view": 86496,
-                  "view_delta": 2472
+                  "view": 86509,
+                  "view_delta": 2485
                 }
               ]
             },
@@ -29804,22 +29814,22 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 25,
                 "stats": {
-                  "view": 162252,
+                  "view": 162266,
                   "like": 3270,
                   "comment": 193
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 1092,
+                  "view": 1106,
                   "like": 27,
                   "comment": 0
                 },
                 "span_days": 7,
                 "delta_status": "derived",
                 "rates": {
-                  "engagement": 2.1343,
-                  "like": 2.0154,
-                  "comment": 0.119
+                  "engagement": 2.1342,
+                  "like": 2.0152,
+                  "comment": 0.1189
                 }
               }
             ],
@@ -29827,17 +29837,17 @@
               "date_local": "2026-09-29",
               "days_since_pub": 25,
               "stats": {
-                "view": 162252,
+                "view": 162266,
                 "like": 3270,
                 "comment": 193
               },
               "rates": {
-                "engagement": 2.1343,
-                "like": 2.0154,
-                "comment": 0.119
+                "engagement": 2.1342,
+                "like": 2.0152,
+                "comment": 0.1189
               }
             },
-            "latest_view": 162252,
+            "latest_view": 162266,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 11,
@@ -29854,8 +29864,8 @@
                 },
                 {
                   "day": 25,
-                  "view": 162252,
-                  "view_delta": 1092
+                  "view": 162266,
+                  "view_delta": 1106
                 }
               ]
             },
@@ -30306,21 +30316,21 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 42,
                 "stats": {
-                  "view": 223047,
+                  "view": 223071,
                   "like": 8873,
                   "comment": 662
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 4049,
+                  "view": 4073,
                   "like": 132,
                   "comment": 2
                 },
                 "span_days": 7,
                 "delta_status": "derived",
                 "rates": {
-                  "engagement": 4.2749,
-                  "like": 3.9781,
+                  "engagement": 4.2744,
+                  "like": 3.9777,
                   "comment": 0.2968
                 }
               }
@@ -30329,17 +30339,17 @@
               "date_local": "2026-09-29",
               "days_since_pub": 42,
               "stats": {
-                "view": 223047,
+                "view": 223071,
                 "like": 8873,
                 "comment": 662
               },
               "rates": {
-                "engagement": 4.2749,
-                "like": 3.9781,
+                "engagement": 4.2744,
+                "like": 3.9777,
                 "comment": 0.2968
               }
             },
-            "latest_view": 223047,
+            "latest_view": 223071,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 28,
@@ -30356,8 +30366,8 @@
                 },
                 {
                   "day": 42,
-                  "view": 223047,
-                  "view_delta": 4049
+                  "view": 223071,
+                  "view_delta": 4073
                 }
               ]
             },
@@ -30557,22 +30567,22 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 46,
                 "stats": {
-                  "view": 202954,
+                  "view": 202972,
                   "like": 5994,
                   "comment": 403
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 1388,
+                  "view": 1406,
                   "like": 31,
                   "comment": 1
                 },
                 "span_days": 7,
                 "delta_status": "derived",
                 "rates": {
-                  "engagement": 3.1519,
-                  "like": 2.9534,
-                  "comment": 0.1986
+                  "engagement": 3.1517,
+                  "like": 2.9531,
+                  "comment": 0.1985
                 }
               }
             ],
@@ -30580,17 +30590,17 @@
               "date_local": "2026-09-29",
               "days_since_pub": 46,
               "stats": {
-                "view": 202954,
+                "view": 202972,
                 "like": 5994,
                 "comment": 403
               },
               "rates": {
-                "engagement": 3.1519,
-                "like": 2.9534,
-                "comment": 0.1986
+                "engagement": 3.1517,
+                "like": 2.9531,
+                "comment": 0.1985
               }
             },
-            "latest_view": 202954,
+            "latest_view": 202972,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 32,
@@ -30607,8 +30617,8 @@
                 },
                 {
                   "day": 46,
-                  "view": 202954,
-                  "view_delta": 1388
+                  "view": 202972,
+                  "view_delta": 1406
                 }
               ]
             },
@@ -31059,22 +31069,22 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 62,
                 "stats": {
-                  "view": 34076,
+                  "view": 34090,
                   "like": 2412,
                   "comment": 159
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 912,
+                  "view": 926,
                   "like": 138,
                   "comment": 0
                 },
                 "span_days": 7,
                 "delta_status": "derived",
                 "rates": {
-                  "engagement": 7.5449,
-                  "like": 7.0783,
-                  "comment": 0.4666
+                  "engagement": 7.5418,
+                  "like": 7.0754,
+                  "comment": 0.4664
                 }
               }
             ],
@@ -31082,17 +31092,17 @@
               "date_local": "2026-09-29",
               "days_since_pub": 62,
               "stats": {
-                "view": 34076,
+                "view": 34090,
                 "like": 2412,
                 "comment": 159
               },
               "rates": {
-                "engagement": 7.5449,
-                "like": 7.0783,
-                "comment": 0.4666
+                "engagement": 7.5418,
+                "like": 7.0754,
+                "comment": 0.4664
               }
             },
-            "latest_view": 34076,
+            "latest_view": 34090,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 48,
@@ -31109,8 +31119,8 @@
                 },
                 {
                   "day": 62,
-                  "view": 34076,
-                  "view_delta": 912
+                  "view": 34090,
+                  "view_delta": 926
                 }
               ]
             },
@@ -31310,22 +31320,22 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 63,
                 "stats": {
-                  "view": 44421,
+                  "view": 44429,
                   "like": 3977,
                   "comment": 312
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 789,
+                  "view": 797,
                   "like": 23,
                   "comment": 0
                 },
                 "span_days": 7,
                 "delta_status": "derived",
                 "rates": {
-                  "engagement": 9.6553,
-                  "like": 8.953,
-                  "comment": 0.7024
+                  "engagement": 9.6536,
+                  "like": 8.9514,
+                  "comment": 0.7022
                 }
               }
             ],
@@ -31333,17 +31343,17 @@
               "date_local": "2026-09-29",
               "days_since_pub": 63,
               "stats": {
-                "view": 44421,
+                "view": 44429,
                 "like": 3977,
                 "comment": 312
               },
               "rates": {
-                "engagement": 9.6553,
-                "like": 8.953,
-                "comment": 0.7024
+                "engagement": 9.6536,
+                "like": 8.9514,
+                "comment": 0.7022
               }
             },
-            "latest_view": 44421,
+            "latest_view": 44429,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 49,
@@ -31360,8 +31370,8 @@
                 },
                 {
                   "day": 63,
-                  "view": 44421,
-                  "view_delta": 789
+                  "view": 44429,
+                  "view_delta": 797
                 }
               ]
             },
@@ -31561,22 +31571,22 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 67,
                 "stats": {
-                  "view": 131376,
+                  "view": 131393,
                   "like": 4300,
                   "comment": 284
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 341,
+                  "view": 358,
                   "like": 15,
                   "comment": 0
                 },
                 "span_days": 7,
                 "delta_status": "derived",
                 "rates": {
-                  "engagement": 3.4892,
-                  "like": 3.273,
-                  "comment": 0.2162
+                  "engagement": 3.4888,
+                  "like": 3.2726,
+                  "comment": 0.2161
                 }
               }
             ],
@@ -31584,17 +31594,17 @@
               "date_local": "2026-09-29",
               "days_since_pub": 67,
               "stats": {
-                "view": 131376,
+                "view": 131393,
                 "like": 4300,
                 "comment": 284
               },
               "rates": {
-                "engagement": 3.4892,
-                "like": 3.273,
-                "comment": 0.2162
+                "engagement": 3.4888,
+                "like": 3.2726,
+                "comment": 0.2161
               }
             },
-            "latest_view": 131376,
+            "latest_view": 131393,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 53,
@@ -31611,8 +31621,8 @@
                 },
                 {
                   "day": 67,
-                  "view": 131376,
-                  "view_delta": 341
+                  "view": 131393,
+                  "view_delta": 358
                 }
               ]
             },
@@ -31812,21 +31822,21 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 83,
                 "stats": {
-                  "view": 111800,
+                  "view": 111802,
                   "like": 3879,
                   "comment": 181
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 2179,
+                  "view": 2181,
                   "like": 28,
                   "comment": 0
                 },
                 "span_days": 7,
                 "delta_status": "derived",
                 "rates": {
-                  "engagement": 3.6315,
-                  "like": 3.4696,
+                  "engagement": 3.6314,
+                  "like": 3.4695,
                   "comment": 0.1619
                 }
               }
@@ -31835,17 +31845,17 @@
               "date_local": "2026-09-29",
               "days_since_pub": 83,
               "stats": {
-                "view": 111800,
+                "view": 111802,
                 "like": 3879,
                 "comment": 181
               },
               "rates": {
-                "engagement": 3.6315,
-                "like": 3.4696,
+                "engagement": 3.6314,
+                "like": 3.4695,
                 "comment": 0.1619
               }
             },
-            "latest_view": 111800,
+            "latest_view": 111802,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 69,
@@ -31862,8 +31872,8 @@
                 },
                 {
                   "day": 83,
-                  "view": 111800,
-                  "view_delta": 2179
+                  "view": 111802,
+                  "view_delta": 2181
                 }
               ]
             },
@@ -32063,21 +32073,21 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 85,
                 "stats": {
-                  "view": 170500,
-                  "like": 8592,
+                  "view": 170505,
+                  "like": 8594,
                   "comment": 508
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 1572,
-                  "like": 41,
+                  "view": 1577,
+                  "like": 43,
                   "comment": 0
                 },
                 "span_days": 7,
                 "delta_status": "derived",
                 "rates": {
-                  "engagement": 5.3372,
-                  "like": 5.0393,
+                  "engagement": 5.3383,
+                  "like": 5.0403,
                   "comment": 0.2979
                 }
               }
@@ -32086,17 +32096,17 @@
               "date_local": "2026-09-29",
               "days_since_pub": 85,
               "stats": {
-                "view": 170500,
-                "like": 8592,
+                "view": 170505,
+                "like": 8594,
                 "comment": 508
               },
               "rates": {
-                "engagement": 5.3372,
-                "like": 5.0393,
+                "engagement": 5.3383,
+                "like": 5.0403,
                 "comment": 0.2979
               }
             },
-            "latest_view": 170500,
+            "latest_view": 170505,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 71,
@@ -32113,8 +32123,8 @@
                 },
                 {
                   "day": 85,
-                  "view": 170500,
-                  "view_delta": 1572
+                  "view": 170505,
+                  "view_delta": 1577
                 }
               ]
             },
@@ -32314,21 +32324,21 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 88,
                 "stats": {
-                  "view": 194640,
+                  "view": 194648,
                   "like": 6851,
                   "comment": 373
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 823,
+                  "view": 831,
                   "like": 19,
                   "comment": 0
                 },
                 "span_days": 7,
                 "delta_status": "derived",
                 "rates": {
-                  "engagement": 3.7115,
-                  "like": 3.5198,
+                  "engagement": 3.7113,
+                  "like": 3.5197,
                   "comment": 0.1916
                 }
               }
@@ -32337,17 +32347,17 @@
               "date_local": "2026-09-29",
               "days_since_pub": 88,
               "stats": {
-                "view": 194640,
+                "view": 194648,
                 "like": 6851,
                 "comment": 373
               },
               "rates": {
-                "engagement": 3.7115,
-                "like": 3.5198,
+                "engagement": 3.7113,
+                "like": 3.5197,
                 "comment": 0.1916
               }
             },
-            "latest_view": 194640,
+            "latest_view": 194648,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 74,
@@ -32364,8 +32374,8 @@
                 },
                 {
                   "day": 88,
-                  "view": 194640,
-                  "view_delta": 823
+                  "view": 194648,
+                  "view_delta": 831
                 }
               ]
             },
@@ -32565,21 +32575,21 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 93,
                 "stats": {
-                  "view": 246276,
-                  "like": 7312,
+                  "view": 246278,
+                  "like": 7313,
                   "comment": 757
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 209,
-                  "like": 16,
+                  "view": 211,
+                  "like": 17,
                   "comment": -1
                 },
                 "span_days": 7,
                 "delta_status": "derived",
                 "rates": {
-                  "engagement": 3.2764,
-                  "like": 2.969,
+                  "engagement": 3.2768,
+                  "like": 2.9694,
                   "comment": 0.3074
                 }
               }
@@ -32588,17 +32598,17 @@
               "date_local": "2026-09-29",
               "days_since_pub": 93,
               "stats": {
-                "view": 246276,
-                "like": 7312,
+                "view": 246278,
+                "like": 7313,
                 "comment": 757
               },
               "rates": {
-                "engagement": 3.2764,
-                "like": 2.969,
+                "engagement": 3.2768,
+                "like": 2.9694,
                 "comment": 0.3074
               }
             },
-            "latest_view": 246276,
+            "latest_view": 246278,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 79,
@@ -32615,8 +32625,8 @@
                 },
                 {
                   "day": 93,
-                  "view": 246276,
-                  "view_delta": 209
+                  "view": 246278,
+                  "view_delta": 211
                 }
               ]
             },
@@ -33133,13 +33143,13 @@
             "comment": 16
           },
           "totals": {
-            "view": 2269022,
-            "like": 77229,
+            "view": 2269147,
+            "like": 77231,
             "comment": 5475
           },
           "rates": {
-            "engagement": 3.6449,
-            "like": 3.4036,
+            "engagement": 3.6448,
+            "like": 3.4035,
             "comment": 0.2413
           }
         }
@@ -33348,22 +33358,22 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 20,
                 "stats": {
-                  "view": 77012,
-                  "like": 977,
+                  "view": 77059,
+                  "like": 978,
                   "comment": 30
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 2646,
-                  "like": 39,
+                  "view": 2693,
+                  "like": 40,
                   "comment": 0
                 },
                 "span_days": 7,
                 "delta_status": "derived",
                 "rates": {
-                  "engagement": 1.3076,
-                  "like": 1.2686,
-                  "comment": 0.039
+                  "engagement": 1.3081,
+                  "like": 1.2692,
+                  "comment": 0.0389
                 }
               }
             ],
@@ -33371,17 +33381,17 @@
               "date_local": "2026-09-29",
               "days_since_pub": 20,
               "stats": {
-                "view": 77012,
-                "like": 977,
+                "view": 77059,
+                "like": 978,
                 "comment": 30
               },
               "rates": {
-                "engagement": 1.3076,
-                "like": 1.2686,
-                "comment": 0.039
+                "engagement": 1.3081,
+                "like": 1.2692,
+                "comment": 0.0389
               }
             },
-            "latest_view": 77012,
+            "latest_view": 77059,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 6,
@@ -33398,8 +33408,8 @@
                 },
                 {
                   "day": 20,
-                  "view": 77012,
-                  "view_delta": 2646
+                  "view": 77059,
+                  "view_delta": 2693
                 }
               ]
             },
@@ -33599,21 +33609,21 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 21,
                 "stats": {
-                  "view": 154118,
+                  "view": 154140,
                   "like": 1867,
                   "comment": 105
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 1263,
+                  "view": 1285,
                   "like": 32,
                   "comment": 1
                 },
                 "span_days": 7,
                 "delta_status": "derived",
                 "rates": {
-                  "engagement": 1.2795,
-                  "like": 1.2114,
+                  "engagement": 1.2794,
+                  "like": 1.2112,
                   "comment": 0.0681
                 }
               }
@@ -33622,17 +33632,17 @@
               "date_local": "2026-09-29",
               "days_since_pub": 21,
               "stats": {
-                "view": 154118,
+                "view": 154140,
                 "like": 1867,
                 "comment": 105
               },
               "rates": {
-                "engagement": 1.2795,
-                "like": 1.2114,
+                "engagement": 1.2794,
+                "like": 1.2112,
                 "comment": 0.0681
               }
             },
-            "latest_view": 154118,
+            "latest_view": 154140,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 7,
@@ -33649,8 +33659,8 @@
                 },
                 {
                   "day": 21,
-                  "view": 154118,
-                  "view_delta": 1263
+                  "view": 154140,
+                  "view_delta": 1285
                 }
               ]
             },
@@ -33850,21 +33860,21 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 25,
                 "stats": {
-                  "view": 108981,
+                  "view": 108991,
                   "like": 1487,
                   "comment": 64
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 1043,
+                  "view": 1053,
                   "like": 26,
                   "comment": 0
                 },
                 "span_days": 7,
                 "delta_status": "derived",
                 "rates": {
-                  "engagement": 1.4232,
-                  "like": 1.3645,
+                  "engagement": 1.4231,
+                  "like": 1.3643,
                   "comment": 0.0587
                 }
               }
@@ -33873,17 +33883,17 @@
               "date_local": "2026-09-29",
               "days_since_pub": 25,
               "stats": {
-                "view": 108981,
+                "view": 108991,
                 "like": 1487,
                 "comment": 64
               },
               "rates": {
-                "engagement": 1.4232,
-                "like": 1.3645,
+                "engagement": 1.4231,
+                "like": 1.3643,
                 "comment": 0.0587
               }
             },
-            "latest_view": 108981,
+            "latest_view": 108991,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 11,
@@ -33900,8 +33910,8 @@
                 },
                 {
                   "day": 25,
-                  "view": 108981,
-                  "view_delta": 1043
+                  "view": 108991,
+                  "view_delta": 1053
                 }
               ]
             },
@@ -34352,21 +34362,21 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 42,
                 "stats": {
-                  "view": 176541,
+                  "view": 176550,
                   "like": 3256,
                   "comment": 233
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 1053,
+                  "view": 1062,
                   "like": 13,
                   "comment": 0
                 },
                 "span_days": 7,
                 "delta_status": "derived",
                 "rates": {
-                  "engagement": 1.9763,
-                  "like": 1.8443,
+                  "engagement": 1.9762,
+                  "like": 1.8442,
                   "comment": 0.132
                 }
               }
@@ -34375,17 +34385,17 @@
               "date_local": "2026-09-29",
               "days_since_pub": 42,
               "stats": {
-                "view": 176541,
+                "view": 176550,
                 "like": 3256,
                 "comment": 233
               },
               "rates": {
-                "engagement": 1.9763,
-                "like": 1.8443,
+                "engagement": 1.9762,
+                "like": 1.8442,
                 "comment": 0.132
               }
             },
-            "latest_view": 176541,
+            "latest_view": 176550,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 28,
@@ -34402,8 +34412,8 @@
                 },
                 {
                   "day": 42,
-                  "view": 176541,
-                  "view_delta": 1053
+                  "view": 176550,
+                  "view_delta": 1062
                 }
               ]
             },
@@ -34854,20 +34864,20 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 51,
                 "stats": {
-                  "view": 139883,
+                  "view": 139892,
                   "like": 1017,
                   "comment": 62
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 563,
+                  "view": 572,
                   "like": 59,
                   "comment": 0
                 },
                 "span_days": 7,
                 "delta_status": "derived",
                 "rates": {
-                  "engagement": 0.7714,
+                  "engagement": 0.7713,
                   "like": 0.727,
                   "comment": 0.0443
                 }
@@ -34877,17 +34887,17 @@
               "date_local": "2026-09-29",
               "days_since_pub": 51,
               "stats": {
-                "view": 139883,
+                "view": 139892,
                 "like": 1017,
                 "comment": 62
               },
               "rates": {
-                "engagement": 0.7714,
+                "engagement": 0.7713,
                 "like": 0.727,
                 "comment": 0.0443
               }
             },
-            "latest_view": 139883,
+            "latest_view": 139892,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 37,
@@ -34904,8 +34914,8 @@
                 },
                 {
                   "day": 51,
-                  "view": 139883,
-                  "view_delta": 563
+                  "view": 139892,
+                  "view_delta": 572
                 }
               ]
             },
@@ -35105,21 +35115,21 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 62,
                 "stats": {
-                  "view": 85002,
+                  "view": 85016,
                   "like": 991,
                   "comment": 35
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 967,
+                  "view": 981,
                   "like": 48,
                   "comment": 0
                 },
                 "span_days": 7,
                 "delta_status": "derived",
                 "rates": {
-                  "engagement": 1.207,
-                  "like": 1.1659,
+                  "engagement": 1.2068,
+                  "like": 1.1657,
                   "comment": 0.0412
                 }
               }
@@ -35128,17 +35138,17 @@
               "date_local": "2026-09-29",
               "days_since_pub": 62,
               "stats": {
-                "view": 85002,
+                "view": 85016,
                 "like": 991,
                 "comment": 35
               },
               "rates": {
-                "engagement": 1.207,
-                "like": 1.1659,
+                "engagement": 1.2068,
+                "like": 1.1657,
                 "comment": 0.0412
               }
             },
-            "latest_view": 85002,
+            "latest_view": 85016,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 48,
@@ -35155,8 +35165,8 @@
                 },
                 {
                   "day": 62,
-                  "view": 85002,
-                  "view_delta": 967
+                  "view": 85016,
+                  "view_delta": 981
                 }
               ]
             },
@@ -35858,21 +35868,21 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 83,
                 "stats": {
-                  "view": 131578,
+                  "view": 131594,
                   "like": 1724,
                   "comment": 44
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 1675,
+                  "view": 1691,
                   "like": 11,
                   "comment": 0
                 },
                 "span_days": 7,
                 "delta_status": "derived",
                 "rates": {
-                  "engagement": 1.3437,
-                  "like": 1.3102,
+                  "engagement": 1.3435,
+                  "like": 1.3101,
                   "comment": 0.0334
                 }
               }
@@ -35881,17 +35891,17 @@
               "date_local": "2026-09-29",
               "days_since_pub": 83,
               "stats": {
-                "view": 131578,
+                "view": 131594,
                 "like": 1724,
                 "comment": 44
               },
               "rates": {
-                "engagement": 1.3437,
-                "like": 1.3102,
+                "engagement": 1.3435,
+                "like": 1.3101,
                 "comment": 0.0334
               }
             },
-            "latest_view": 131578,
+            "latest_view": 131594,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 69,
@@ -35908,8 +35918,8 @@
                 },
                 {
                   "day": 83,
-                  "view": 131578,
-                  "view_delta": 1675
+                  "view": 131594,
+                  "view_delta": 1691
                 }
               ]
             },
@@ -36109,21 +36119,21 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 85,
                 "stats": {
-                  "view": 155656,
-                  "like": 3482,
+                  "view": 155660,
+                  "like": 3483,
                   "comment": 158
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 432,
-                  "like": 5,
+                  "view": 436,
+                  "like": 6,
                   "comment": 0
                 },
                 "span_days": 7,
                 "delta_status": "derived",
                 "rates": {
-                  "engagement": 2.3385,
-                  "like": 2.237,
+                  "engagement": 2.3391,
+                  "like": 2.2376,
                   "comment": 0.1015
                 }
               }
@@ -36132,17 +36142,17 @@
               "date_local": "2026-09-29",
               "days_since_pub": 85,
               "stats": {
-                "view": 155656,
-                "like": 3482,
+                "view": 155660,
+                "like": 3483,
                 "comment": 158
               },
               "rates": {
-                "engagement": 2.3385,
-                "like": 2.237,
+                "engagement": 2.3391,
+                "like": 2.2376,
                 "comment": 0.1015
               }
             },
-            "latest_view": 155656,
+            "latest_view": 155660,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 71,
@@ -36159,8 +36169,8 @@
                 },
                 {
                   "day": 85,
-                  "view": 155656,
-                  "view_delta": 432
+                  "view": 155660,
+                  "view_delta": 436
                 }
               ]
             },
@@ -36360,21 +36370,21 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 88,
                 "stats": {
-                  "view": 320277,
-                  "like": 2307,
+                  "view": 320281,
+                  "like": 2308,
                   "comment": 114
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 403,
-                  "like": 3,
+                  "view": 407,
+                  "like": 4,
                   "comment": 0
                 },
                 "span_days": 7,
                 "delta_status": "derived",
                 "rates": {
-                  "engagement": 0.7559,
-                  "like": 0.7203,
+                  "engagement": 0.7562,
+                  "like": 0.7206,
                   "comment": 0.0356
                 }
               }
@@ -36383,17 +36393,17 @@
               "date_local": "2026-09-29",
               "days_since_pub": 88,
               "stats": {
-                "view": 320277,
-                "like": 2307,
+                "view": 320281,
+                "like": 2308,
                 "comment": 114
               },
               "rates": {
-                "engagement": 0.7559,
-                "like": 0.7203,
+                "engagement": 0.7562,
+                "like": 0.7206,
                 "comment": 0.0356
               }
             },
-            "latest_view": 320277,
+            "latest_view": 320281,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 74,
@@ -36410,8 +36420,8 @@
                 },
                 {
                   "day": 88,
-                  "view": 320277,
-                  "view_delta": 403
+                  "view": 320281,
+                  "view_delta": 407
                 }
               ]
             },
@@ -36862,21 +36872,21 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 97,
                 "stats": {
-                  "view": 79519,
-                  "like": 1189,
+                  "view": 79534,
+                  "like": 1190,
                   "comment": 38
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 880,
-                  "like": 11,
+                  "view": 895,
+                  "like": 12,
                   "comment": 1
                 },
                 "span_days": 7,
                 "delta_status": "derived",
                 "rates": {
-                  "engagement": 1.543,
-                  "like": 1.4952,
+                  "engagement": 1.544,
+                  "like": 1.4962,
                   "comment": 0.0478
                 }
               }
@@ -36885,17 +36895,17 @@
               "date_local": "2026-09-29",
               "days_since_pub": 97,
               "stats": {
-                "view": 79519,
-                "like": 1189,
+                "view": 79534,
+                "like": 1190,
                 "comment": 38
               },
               "rates": {
-                "engagement": 1.543,
-                "like": 1.4952,
+                "engagement": 1.544,
+                "like": 1.4962,
                 "comment": 0.0478
               }
             },
-            "latest_view": 79519,
+            "latest_view": 79534,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 83,
@@ -36912,8 +36922,8 @@
                 },
                 {
                   "day": 97,
-                  "view": 79519,
-                  "view_delta": 880
+                  "view": 79534,
+                  "view_delta": 895
                 }
               ]
             },
@@ -37113,21 +37123,21 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 98,
                 "stats": {
-                  "view": 107916,
-                  "like": 1752,
+                  "view": 107923,
+                  "like": 1753,
                   "comment": 79
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 339,
-                  "like": 14,
+                  "view": 346,
+                  "like": 15,
                   "comment": 0
                 },
                 "span_days": 7,
                 "delta_status": "derived",
                 "rates": {
-                  "engagement": 1.6967,
-                  "like": 1.6235,
+                  "engagement": 1.6975,
+                  "like": 1.6243,
                   "comment": 0.0732
                 }
               }
@@ -37136,17 +37146,17 @@
               "date_local": "2026-09-29",
               "days_since_pub": 98,
               "stats": {
-                "view": 107916,
-                "like": 1752,
+                "view": 107923,
+                "like": 1753,
                 "comment": 79
               },
               "rates": {
-                "engagement": 1.6967,
-                "like": 1.6235,
+                "engagement": 1.6975,
+                "like": 1.6243,
                 "comment": 0.0732
               }
             },
-            "latest_view": 107916,
+            "latest_view": 107923,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 84,
@@ -37163,8 +37173,8 @@
                 },
                 {
                   "day": 98,
-                  "view": 107916,
-                  "view_delta": 339
+                  "view": 107923,
+                  "view_delta": 346
                 }
               ]
             },
@@ -37179,13 +37189,13 @@
             "comment": 16
           },
           "totals": {
-            "view": 2195554,
-            "like": 28489,
+            "view": 2195711,
+            "like": 28494,
             "comment": 1411
           },
           "rates": {
-            "engagement": 1.3618,
-            "like": 1.2976,
+            "engagement": 1.362,
+            "like": 1.2977,
             "comment": 0.0643
           }
         }
@@ -37394,22 +37404,22 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 20,
                 "stats": {
-                  "view": 33645,
+                  "view": 33662,
                   "like": 259,
                   "comment": 34
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 1175,
+                  "view": 1192,
                   "like": 14,
                   "comment": 1
                 },
                 "span_days": 7,
                 "delta_status": "derived",
                 "rates": {
-                  "engagement": 0.8709,
-                  "like": 0.7698,
-                  "comment": 0.1011
+                  "engagement": 0.8704,
+                  "like": 0.7694,
+                  "comment": 0.101
                 }
               }
             ],
@@ -37417,17 +37427,17 @@
               "date_local": "2026-09-29",
               "days_since_pub": 20,
               "stats": {
-                "view": 33645,
+                "view": 33662,
                 "like": 259,
                 "comment": 34
               },
               "rates": {
-                "engagement": 0.8709,
-                "like": 0.7698,
-                "comment": 0.1011
+                "engagement": 0.8704,
+                "like": 0.7694,
+                "comment": 0.101
               }
             },
-            "latest_view": 33645,
+            "latest_view": 33662,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 6,
@@ -37444,8 +37454,8 @@
                 },
                 {
                   "day": 20,
-                  "view": 33645,
-                  "view_delta": 1175
+                  "view": 33662,
+                  "view_delta": 1192
                 }
               ]
             },
@@ -38147,21 +38157,21 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 41,
                 "stats": {
-                  "view": 42219,
+                  "view": 42233,
                   "like": 497,
                   "comment": 54
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 1596,
+                  "view": 1610,
                   "like": 10,
                   "comment": 0
                 },
                 "span_days": 7,
                 "delta_status": "derived",
                 "rates": {
-                  "engagement": 1.3051,
-                  "like": 1.1772,
+                  "engagement": 1.3047,
+                  "like": 1.1768,
                   "comment": 0.1279
                 }
               }
@@ -38170,17 +38180,17 @@
               "date_local": "2026-09-29",
               "days_since_pub": 41,
               "stats": {
-                "view": 42219,
+                "view": 42233,
                 "like": 497,
                 "comment": 54
               },
               "rates": {
-                "engagement": 1.3051,
-                "like": 1.1772,
+                "engagement": 1.3047,
+                "like": 1.1768,
                 "comment": 0.1279
               }
             },
-            "latest_view": 42219,
+            "latest_view": 42233,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 27,
@@ -38197,8 +38207,8 @@
                 },
                 {
                   "day": 41,
-                  "view": 42219,
-                  "view_delta": 1596
+                  "view": 42233,
+                  "view_delta": 1610
                 }
               ]
             },
@@ -39151,22 +39161,22 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 62,
                 "stats": {
-                  "view": 39105,
+                  "view": 39118,
                   "like": 370,
                   "comment": 43
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 682,
+                  "view": 695,
                   "like": 19,
                   "comment": 0
                 },
                 "span_days": 7,
                 "delta_status": "derived",
                 "rates": {
-                  "engagement": 1.0561,
-                  "like": 0.9462,
-                  "comment": 0.11
+                  "engagement": 1.0558,
+                  "like": 0.9459,
+                  "comment": 0.1099
                 }
               }
             ],
@@ -39174,17 +39184,17 @@
               "date_local": "2026-09-29",
               "days_since_pub": 62,
               "stats": {
-                "view": 39105,
+                "view": 39118,
                 "like": 370,
                 "comment": 43
               },
               "rates": {
-                "engagement": 1.0561,
-                "like": 0.9462,
-                "comment": 0.11
+                "engagement": 1.0558,
+                "like": 0.9459,
+                "comment": 0.1099
               }
             },
-            "latest_view": 39105,
+            "latest_view": 39118,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 48,
@@ -39201,8 +39211,8 @@
                 },
                 {
                   "day": 62,
-                  "view": 39105,
-                  "view_delta": 682
+                  "view": 39118,
+                  "view_delta": 695
                 }
               ]
             },
@@ -39402,13 +39412,13 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 63,
                 "stats": {
-                  "view": 62000,
+                  "view": 62001,
                   "like": 380,
                   "comment": 77
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 175,
+                  "view": 176,
                   "like": 7,
                   "comment": 0
                 },
@@ -39425,7 +39435,7 @@
               "date_local": "2026-09-29",
               "days_since_pub": 63,
               "stats": {
-                "view": 62000,
+                "view": 62001,
                 "like": 380,
                 "comment": 77
               },
@@ -39435,7 +39445,7 @@
                 "comment": 0.1242
               }
             },
-            "latest_view": 62000,
+            "latest_view": 62001,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 49,
@@ -39452,8 +39462,8 @@
                 },
                 {
                   "day": 63,
-                  "view": 62000,
-                  "view_delta": 175
+                  "view": 62001,
+                  "view_delta": 176
                 }
               ]
             },
@@ -39653,20 +39663,20 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 67,
                 "stats": {
-                  "view": 54423,
+                  "view": 54427,
                   "like": 369,
                   "comment": 74
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 115,
+                  "view": 119,
                   "like": 3,
                   "comment": 0
                 },
                 "span_days": 7,
                 "delta_status": "derived",
                 "rates": {
-                  "engagement": 0.814,
+                  "engagement": 0.8139,
                   "like": 0.678,
                   "comment": 0.136
                 }
@@ -39676,17 +39686,17 @@
               "date_local": "2026-09-29",
               "days_since_pub": 67,
               "stats": {
-                "view": 54423,
+                "view": 54427,
                 "like": 369,
                 "comment": 74
               },
               "rates": {
-                "engagement": 0.814,
+                "engagement": 0.8139,
                 "like": 0.678,
                 "comment": 0.136
               }
             },
-            "latest_view": 54423,
+            "latest_view": 54427,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 53,
@@ -39703,8 +39713,8 @@
                 },
                 {
                   "day": 67,
-                  "view": 54423,
-                  "view_delta": 115
+                  "view": 54427,
+                  "view_delta": 119
                 }
               ]
             },
@@ -39904,20 +39914,20 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 83,
                 "stats": {
-                  "view": 91760,
+                  "view": 91770,
                   "like": 477,
                   "comment": 45
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 776,
+                  "view": 786,
                   "like": 13,
                   "comment": 0
                 },
                 "span_days": 7,
                 "delta_status": "derived",
                 "rates": {
-                  "engagement": 0.5689,
+                  "engagement": 0.5688,
                   "like": 0.5198,
                   "comment": 0.049
                 }
@@ -39927,17 +39937,17 @@
               "date_local": "2026-09-29",
               "days_since_pub": 83,
               "stats": {
-                "view": 91760,
+                "view": 91770,
                 "like": 477,
                 "comment": 45
               },
               "rates": {
-                "engagement": 0.5689,
+                "engagement": 0.5688,
                 "like": 0.5198,
                 "comment": 0.049
               }
             },
-            "latest_view": 91760,
+            "latest_view": 91770,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 69,
@@ -39954,8 +39964,8 @@
                 },
                 {
                   "day": 83,
-                  "view": 91760,
-                  "view_delta": 776
+                  "view": 91770,
+                  "view_delta": 786
                 }
               ]
             },
@@ -40908,21 +40918,21 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 97,
                 "stats": {
-                  "view": 30989,
+                  "view": 30994,
                   "like": 240,
                   "comment": 30
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 306,
+                  "view": 311,
                   "like": 1,
                   "comment": 0
                 },
                 "span_days": 7,
                 "delta_status": "derived",
                 "rates": {
-                  "engagement": 0.8713,
-                  "like": 0.7745,
+                  "engagement": 0.8711,
+                  "like": 0.7743,
                   "comment": 0.0968
                 }
               }
@@ -40931,17 +40941,17 @@
               "date_local": "2026-09-29",
               "days_since_pub": 97,
               "stats": {
-                "view": 30989,
+                "view": 30994,
                 "like": 240,
                 "comment": 30
               },
               "rates": {
-                "engagement": 0.8713,
-                "like": 0.7745,
+                "engagement": 0.8711,
+                "like": 0.7743,
                 "comment": 0.0968
               }
             },
-            "latest_view": 30989,
+            "latest_view": 30994,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 83,
@@ -40958,8 +40968,8 @@
                 },
                 {
                   "day": 97,
-                  "view": 30989,
-                  "view_delta": 306
+                  "view": 30994,
+                  "view_delta": 311
                 }
               ]
             },
@@ -41225,13 +41235,13 @@
             "comment": 16
           },
           "totals": {
-            "view": 887355,
+            "view": 887419,
             "like": 6167,
             "comment": 1232
           },
           "rates": {
             "engagement": 0.8338,
-            "like": 0.695,
+            "like": 0.6949,
             "comment": 0.1388
           }
         }
@@ -42193,13 +42203,13 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 41,
                 "stats": {
-                  "view": 124989,
+                  "view": 124994,
                   "like": 281,
                   "comment": 38
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 540,
+                  "view": 545,
                   "like": 9,
                   "comment": 0
                 },
@@ -42216,7 +42226,7 @@
               "date_local": "2026-09-29",
               "days_since_pub": 41,
               "stats": {
-                "view": 124989,
+                "view": 124994,
                 "like": 281,
                 "comment": 38
               },
@@ -42226,7 +42236,7 @@
                 "comment": 0.0304
               }
             },
-            "latest_view": 124989,
+            "latest_view": 124994,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 27,
@@ -42243,8 +42253,8 @@
                 },
                 {
                   "day": 41,
-                  "view": 124989,
-                  "view_delta": 540
+                  "view": 124994,
+                  "view_delta": 545
                 }
               ]
             },
@@ -42946,13 +42956,13 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 51,
                 "stats": {
-                  "view": 114346,
+                  "view": 114349,
                   "like": 196,
                   "comment": 15
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 54,
+                  "view": 57,
                   "like": 69,
                   "comment": 0
                 },
@@ -42969,7 +42979,7 @@
               "date_local": "2026-09-29",
               "days_since_pub": 51,
               "stats": {
-                "view": 114346,
+                "view": 114349,
                 "like": 196,
                 "comment": 15
               },
@@ -42979,7 +42989,7 @@
                 "comment": 0.0131
               }
             },
-            "latest_view": 114346,
+            "latest_view": 114349,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 37,
@@ -42996,8 +43006,8 @@
                 },
                 {
                   "day": 51,
-                  "view": 114346,
-                  "view_delta": 54
+                  "view": 114349,
+                  "view_delta": 57
                 }
               ]
             },
@@ -43197,13 +43207,13 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 62,
                 "stats": {
-                  "view": 124827,
+                  "view": 124830,
                   "like": 241,
                   "comment": 8
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 166,
+                  "view": 169,
                   "like": 14,
                   "comment": 0
                 },
@@ -43220,7 +43230,7 @@
               "date_local": "2026-09-29",
               "days_since_pub": 62,
               "stats": {
-                "view": 124827,
+                "view": 124830,
                 "like": 241,
                 "comment": 8
               },
@@ -43230,7 +43240,7 @@
                 "comment": 0.0064
               }
             },
-            "latest_view": 124827,
+            "latest_view": 124830,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 48,
@@ -43247,8 +43257,8 @@
                 },
                 {
                   "day": 62,
-                  "view": 124827,
-                  "view_delta": 166
+                  "view": 124830,
+                  "view_delta": 169
                 }
               ]
             },
@@ -43950,13 +43960,13 @@
                 "date_local": "2026-09-29",
                 "days_since_pub": 83,
                 "stats": {
-                  "view": 122727,
+                  "view": 122732,
                   "like": 352,
                   "comment": 15
                 },
                 "status": "observed",
                 "deltas": {
-                  "view": 284,
+                  "view": 289,
                   "like": 14,
                   "comment": 0
                 },
@@ -43973,7 +43983,7 @@
               "date_local": "2026-09-29",
               "days_since_pub": 83,
               "stats": {
-                "view": 122727,
+                "view": 122732,
                 "like": 352,
                 "comment": 15
               },
@@ -43983,7 +43993,7 @@
                 "comment": 0.0122
               }
             },
-            "latest_view": 122727,
+            "latest_view": 122732,
             "ramp": {
               "available": false,
               "first_capture_days_since_pub": 69,
@@ -44000,8 +44010,8 @@
                 },
                 {
                   "day": 83,
-                  "view": 122727,
-                  "view_delta": 284
+                  "view": 122732,
+                  "view_delta": 289
                 }
               ]
             },
@@ -45271,7 +45281,7 @@
             "comment": 16
           },
           "totals": {
-            "view": 1752260,
+            "view": 1752276,
             "like": 3911,
             "comment": 377
           },
@@ -45398,5 +45408,5 @@
       "note": "评测时游戏时长、评测后游玩时长、语种、购买渠道；仅含今天仍存在的评测，且评测者不是玩家的随机样本"
     }
   ],
-  "build_id": "b2555dc6a02f4e1c85d3dfd0236b7556"
+  "build_id": "b5b183f1ed0e4539bc5b0a08728c8182"
 }
