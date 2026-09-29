@@ -20,14 +20,16 @@ CREATE TABLE game (
 CREATE TABLE version (
   game_id       TEXT NOT NULL REFERENCES game,
   version_id    TEXT NOT NULL,
-  start_date    TEXT NOT NULL CHECK (start_date GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]'),
+  start_date    TEXT CHECK (start_date GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]'),  -- Steam 端开放日
   start_at      TEXT,                       -- 有精确开放时刻时填写
   cn_start_date TEXT,                       -- 国服与 Steam 不同日时填写
   status        TEXT NOT NULL CHECK (status IN ('released', 'scheduled')),
   source        TEXT,
   source_url    TEXT,
+  cn_source_url TEXT,
   note          TEXT,
-  PRIMARY KEY (game_id, version_id)
+  PRIMARY KEY (game_id, version_id),
+  CHECK (status = 'scheduled' OR start_date IS NOT NULL)   -- 已开放的版本必须有 Steam 开放日
 ) WITHOUT ROWID;
 
 -- 同一内容在 B 站与 YouTube 各语区的一组视频（config/video_pairs.yml）
@@ -60,6 +62,10 @@ CREATE TABLE video (
   character_name    TEXT,
   identity_verified INTEGER CHECK (identity_verified IN (0, 1)),
   registered        INTEGER NOT NULL DEFAULT 1 CHECK (registered IN (0, 1)),
+  -- 以下由采集器根据接口返回填写，登记表同步不覆盖
+  observed_title    TEXT,
+  observed_channel  TEXT,
+  published_at      TEXT,                   -- 接口给出的精确发布时刻（UTC）
   PRIMARY KEY (platform, video_id)
 ) WITHOUT ROWID;
 
@@ -81,15 +87,40 @@ CREATE TABLE review (
 );
 CREATE INDEX review_game_date ON review (game_id, created_date);
 
+-- 每次评测回填运行：覆盖范围（每日评测补 0 的截止日）从这里取
+CREATE TABLE review_run (
+  run_id         INTEGER PRIMARY KEY,
+  game_id        TEXT NOT NULL REFERENCES game,
+  mode           TEXT NOT NULL CHECK (mode IN ('full', 'incremental')),
+  finished_at    TEXT NOT NULL,
+  covered_through TEXT NOT NULL,            -- 本次运行后评测覆盖到的业务日
+  cutoff         TEXT,                      -- 增量模式：从哪天开始重新拉取
+  pages          INTEGER,
+  fetched        INTEGER,
+  total_expected INTEGER,
+  stop_reason    TEXT
+);
+CREATE INDEX review_run_game ON review_run (game_id, finished_at);
+
 -- SteamDB 日汇总：在线人数唯一的可比口径
 CREATE TABLE online_daily (
   game_id      TEXT NOT NULL REFERENCES game,
   date         TEXT NOT NULL CHECK (date GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]'),
-  avg_players  INTEGER CHECK (avg_players >= 0),
-  peak_players INTEGER CHECK (peak_players >= 0),
+  avg_players   INTEGER CHECK (avg_players >= 0),     -- 全天平均同时在线
+  point_players INTEGER CHECK (point_players >= 0),   -- 日汇总行的 Players：某一时点的值，不是峰值（有的日子低于日均）
   source_file  TEXT,
   imported_at  TEXT NOT NULL,
   PRIMARY KEY (game_id, date)
+) WITHOUT ROWID;
+
+-- v2 的小时级 Steam 在线采样（v3 已停采，只保留历史，看板不展示）
+CREATE TABLE online_hourly (
+  game_id    TEXT NOT NULL REFERENCES game,
+  date       TEXT NOT NULL,
+  hour       INTEGER NOT NULL CHECK (hour BETWEEN 0 AND 23),
+  players    INTEGER CHECK (players >= 0),
+  sampled_at TEXT NOT NULL,
+  PRIMARY KEY (game_id, date, hour)
 ) WITHOUT ROWID;
 
 -- Steam 官方每日汇总（存量）。current_players 为采集时刻的瞬时值，只作参考
@@ -205,4 +236,5 @@ INSERT INTO fact_source VALUES
   ('steam_daily',  'observed',      'Steam 官方汇总',   '每日采集时刻的存量；current_players 是瞬时值'),
   ('video_obs',    'observed',      'B 站 / YouTube',   '登记视频的累计计数，事后登记的视频缺少发布初期数据'),
   ('steam_news',   'observed',      'Steam 公告',       NULL),
-  ('steam_build',  'third_party',   'steamcmd.net',     '构建号与构建更新时间');
+  ('steam_build',  'third_party',   'steamcmd.net',     '构建号与构建更新时间'),
+  ('online_hourly','observed',      'Steam 小时在线',   'v2 历史，仅保留不展示');

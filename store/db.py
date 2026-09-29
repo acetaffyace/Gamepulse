@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DB_PATH = ROOT / "data" / "gamepulse.sqlite"
 BACKUP_DIR = ROOT / "data" / "backups"
 MIGRATIONS_DIR = Path(__file__).resolve().parent / "migrations"
+VIEWS_SQL = Path(__file__).resolve().parent / "views.sql"
 BUSY_TIMEOUT_MS = 30_000
 
 _MIGRATION_NAME = re.compile(r"^(\d{3})_[a-z0-9_]+\.sql$")
@@ -30,8 +31,40 @@ def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
+class Quantile:
+    """quantile(x, p)：线性插值分位数（与 PERCENTILE_CONT 相同），p = 0.5 即标准中位数。
+
+    浏览器端 web/lib/db.js 注册同名函数，两端用 tests/fixtures/quantile-cases.json 交叉核对。
+    NULL 不参与计算；没有有效值时返回 NULL。
+    """
+
+    def __init__(self):
+        self.values: list[float] = []
+        self.p: float | None = None
+
+    def step(self, value, p):
+        if p is None or not 0 <= float(p) <= 1:
+            raise ValueError("quantile p must be between 0 and 1")
+        self.p = float(p)
+        if value is not None:
+            self.values.append(value)
+
+    def finalize(self):
+        return quantile(self.values, self.p)
+
+
+def quantile(values: Sequence[float], p: float | None) -> float | None:
+    if not values or p is None:
+        return None
+    ordered = sorted(values)
+    h = (len(ordered) - 1) * p
+    lo = int(h)
+    hi = min(lo + 1, len(ordered) - 1)
+    return ordered[lo] + (h - lo) * (ordered[hi] - ordered[lo])
+
+
 def connect(path: Path | str = DB_PATH, *, migrate: bool = True) -> sqlite3.Connection:
-    """打开数据库并升级到最新表结构。
+    """打开数据库，升级到最新表结构并重建视图。
 
     isolation_level=None 关闭 sqlite3 模块的隐式事务，事务边界只由 transaction() 决定。
     """
@@ -39,13 +72,20 @@ def connect(path: Path | str = DB_PATH, *, migrate: bool = True) -> sqlite3.Conn
         Path(path).parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(path, timeout=BUSY_TIMEOUT_MS / 1000, isolation_level=None)
     conn.row_factory = sqlite3.Row
+    conn.create_aggregate("quantile", 2, Quantile)
     conn.execute("PRAGMA foreign_keys = ON")
     conn.execute(f"PRAGMA busy_timeout = {BUSY_TIMEOUT_MS}")
     if str(path) != ":memory:":
         conn.execute("PRAGMA journal_mode = WAL")
     if migrate:
         apply_migrations(conn)
+        apply_views(conn)
     return conn
+
+
+def apply_views(conn: sqlite3.Connection) -> None:
+    with transaction(conn):
+        _execute_script(conn, VIEWS_SQL.read_text(encoding="utf-8"))
 
 
 def migrations() -> list[tuple[int, Path]]:
@@ -149,6 +189,25 @@ def upsert(conn: sqlite3.Connection, table: str, rows: Iterable[Mapping[str, obj
     sql = (f"INSERT INTO {table} ({', '.join(cols)}) VALUES ({', '.join('?' for _ in cols)}) "
            f"ON CONFLICT ({', '.join(key)}) DO "
            + (f"UPDATE SET {', '.join(f'{c} = excluded.{c}' for c in updates)}" if updates else "NOTHING"))
+    with transaction(conn):
+        conn.executemany(sql, [tuple(row[c] for c in cols) for row in rows])
+    return len(rows)
+
+
+def insert(conn: sqlite3.Connection, table: str, rows: Iterable[Mapping[str, object]]) -> int:
+    """追加行（用于自增主键的记录表，如 review_run）。列名校验规则与 upsert 相同。"""
+    rows = list(rows)
+    if not rows:
+        return 0
+    known = set(columns(conn, table))
+    cols = list(rows[0].keys())
+    unknown = [c for c in cols if c not in known]
+    if unknown:
+        raise ValueError(f"{table}: unknown columns {unknown}")
+    for index, row in enumerate(rows):
+        if list(row.keys()) != cols:
+            raise ValueError(f"{table}: row {index} has columns {list(row.keys())}, expected {cols}")
+    sql = f"INSERT INTO {table} ({', '.join(cols)}) VALUES ({', '.join('?' for _ in cols)})"
     with transaction(conn):
         conn.executemany(sql, [tuple(row[c] for c in cols) for row in rows])
     return len(rows)
