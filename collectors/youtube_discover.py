@@ -31,6 +31,8 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from collectors.common import business_date
+
 from collectors.common import (  # noqa: E402
     CONFIG_DIR,
     YOUTUBE_LOCALES,
@@ -180,7 +182,7 @@ def resolve_channels(sess, api_key: str) -> int:
 
 
 def list_uploads(sess, api_key: str, playlist_id: str,
-                 since: str, max_pages: int = 4) -> list[dict]:
+                 since: str, max_pages: int = 4) -> dict:
     """按时间倒序列出 uploads，直到早于 since 为止。
 
     播放列表本身就是倒序的，因此遇到第一个早于 since 的条目即可停止翻页，
@@ -188,6 +190,8 @@ def list_uploads(sess, api_key: str, playlist_id: str,
     """
     out: list[dict] = []
     page_token = None
+    complete = False
+    stop_reason = "page_budget"
 
     for _ in range(max_pages):
         params = {"part": "snippet,contentDetails", "playlistId": playlist_id,
@@ -196,14 +200,14 @@ def list_uploads(sess, api_key: str, playlist_id: str,
             params["pageToken"] = page_token
         payload, status = get_json(sess, PLAYLIST_URL, params, timeout=30)
         if status != "ok" or not payload or "error" in payload:
+            stop_reason = f"request_failed:{status}"
             break
 
         stop = False
         for item in payload.get("items", []):
             snippet = item.get("snippet") or {}
             details = item.get("contentDetails") or {}
-            published = (details.get("videoPublishedAt")
-                         or snippet.get("publishedAt") or "")[:10]
+            published = business_date(details.get("videoPublishedAt") or snippet.get("publishedAt"))
             if published and published < since:
                 stop = True
                 continue
@@ -215,10 +219,13 @@ def list_uploads(sess, api_key: str, playlist_id: str,
 
         page_token = payload.get("nextPageToken")
         if stop or not page_token:
+            complete = True
+            stop_reason = "date_boundary" if stop else "exhausted"
             break
         polite_sleep(0.5)
 
-    return [v for v in out if v["video_id"]]
+    return {"items": [v for v in out if v["video_id"]], "complete": complete,
+            "stop_reason": stop_reason, "next_page_token": page_token}
 
 
 def discover(sess, api_key: str, since: str, game_filter: str | None,
@@ -230,6 +237,7 @@ def discover(sess, api_key: str, since: str, game_filter: str | None,
 
     new_entries: list[dict] = []
     per_locale: dict[str, int] = {}
+    incomplete = False
 
     for game_id, locales in channels.items():
         if game_filter and game_id != game_filter:
@@ -247,9 +255,13 @@ def discover(sess, api_key: str, since: str, game_filter: str | None,
 
             print(f"\n== {games[game_id]['display_name']} · [{locale}] "
                   f"{entry.get('title')} ==")
-            uploads = list_uploads(sess, api_key, playlist, since)
+            result = list_uploads(sess, api_key, playlist, since)
+            uploads = result["items"]
+            incomplete = incomplete or not result["complete"]
+            if not result["complete"]:
+                print(f"  [partial] 枚举未完成：{result['stop_reason']}，只展示已发现的候选")
             fresh = [u for u in uploads if u["video_id"] not in existing]
-            print(f"  {since} 起共 {len(uploads)} 条投稿，其中 {len(fresh)} 条未登记")
+            print(f"  {since} 起已枚举 {len(uploads)} 条投稿，其中 {len(fresh)} 条未登记")
 
             for video in fresh:
                 kind = guess_content_type(video["title"])
@@ -284,19 +296,19 @@ def discover(sess, api_key: str, since: str, game_filter: str | None,
 
     if not new_entries:
         print("\n没有发现未登记的新视频。")
-        return 0
+        return int(incomplete)
 
     if not append:
         print(f"\n共 {len(new_entries)} 条候选。确认无误后加 --append 写入注册表。")
         print("写入后请人工补 character_name 与 version_id —— 脚本不猜版本归属。")
-        return 0
+        return int(incomplete)
 
     data.setdefault("videos", [])
     data["videos"] = (data["videos"] or []) + new_entries
     save_registry(data)
     print(f"\n已写入 {len(new_entries)} 条到 {REGISTRY.name}。"
           f"请人工补 character_name 与 version_id。")
-    return 0
+    return int(incomplete)
 
 
 def main() -> int:

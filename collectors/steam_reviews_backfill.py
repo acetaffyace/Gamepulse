@@ -28,6 +28,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from collectors.review_checkpoint import ReviewCheckpoint
+from collectors.common import business_date, BUSINESS_TZ, collection_result, atomic_write_text, file_lock
+
 from collectors.common import (  # noqa: E402
     RAW_DIR,
     get_game,
@@ -63,7 +66,7 @@ def review_row(review: dict) -> dict:
 
 
 def fetch_all_reviews(appid: int, max_pages: int | None = None,
-                      sleep: float = 1.0) -> tuple[list[dict], dict]:
+                      sleep: float = 1.0, checkpoint: Path | None = None) -> tuple[list[dict], dict]:
     """按 filter=recent 游标翻页枚举全部评测。
 
     max_pages 为 None 时，先读一次 query_summary 按总评测数推算所需页数
@@ -82,12 +85,13 @@ def fetch_all_reviews(appid: int, max_pages: int | None = None,
               if total else "  无法读取总数，使用默认上限 500 页")
         polite_sleep(0.8)
 
-    cursor = "*"
-    seen_ids: set[str] = set()
-    reviews: list[dict] = []
-    seen_cursors: set[str] = set()
-    total_expected = None
-    pages = 0
+    saved = ReviewCheckpoint(checkpoint, {"appid": appid, "mode": "full", "filter": "recent", "page_size": PAGE_SIZE})
+    cursor = saved.state["cursor"]
+    reviews = saved.rows
+    seen_ids = {r["recommendationid"] for r in reviews}
+    seen_cursors = set(saved.state["seen_cursors"])
+    total_expected = saved.state["total_expected"]
+    pages = saved.state["pages"]
     stop_reason = "max_pages"
 
     while pages < max_pages:
@@ -110,14 +114,17 @@ def fetch_all_reviews(appid: int, max_pages: int | None = None,
             stop_reason = "empty_page"
             break
 
+        page_reviews = []
         new_in_batch = 0
         for r in batch:
             rid = r.get("recommendationid")
-            if rid in seen_ids:
+            if rid is None or rid in seen_ids:
                 continue
             seen_ids.add(rid)
             new_in_batch += 1
-            reviews.append(review_row(r))
+            row = review_row(r)
+            reviews.append(row)
+            page_reviews.append(row)
 
         next_cursor = payload.get("cursor")
         if not next_cursor or next_cursor in seen_cursors:
@@ -125,6 +132,7 @@ def fetch_all_reviews(appid: int, max_pages: int | None = None,
             break
         seen_cursors.add(next_cursor)
         cursor = next_cursor
+        saved.commit(page_reviews, cursor, seen_cursors, pages, total_expected)
 
         if new_in_batch == 0:
             stop_reason = "no_new_reviews"
@@ -142,15 +150,16 @@ def fetch_all_reviews(appid: int, max_pages: int | None = None,
 
 
 def fetch_recent_reviews(appid: int, cutoff: str, sleep: float = 1.0,
-                         max_pages: int = 300) -> tuple[list[dict], dict]:
+                         max_pages: int = 300, checkpoint: Path | None = None) -> tuple[list[dict], dict]:
     """Fetch recent created reviews until the full-backfill overlap is reached."""
     sess = session()
-    cursor = "*"
-    seen_ids: set[str] = set()
-    seen_cursors: set[str] = set()
-    reviews: list[dict] = []
-    expected = None
-    pages = 0
+    saved = ReviewCheckpoint(checkpoint, {"appid": appid, "mode": "recent", "cutoff": cutoff, "page_size": PAGE_SIZE})
+    cursor = saved.state["cursor"]
+    reviews = saved.rows
+    seen_ids = {r["recommendationid"] for r in reviews}
+    seen_cursors = set(saved.state["seen_cursors"])
+    expected = saved.state["total_expected"]
+    pages = saved.state["pages"]
     stop_reason = "max_pages"
     while pages < max_pages:
         payload, status = get_json(sess, REVIEWS_URL.format(appid=appid), {
@@ -167,17 +176,20 @@ def fetch_recent_reviews(appid: int, cutoff: str, sleep: float = 1.0,
         if not batch:
             stop_reason = "empty_page"
             break
+        page_reviews = []
         for row in batch:
             rid = row.get("recommendationid")
             if rid is None or rid in seen_ids:
                 continue
             seen_ids.add(rid)
             timestamp = row.get("timestamp_created")
-            if timestamp and time.strftime("%Y-%m-%d", time.localtime(timestamp)) >= cutoff:
-                reviews.append(review_row(row))
+            if timestamp and business_date(timestamp) >= cutoff:
+                normalized = review_row(row)
+                reviews.append(normalized)
+                page_reviews.append(normalized)
         timestamps = [r.get("timestamp_created") for r in batch]
         if timestamps and all(timestamps) and (
-            time.strftime("%Y-%m-%d", time.localtime(max(timestamps))) < cutoff
+            business_date(max(timestamps)) < cutoff
         ):
             stop_reason = "cutoff_reached"
             break
@@ -187,6 +199,7 @@ def fetch_recent_reviews(appid: int, cutoff: str, sleep: float = 1.0,
             break
         seen_cursors.add(next_cursor)
         cursor = next_cursor
+        saved.commit(page_reviews, cursor, seen_cursors, pages, expected)
         time.sleep(sleep)
     return reviews, {
         "pages": pages, "fetched": len(reviews), "total_expected": expected,
@@ -204,7 +217,7 @@ def aggregate_by_date(reviews: list[dict],
         ts = r.get("timestamp_created")
         if not ts:
             continue
-        date_local = time.strftime("%Y-%m-%d", time.localtime(ts))
+        date_local = business_date(ts)
         slot = daily[date_local]
         slot["new_reviews"] += 1
         if r["voted_up"]:
@@ -269,12 +282,8 @@ def complete_backfill(meta: dict, previous_total: int = 0) -> bool:
 
 def write_review_history(game_id: str, daily: list[dict]) -> None:
     path = series_path(game_id, "review_history")
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(".jsonl.tmp")
-    with tmp.open("w", encoding="utf-8") as fh:
-        for row in daily:
-            fh.write(json.dumps(row, ensure_ascii=False) + "\n")
-    os.replace(tmp, path)
+    with file_lock(path):
+        atomic_write_text(path, "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in daily))
 
 
 def incremental_backfill(game_id: str, appid: int,
@@ -297,8 +306,9 @@ def incremental_backfill(game_id: str, appid: int,
     base_run_id = full.get("collected_at_utc") or full_date
     cutoff = (date.fromisoformat(full_date)
               - timedelta(days=INCREMENTAL_OVERLAP_DAYS)).isoformat()
-    recent, meta = fetch_recent_reviews(appid, cutoff, sleep=sleep)
-    earliest = min(time.strftime("%Y-%m-%d", time.localtime(r["timestamp_created"]))
+    checkpoint = RAW_DIR / "backfill" / "checkpoints" / game_id / "recent.json"
+    recent, meta = fetch_recent_reviews(appid, cutoff, sleep=sleep, checkpoint=checkpoint)
+    earliest = min(business_date(r["timestamp_created"])
                    for r in full_reviews if r.get("timestamp_created"))
     complete = (meta["stop_reason"] == "cutoff_reached" or
                 (meta["stop_reason"] == "empty_page" and earliest >= cutoff))
@@ -341,6 +351,7 @@ def incremental_backfill(game_id: str, appid: int,
         "reviews": list(incremental.values()),
     })
     write_review_history(game_id, daily)
+    ReviewCheckpoint.finish(checkpoint)
     log_collection("steam_reviews_incremental", game_id, today_local(),
                    "backfill", f"pages={meta['pages']};recent={len(recent)}"
                    f";merged={len(merged)};cutoff={cutoff}")
@@ -360,6 +371,18 @@ def main() -> int:
                         help="基于上次完整回填只刷新近期评测；无完整基底时回退全量")
     args = parser.parse_args()
 
+    with file_lock(RAW_DIR / "backfill" / f"{args.game}.operation", timeout=1):
+        try:
+            result = run_backfill(args)
+        except Exception as exc:
+            collection_result("steam_reviews_backfill", args.game, today_local(), 1, 0, type(exc).__name__)
+            raise
+        collection_result("steam_reviews_incremental" if args.incremental else "steam_reviews_backfill",
+                          args.game, today_local(), 1, int(result == 0))
+        return result
+
+
+def run_backfill(args) -> int:
     game = get_game(args.game)
     appid = game.get("steam_app_id")
     if not appid:
@@ -373,10 +396,11 @@ def main() -> int:
         print("尚无完整回填基底，执行全量回填")
 
     print(f"开始回填 {game.get('display_name')} (appid={appid}) 的评测历史…")
-    reviews, meta = fetch_all_reviews(appid, args.max_pages, args.sleep)
+    checkpoint = RAW_DIR / "backfill" / "checkpoints" / args.game / "full.json"
+    reviews, meta = fetch_all_reviews(appid, args.max_pages, args.sleep, checkpoint=checkpoint)
 
     print(f"\n翻页结束：{meta['pages']} 页，采集 {meta['collected']:,} 条，"
-          f"接口声明总数 {meta['total_expected']:,}，停止原因 {meta['stop_reason']}")
+          f"接口声明总数 {format(meta['total_expected'], ',') if meta['total_expected'] is not None else '未知'}，停止原因 {meta['stop_reason']}")
     if meta["total_expected"]:
         ratio = meta["collected"] / meta["total_expected"] * 100
         print(f"覆盖率：{ratio:.1f}%")
@@ -396,6 +420,7 @@ def main() -> int:
                {"meta": meta, "collected_at": today_local(),
                 "collected_at_utc": now_iso(), "reviews": reviews})
     write_review_history(args.game, daily)
+    ReviewCheckpoint.finish(checkpoint)
 
     log_collection("steam_reviews_backfill", args.game, today_local(),
                    "backfill", f"days={len(daily)};reviews={meta['collected']}")

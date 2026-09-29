@@ -31,6 +31,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from collectors.common import business_date, BUSINESS_TZ, collection_result, atomic_write_text, file_lock
+
 from collectors.common import (  # noqa: E402
     UNAVAILABLE,
     get_game,
@@ -70,7 +72,7 @@ def fetch_build(sess, appid: int) -> tuple[dict, dict]:
     updated_iso = None
     updated_date = None
     if updated:
-        dt = datetime.fromtimestamp(int(updated))
+        dt = datetime.fromtimestamp(int(updated), BUSINESS_TZ)
         updated_iso = dt.isoformat(timespec="seconds")
         updated_date = dt.strftime("%Y-%m-%d")
 
@@ -150,14 +152,19 @@ def main() -> int:
     games = [get_game(args.game)] if args.game else [
         g for g in load_games() if g.get("active")]
 
-    ok = 0
+    failures = 0
     for game in games:
-        record = collect_game(game, args.date)
-        if record.get("buildid"):
-            ok += 1
-        polite_sleep(1.0)
+        try:
+            record = collect_game(game, args.date)
+            valid = bool(record.get("buildid"))
+            collection_result("steam_build", game["game_id"], args.date, 1 if game.get("steam_app_id") else 0, int(valid))
+            failures += int(bool(game.get("steam_app_id")) and not valid)
+        except Exception as exc:
+            collection_result("steam_build", game["game_id"], args.date, 1, 0, type(exc).__name__)
+            failures += 1
+        polite_sleep(.8)
 
-    return 0 if ok else 1
+    return int(bool(failures))
 
 
 if __name__ == "__main__":

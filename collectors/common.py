@@ -12,7 +12,11 @@ import json
 import os
 import sys
 import time
-from datetime import datetime, timezone
+import tempfile
+import threading
+import uuid
+from contextlib import contextmanager
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -26,6 +30,10 @@ RAW_DIR = DATA_DIR / "raw"
 SERIES_DIR = DATA_DIR / "series"
 IMPORT_DIR = DATA_DIR / "imports"
 COLLECT_LOG = DATA_DIR / "collect-log.tsv"
+BUSINESS_TZ = timezone(timedelta(hours=8), name="Asia/Shanghai")
+_LOCKS: dict[str, threading.RLock] = {}
+_LOCK_GUARD = threading.Lock()
+_HELD_LOCKS = threading.local()
 
 USER_AGENT = "game-ops-radar/0.1 (public-data dashboard; contact via repo)"
 
@@ -51,7 +59,89 @@ _force_utf8_stdout()
 
 
 def today_local() -> str:
-    return datetime.now().strftime("%Y-%m-%d")
+    return datetime.now(BUSINESS_TZ).date().isoformat()
+
+
+def business_date(value) -> str | None:
+    """UTC timestamps/ISO instants -> one UTC+8 business date, independent of host TZ."""
+    if value is None or value == "":
+        return None
+    if isinstance(value, (int, float)):
+        instant = datetime.fromtimestamp(value, timezone.utc)
+    else:
+        instant = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        if instant.tzinfo is None:
+            instant = instant.replace(tzinfo=BUSINESS_TZ)
+    return instant.astimezone(BUSINESS_TZ).date().isoformat()
+
+
+@contextmanager
+def file_lock(path: Path, timeout: float = 30):
+    """Reentrant thread + process lock covering the complete read/modify/write."""
+    # Windows resolve() may change spelling after a previously absent file is
+    # created (case/8.3 paths). The reentrant key must not change mid-operation.
+    name = os.path.normcase(os.path.abspath(path))
+    with _LOCK_GUARD:
+        lock = _LOCKS.setdefault(name, threading.RLock())
+    if not lock.acquire(timeout=timeout):
+        raise TimeoutError(f"Timed out waiting for {path.name}")
+    held = getattr(_HELD_LOCKS, "paths", set())
+    _HELD_LOCKS.paths = held
+    stream = None
+    try:
+        if name in held:
+            yield
+            return
+        lock_path = path.with_name(path.name + ".lock")
+        lock_path.parent.mkdir(parents=True, exist_ok=True)
+        stream = lock_path.open("a+b")
+        if stream.tell() == 0:
+            stream.write(b"0"); stream.flush()
+        deadline = time.monotonic() + timeout
+        while True:
+            try:
+                stream.seek(0)
+                if os.name == "nt":
+                    import msvcrt
+                    msvcrt.locking(stream.fileno(), msvcrt.LK_NBLCK, 1)
+                else:
+                    import fcntl
+                    fcntl.flock(stream.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except OSError:
+                if time.monotonic() >= deadline:
+                    raise TimeoutError(f"Timed out waiting for {path.name}")
+                time.sleep(.025)
+        held.add(name)
+        try:
+            yield
+        finally:
+            held.remove(name)
+            stream.seek(0)
+            if os.name == "nt":
+                import msvcrt
+                msvcrt.locking(stream.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                import fcntl
+                fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
+    finally:
+        if stream is not None:
+            stream.close()
+        lock.release()
+
+
+def atomic_write_text(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent,
+                                         prefix=path.name + ".", suffix=".tmp", delete=False) as fh:
+            tmp = Path(fh.name)
+            fh.write(text); fh.flush(); os.fsync(fh.fileno())
+        os.replace(tmp, path)
+    finally:
+        if tmp is not None:
+            tmp.unlink(missing_ok=True)
 
 
 def now_iso() -> str:
@@ -279,9 +369,24 @@ def get_json(sess: requests.Session, url: str, params: dict | None = None,
         except requests.RequestException as exc:
             return None, f"request_error:{type(exc).__name__}"
         if resp.status_code != 200:
-            return None, f"http_{resp.status_code}"
+            reason = f"http_{resp.status_code}"
+            try:
+                error = resp.json().get("error", {})
+                codes = [x.get("reason") for x in error.get("errors", []) if isinstance(x, dict)] if isinstance(error, dict) else []
+                reason += ":" + ",".join(str(c) for c in codes if c) if any(codes) else ""
+            except (ValueError, AttributeError, TypeError):
+                pass
+            if resp.status_code in (429, 500, 502, 503, 504) and attempt + 1 < attempts:
+                try:
+                    delay = float(resp.headers.get("Retry-After", backoff * (attempt + 1)))
+                except (ValueError, TypeError):
+                    delay = backoff * (attempt + 1)
+                time.sleep(max(0, min(delay, 60)))
+                continue
+            return None, reason
         try:
-            return resp.json(), "ok"
+            payload = resp.json()
+            return (payload, "ok") if isinstance(payload, dict) else (None, "invalid_json_shape")
         except ValueError:
             # 风控页通常是 HTML，不是 JSON
             return None, "non_json_response"
@@ -290,15 +395,13 @@ def get_json(sess: requests.Session, url: str, params: dict | None = None,
 
 def write_json(path: Path, payload: dict) -> None:
     """原子写：先写临时文件再替换，避免中断留下半个文件。"""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    with tmp.open("w", encoding="utf-8") as fh:
-        json.dump(payload, fh, ensure_ascii=False, indent=2)
-    os.replace(tmp, path)
+    atomic_write_text(path, json.dumps(payload, ensure_ascii=False, indent=2))
 
 
 def save_raw(source: str, game_id: str, date_local: str, payload: dict) -> Path:
     path = RAW_DIR / date_local / f"{source}_{game_id}.json"
+    archive = RAW_DIR / date_local / "attempts" / f"{source}_{game_id}_{uuid.uuid4().hex}.json"
+    write_json(archive, {"attempted_at": now_iso(), "payload": payload})
     write_json(path, payload)
     return path
 
@@ -320,61 +423,105 @@ def read_series(game_id: str, source: str) -> list[dict]:
     return records
 
 
+def retain_observation(existing: dict, incoming: dict) -> dict:
+    """Keep earlier valid values only within the SAME logical sampling period."""
+    attempted = incoming.get("sampled_at") or incoming.get("collected_at") or now_iso()
+    note = incoming.get("note", "")
+    invalid_identity = incoming.get("identity_verified") is False or any(
+        token in note for token in ("owner_mismatch", "channel_not_official", "locale_mismatch"))
+    if invalid_identity:
+        return {**incoming, "identity_verified": False}
+    old_valid = (existing.get("status") or existing.get("build_status")) in (OBSERVED, "third_party")
+    failed = (incoming.get("status") or incoming.get("build_status")) in (UNAVAILABLE, "failed", "error")
+    if old_valid and failed:
+        return {**existing, "retained_observation": True,
+                "observed_at": existing.get("observed_at") or existing.get("sampled_at") or existing.get("date_local"),
+                "last_attempt": {"at": attempted, "status": "failed", "note": note}}
+    # A successful response may deliberately hide an individual counter. Do
+    # not combine an earlier like/comment count with a newly measured view.
+    if incoming.get("status") in (OBSERVED, "third_party"):
+        return dict(incoming)
+    result = dict(incoming)
+    retained = []
+    groups = {"current_players": "current_players_status",
+              "total_reviews": "reviews_status", "total_positive": "reviews_status", "total_negative": "reviews_status",
+              "price_final": "price_status", "price_initial": "price_status", "discount_percent": "price_status",
+              "buildid": "build_status", "build_updated_at": "build_status", "build_updated_date": "build_status"}
+    for key, value in existing.items():
+        if key in incoming and incoming[key] is None and value is not None and incoming.get(groups.get(key)) == UNAVAILABLE:
+            result[key] = value
+            retained.append(key)
+    if existing.get("items") and incoming.get("status") == UNAVAILABLE:
+        result["items"] = existing["items"]
+        retained.append("items")
+    if retained:
+        result["retained_fields"] = retained
+        result["retained_observed_at"] = existing.get("observed_at") or existing.get("sampled_at") or existing.get("date_local")
+        result["last_attempt"] = {"at": attempted, "status": "partial", "note": note}
+    return result
+
+
+def _merge_record(existing: dict, incoming: dict) -> dict:
+    result = retain_observation(existing, incoming)
+    if "videos" in incoming:
+        id_key = "bvid" if any("bvid" in v for v in incoming["videos"]) else "video_id"
+        old = {v.get(id_key): {**v, "observed_at": v.get("observed_at") or existing.get("sampled_at") or existing.get("date_local")} for v in existing.get("videos", [])}
+        result["videos"] = [retain_observation(old.get(v.get(id_key), {}), v)
+                            for v in incoming["videos"]]
+    return result
+
+
 def upsert_series_keyed(game_id: str, source: str, record: dict,
                         keys: tuple[str, ...] = ("date_local",)) -> str:
-    """按 keys 组成的逻辑主键幂等写入。返回 'insert' 或 'update'。
-
-    日粒度序列用默认的 date_local；小时级采样需要 (date_local, hour_local)，
-    否则同一天的 24 个采样点会互相覆盖，只剩最后一个。
-    """
+    record = {"sampled_at": now_iso(), **record}
+    if "videos" in record:
+        record["videos"] = [{"observed_at": record["sampled_at"], **v} for v in record["videos"]]
     path = series_path(game_id, source)
-    records = read_series(game_id, source)
-
-    def key_of(rec: dict) -> tuple:
-        return tuple(rec.get(k) for k in keys)
-
-    target = key_of(record)
-    action = "insert"
-    for idx, existing in enumerate(records):
-        if key_of(existing) == target:
-            records[idx] = record
-            action = "update"
-            break
-    else:
-        records.append(record)
-    records.sort(key=key_of)
-
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(".jsonl.tmp")
-    with tmp.open("w", encoding="utf-8") as fh:
-        for rec in records:
-            fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
-    os.replace(tmp, path)
-    return action
+    with file_lock(path):
+        records = read_series(game_id, source)
+        key_of = lambda row: tuple(row.get(k) for k in keys)
+        target = key_of(record)
+        if any(value is None for value in target):
+            raise ValueError(f"Missing series key: {keys}")
+        action = "insert"
+        for idx, existing in enumerate(records):
+            if key_of(existing) == target:
+                records[idx] = _merge_record(existing, record)
+                action = "update"
+                break
+        else:
+            records.append(record)
+        records.sort(key=key_of)
+        atomic_write_text(path, "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in records))
+        return action
 
 
 def upsert_series(game_id: str, source: str, record: dict) -> str:
-    """按 date_local 幂等写入。返回 'insert' 或 'update'。"""
     return upsert_series_keyed(game_id, source, record, keys=("date_local",))
 
 
 def upsert_video_subset_series(game_id: str, source: str, record: dict,
                                id_key: str) -> str:
-    """Merge a curated video refresh into today's row without dropping other IDs."""
-    existing = next((r for r in read_series(game_id, source)
-                     if r.get("date_local") == record.get("date_local")), None)
-    if existing:
-        merged = list(existing.get("videos") or [])
-        positions = {v.get(id_key): i for i, v in enumerate(merged)}
-        for video in record.get("videos") or []:
-            key = video.get(id_key)
-            if key in positions:
-                merged[positions[key]] = video
-            else:
-                positions[key] = len(merged)
-                merged.append(video)
-        record = {**record, "videos": merged}
-    return upsert_series(game_id, source, record)
+    with file_lock(series_path(game_id, source)):
+        existing = next((r for r in read_series(game_id, source)
+                         if r.get("date_local") == record.get("date_local")), None)
+        if existing:
+            merged = {v[id_key]: {**v, "observed_at": v.get("observed_at") or existing.get("sampled_at") or existing.get("date_local")} for v in existing.get("videos", [])}
+            for video in record.get("videos", []):
+                key = video[id_key]
+                merged[key] = retain_observation(merged.get(key, {}), video)
+            record = {**record, "videos": list(merged.values())}
+        return upsert_series(game_id, source, record)
+
+
+def collection_result(source: str, game_id: str, date_local: str,
+                      expected: int, succeeded: int, detail: str = "") -> dict:
+    status = "disabled" if detail == "not_configured" else "skipped" if not expected else "success" if succeeded == expected else "partial" if succeeded else "failed"
+    result = {"date_local": date_local, "source": source, "game_id": game_id,
+              "attempted_at": now_iso(), "status": status, "expected": expected,
+              "succeeded": succeeded, "detail": detail}
+    upsert_series_keyed(game_id, "collection_attempts", result, ("date_local", "source"))
+    return result
 
 
 def log_collection(source: str, game_id: str, date_local: str,

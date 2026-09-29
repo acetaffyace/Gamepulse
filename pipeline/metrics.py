@@ -26,11 +26,11 @@ YT_STATS = ("view", "like", "comment")
 
 # 互动率的分子构成，按平台分别定义。
 # B 站：投币成本最高（要消耗硬币），三项合计即「三连」。
-# YouTube：只有点赞一项可用，因此它的 engagement 与 B 站的不可直接比较 ——
+# YouTube：点赞与评论，因此它的 engagement 与 B 站的不可直接比较 ——
 #          分子构成不同，跨平台比的是各自的时间趋势，不是绝对高低。
 INTERACTION_NUMERATORS = {
     "bilibili": ("like", "coin", "favorite"),
-    "youtube": ("like",),
+    "youtube": ("like", "comment"),
 }
 
 
@@ -327,6 +327,8 @@ def video_series(records: list[dict], platform: str = "bilibili",
 
     for rec in sorted(records, key=lambda r: r["date_local"]):
         for v in rec.get("videos", []):
+            if v.get("identity_verified") is False or any(t in v.get("note", "") for t in ("owner_mismatch", "channel_not_official", "locale_mismatch")):
+                continue
             bvid = v[id_key]
             slot = by_video.setdefault(bvid, {
                 id_key: bvid,
@@ -345,6 +347,9 @@ def video_series(records: list[dict], platform: str = "bilibili",
                 "pubdate": v.get("pubdate"),
                 "points": [],
             })
+            for field in ("title", "owner_mid", "channel_id", "locale", "character_id", "character_name", "content_type"):
+                if v.get(field) is not None:
+                    slot[field] = v[field]
             # pubdate 以采集到的最新值为准（登记表可能填错，接口是事实）
             if v.get("pubdate"):
                 slot["pubdate"] = v["pubdate"]
@@ -424,6 +429,7 @@ def video_totals(videos: dict[str, dict], platform: str = "bilibili") -> dict:
     stats_keys = BILI_STATS if platform == "bilibili" else YT_STATS
     totals = {k: 0 for k in stats_keys}
     counted = 0
+    coverage = {k: 0 for k in stats_keys}
     for slot in videos.values():
         latest = slot.get("latest")
         if not latest:
@@ -433,9 +439,11 @@ def video_totals(videos: dict[str, dict], platform: str = "bilibili") -> dict:
             value = latest["stats"].get(key)
             if value is not None:
                 totals[key] += value
+                coverage[key] += 1
     if not counted:
         return {"videos": 0, "totals": None, "rates": None}
-    return {"videos": counted, "totals": totals,
+    totals = {k: v if coverage[k] == counted else None for k, v in totals.items()}
+    return {"videos": counted, "coverage": coverage, "totals": totals,
             "rates": interaction_rates(totals, platform)}
 
 

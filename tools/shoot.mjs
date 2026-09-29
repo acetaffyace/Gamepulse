@@ -43,6 +43,11 @@ async function shoot(browser, preset, label, subjectKeys = subjectsArg,
   await page.waitForSelector('#app:not(.hidden)', { timeout: 15000 });
 
   if (preset) {
+    const explore = page.locator('.studio-nav [data-page-nav="explore"]');
+    if (await explore.count()) {
+      await explore.click();
+      await page.click('#demoFilters');
+    }
     await page.selectOption('#presetSelect', preset);
     await page.waitForTimeout(700);
   }

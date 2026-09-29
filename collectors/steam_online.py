@@ -32,6 +32,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from collectors.common import business_date, BUSINESS_TZ, collection_result, atomic_write_text, file_lock
+
 from collectors.common import (  # noqa: E402
     OBSERVED,
     UNAVAILABLE,
@@ -54,7 +56,7 @@ def sample_game(sess, game: dict) -> dict | None:
     if not appid:
         return None
 
-    now = datetime.now()
+    now = datetime.now(BUSINESS_TZ)
     date_local = now.strftime("%Y-%m-%d")
     hour_local = now.hour
 
@@ -98,12 +100,17 @@ def main() -> int:
     sess = session()
     failures = 0
     for game in games:
-        record = sample_game(sess, game)
-        if record is None or record["status"] != OBSERVED:
+        try:
+            record = sample_game(sess, game)
+            valid = bool(record and record.get("status") == OBSERVED)
+            collection_result("steam_online", game["game_id"], datetime.now(BUSINESS_TZ).date().isoformat(), 1 if game.get("steam_app_id") else 0, int(valid))
+            failures += int(bool(game.get("steam_app_id")) and not valid)
+        except Exception as exc:
+            collection_result("steam_online", game["game_id"], datetime.now(BUSINESS_TZ).date().isoformat(), 1, 0, type(exc).__name__)
             failures += 1
-        polite_sleep(0.8)
+        polite_sleep(.8)
 
-    return 1 if failures == len(games) else 0
+    return 1 if failures else 0
 
 
 if __name__ == "__main__":

@@ -21,13 +21,13 @@
 | 可配置看板 | 指标轨道由 YAML 定义，页面可调整轨道和预设，并导出 CSV、PNG 或视图链接 |
 | 数据质量 | 区分直接观测、回填重建和第三方数据；缺失值保留为空，并提示覆盖范围 |
 
-<a href="dashboard/shots/video_facets.png"><img src="dashboard/shots/video_facets.png" alt="GamePulse 视频分面对比与同内容联动" width="720"></a>
+<a href="dashboard/shots/studio-overview.png"><img src="dashboard/shots/studio-overview.png" alt="GamePulse 正式工作台总览" width="720"></a>
 
-[查看版本对比截图](dashboard/shots/compare_versions.png) · [查看玩家结构截图](dashboard/shots/player_profile.png) · [技术与数据口径](docs/technical-notes.md)
+[查看版本对比截图](dashboard/shots/studio-versions.png) · [查看玩家结构截图](dashboard/shots/player_profile.png) · [技术与数据口径](docs/technical-notes.md)
 
-新版视频区：[分面截图](dashboard/shots/video_facets.png) · [操作与比较口径](docs/dashboard-video-comparison.md)。Pulse 专注于图表观察和对比，详细说明按需展开。
+正式工作台：[总览](dashboard/index.html?page=overview) · [版本对比](dashboard/index.html?page=versions) · [视频传播](dashboard/index.html?page=videos) · [数据来源](dashboard/index.html?page=sources)。[改造与验收记录](docs/production-upgrade-2026-09-29.md)。
 
-**技术实现：** Python 采集与快照构建；原始时间序列存为 JSONL，页面读取 JSON 快照；前端为原生 JavaScript + ECharts 的静态页面。看板配置会在构建时校验，自动化测试覆盖关键指标与回填逻辑。
+**技术实现：** Python 采集与快照构建；原始时间序列存为 JSONL，页面读取 JSON 快照；前端为原生 JavaScript + ECharts 的静态工作台；整批快照和配置校验通过后，通过原子切换索引发布。看板配置会在构建时校验，自动化测试覆盖关键指标与回填逻辑。
 
 ## 本地查看
 
@@ -56,3 +56,15 @@ YouTube 采集需要自行设置 `YOUTUBE_API_KEY`；不设置时仍可查看仓
 - 历史在线数据包含手工导入的第三方 SteamDB 日点；来源在看板中标注。
 
 详细口径、采集链路、已知限制和维护命令见[技术说明](docs/technical-notes.md)。这是独立研究项目，不代表相关平台或游戏公司。
+
+## 验证当前版本
+
+```powershell
+python -m unittest discover -s tests -q
+npm test
+npm run test:studio
+npm run test:browser
+python tools/verify_release.py
+```
+
+`test:studio` 检查正式工作台，`test:browser` 检查经典视图。`pipeline/build_snapshot.py` 同时校验配置并发布完整批次；`--game` 只重建指定游戏，保留其他目录项。经典完整视图仍可从侧栏进入。

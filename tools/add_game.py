@@ -38,6 +38,8 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from collectors.common import file_lock, atomic_write_text
+
 from collectors.common import (  # noqa: E402
     CONFIG_DIR,
     get_json,
@@ -65,19 +67,20 @@ def edit_yaml(name: str, mutate) -> None:
     下一个人（包括三个月后的自己）就不知道为什么不能用搜索接口了。
     """
     path = CONFIG_DIR / name
-    original = path.read_text(encoding="utf-8")
-    data = yaml.safe_load(original) or {}
+    with file_lock(path):
+        original = path.read_text(encoding="utf-8")
+        data = yaml.safe_load(original) or {}
 
-    header = []
-    for line in original.splitlines():
-        if line.startswith("#") or not line.strip():
-            header.append(line)
-        else:
-            break
+        header = []
+        for line in original.splitlines():
+            if line.startswith("#") or not line.strip():
+                header.append(line)
+            else:
+                break
 
-    mutate(data)
-    body = yaml.dump(data, allow_unicode=True, sort_keys=False, width=100)
-    path.write_text("\n".join(header) + "\n" + body, encoding="utf-8")
+        mutate(data)
+        body = yaml.dump(data, allow_unicode=True, sort_keys=False, width=100)
+        atomic_write_text(path, "\n".join(header) + "\n" + body)
 
 
 def search_steam(term: str) -> int:
@@ -201,14 +204,14 @@ def add_bili(url_or_bvid: str, game_id: str) -> int:
     return 0
 
 
-def add_youtube(handle: str, game_id: str) -> int:
+def add_youtube(handle: str, game_id: str, locale: str = "global") -> int:
     from collectors.common import youtube_api_key
     api_key = youtube_api_key()
     if not api_key:
         # 没 Key 也先把 handle 记下来，等配置好 Key 再 --resolve
         def mutate(data):
             channels = data.setdefault("official_channels", {})
-            channels[game_id] = {"handle": handle, "channel_id": None,
+            channels.setdefault(game_id, {})[locale] = {"handle": handle, "channel_id": None,
                                  "title": None, "resolved_at": None}
         edit_yaml("youtube_videos.yml", mutate)
         print(f"未设置 YOUTUBE_API_KEY，已先记下 handle {handle}（未核验）。")
@@ -231,7 +234,7 @@ def add_youtube(handle: str, game_id: str) -> int:
 
     def mutate(data):
         channels = data.setdefault("official_channels", {})
-        channels[game_id] = {
+        channels.setdefault(game_id, {})[locale] = {
             "handle": handle, "channel_id": item["id"],
             "title": snippet.get("title"),
             "uploads_playlist": ((item.get("contentDetails") or {})
@@ -257,6 +260,7 @@ def main() -> int:
     parser.add_argument("--developer")
     parser.add_argument("--bili-from", help="一条官方 B 站视频的链接或 BV 号")
     parser.add_argument("--yt-handle", help="YouTube 频道 handle，形如 @Name")
+    parser.add_argument("--locale", choices=["global", "ja", "ko", "zh-tw"], default="global")
     args = parser.parse_args()
 
     if args.search:
@@ -272,7 +276,7 @@ def main() -> int:
     if args.yt_handle:
         if not args.game_id:
             parser.error("--yt-handle 需要 --game-id")
-        return add_youtube(args.yt_handle, args.game_id)
+        return add_youtube(args.yt_handle, args.game_id, args.locale)
 
     parser.print_help()
     return 1

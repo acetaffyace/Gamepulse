@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>GamePulse · 游戏长线运营情报雷达</title>
+<title>GamePulse · 游戏运营工作台</title>
 <script src="vendor/echarts-5.5.0.min.js"></script>
 <link rel="stylesheet" href="video-dashboard.css">
 <style>
@@ -432,8 +432,9 @@
     .legend { gap: 8px 12px; }
   }
 </style>
+<link rel="stylesheet" href="studio.css">
 </head>
-<body class="viz-root">
+<body class="viz-root" data-page="overview" data-view-storage="gamepulse.studio.v1">
 <div class="shell">
 
   <header>
@@ -660,5 +661,7 @@
 <script src="engine.js?v=20260929"></script>
 <script src="video-dashboard.js?v=20260929"></script>
 <script src="app.js?v=20260929"></script>
+<script src="studio.js"></script>
+<script src="studio-details.js"></script>
 </body>
 </html>

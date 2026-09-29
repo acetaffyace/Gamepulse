@@ -25,7 +25,7 @@ const root = path.resolve(__dirname, '..');
     page.on('pageerror', error => errors.push(error.message));
     // The entire dashboard must render without third-party scripts or network access.
     await page.route('**/*', route => new URL(route.request().url()).hostname === '127.0.0.1' ? route.continue() : route.abort());
-    const base = `http://127.0.0.1:${server.address().port}/dashboard/index.html`;
+    const base = `http://127.0.0.1:${server.address().port}/dashboard/legacy.html`;
     await page.goto(base, { waitUntil: 'networkidle' });
     await page.waitForSelector('#app:not(.hidden)');
     assert.equal(await page.locator('.video-dashboard').count(), 1);

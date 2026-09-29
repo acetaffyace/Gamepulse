@@ -17,6 +17,49 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 MIN_TREND_DAYS = 30  # 低于此天数不宜做趋势复盘
 
 
+def source_health(records_by_source: dict[str, list[dict]], profile: dict | None,
+                  today: str, attempts: list[dict] | None = None) -> dict:
+    """Build time is not observation time. Expose the latest attempt AND usable data."""
+    result = {}
+    latest_attempts = {}
+    for row in sorted(attempts or [], key=lambda r: r.get("attempted_at", "")):
+        latest_attempts[row["source"]] = row
+    for source, rows in records_by_source.items():
+        ordered = sorted(rows, key=lambda r: (r.get("date_local", ""), r.get("hour_local", 0)))
+        last = ordered[-1] if ordered else {}
+        def counts(row):
+            if source in ("bilibili", "youtube"):
+                videos = row.get("videos", [])
+                return len(videos), sum(v.get("view") is not None and v.get("identity_verified") is not False
+                    and not any(t in v.get("note", "") for t in ("owner_mismatch", "channel_not_official", "locale_mismatch")) for v in videos)
+            fields = {"steam": ("total_reviews", "current_players"), "steam_online": ("players",), "steam_build": ("buildid",)}[source]
+            return len(fields), sum(row.get(field) is not None for field in fields)
+        expected, success = counts(last) if last else (0, 0)
+        through = max((r["date_local"] for r in ordered if counts(r)[1]), default=None)
+        attempt = latest_attempts.get(source)
+        failed_retained = last.get("last_attempt", {}).get("status") in ("failed", "partial") or any(
+            v.get("last_attempt", {}).get("status") in ("failed", "partial") for v in last.get("videos", []))
+        if attempt and attempt.get("date_local", "") >= last.get("date_local", ""):
+            expected, success = attempt.get("expected", 0), attempt.get("succeeded", 0)
+        age = (_parse(today) - _parse(through)).days if through else None
+        status = "skipped" if not expected else "failed" if not success else "partial" if success < expected or failed_retained else "stale" if age is not None and age >= 2 else "healthy"
+        if attempt and attempt.get("status") == "disabled":
+            status = "disabled"
+        result[source] = {"status": status, "last_attempt_at": (attempt or {}).get("attempted_at") or last.get("sampled_at") or last.get("date_local"),
+                          "data_through": through, "last_success_at": through,
+                          "expected": expected, "succeeded": success, "age_days": age}
+    if profile:
+        through = profile.get("collected_at")
+        age = (_parse(today) - _parse(through[:10])).days if through else None
+        attempt = latest_attempts.get("steam_reviews_backfill") or {}
+        failed = attempt.get("status") == "failed" and attempt.get("date_local", "") >= (through or "")
+        result["review_profile"] = {"status": "failed" if failed else "stale" if age is None or age >= 8 else "healthy",
+                                     "data_through": through, "last_success_at": through,
+                                     "last_attempt_at": attempt.get("attempted_at") or through, "age_days": age,
+                                     "schedule": "weekly", "expected": None, "succeeded": profile.get("total_reviews")}
+    return result
+
+
 def _parse(d: str):
     return datetime.strptime(d, "%Y-%m-%d").date()
 

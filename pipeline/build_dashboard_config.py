@@ -206,79 +206,18 @@ def main() -> int:
                         help="任一游戏上取不到值即失败（默认：全部游戏都取不到才失败）")
     args = parser.parse_args()
 
-    config = load_yaml("dashboard.yml")
-    lanes = config.get("lanes") or []
-    if not lanes:
-        print("dashboard.yml 里没有定义任何 lane")
-        return 1
-
-    ids = [lane["id"] for lane in lanes]
-    duplicates = {i for i in ids if ids.count(i) > 1}
-    if duplicates:
-        print(f"轨道 id 重复：{', '.join(sorted(duplicates))}")
-        return 1
-
-    # 预设里引用的轨道必须真实存在，否则切换预设会得到空白页面
-    for name, preset in (config.get("presets") or {}).items():
-        unknown = [i for i in preset.get("lanes", []) if i not in ids]
-        if unknown:
-            print(f"预设 «{name}» 引用了不存在的轨道：{', '.join(unknown)}")
+    from collectors.common import file_lock
+    from pipeline.publication import load_published, compile_config, publish
+    with file_lock(DATA_DIR / "publication", timeout=120):
+        index, snapshots = load_published(DATA_DIR)
+        try:
+            compiled = compile_config(snapshots, strict=args.strict)
+        except ValueError as exc:
+            print(f"配置校验失败，保留上一批次：{exc}")
             return 1
+        publish(DATA_DIR, index["games"], snapshots, compiled)
+        print(f"已校验并发布 {len(compiled['lanes'])} 条轨道的配置")
 
-    snapshots: dict[str, dict] = {}
-    for game in load_games():
-        if not game.get("active"):
-            continue
-        path = DATA_DIR / f"snapshot_{game['game_id']}.json"
-        if path.exists():
-            with path.open("r", encoding="utf-8") as fh:
-                snapshots[game["game_id"]] = json.load(fh)
-
-    if not snapshots:
-        print("没有任何快照可供校验，请先运行 pipeline/build_snapshot.py")
-        return 1
-
-    failed = False
-    for lane in lanes:
-        per_game = {gid: verify_lane(lane, snap) for gid, snap in snapshots.items()}
-        bad = {gid: p for gid, p in per_game.items() if p}
-        if not bad:
-            continue
-        # 默认只有「在所有游戏上都取不到」才算配置错误：
-        # 某个游戏缺某类数据是正常的（例如还没接 YouTube）。
-        fatal = args.strict or len(bad) == len(snapshots)
-        level = "错误" if fatal else "提示"
-        for gid, problems in bad.items():
-            for problem in problems:
-                print(f"[{level}] 轨道 {lane['id']} @ {gid}: {problem}")
-        failed = failed or fatal
-
-    if failed:
-        print("\n轨道配置校验失败，未写出 dashboard_config.json")
-        return 1
-
-    out = {
-        "palette": config.get("palette") or {},
-        "share_ramp": config.get("share_ramp") or [],
-        "share_other": config.get("share_other"),
-        "important_video_types": config.get("important_video_types") or [],
-        "lanes": lanes,
-        "presets": config.get("presets") or {},
-        "adapters": sorted(ADAPTER_SHAPES),
-    }
-    write_json(DATA_DIR / "dashboard_config.json", out)
-    index_path = DATA_DIR / "index.json"
-    if index_path.exists():
-        with index_path.open("r", encoding="utf-8") as fh:
-            index = json.load(fh)
-        index["build_id"] = now_iso()
-        write_json(index_path, index)
-
-    enabled = [lane["id"] for lane in lanes if lane.get("enabled")]
-    print(f"已生成 dashboard_config.json："
-          f"{len(lanes)} 条轨道（默认开启 {len(enabled)} 条），"
-          f"{len(config.get('presets') or {})} 个预设")
-    print(f"  校验通过的游戏：{', '.join(snapshots)}")
     return 0
 
 

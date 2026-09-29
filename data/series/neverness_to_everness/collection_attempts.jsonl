@@ -1,0 +1,4 @@
+{"sampled_at": "2026-09-29T05:26:08+00:00", "date_local": "2026-09-29", "source": "bilibili", "game_id": "neverness_to_everness", "attempted_at": "2026-09-29T05:26:08+00:00", "status": "success", "expected": 17, "succeeded": 17, "detail": ""}
+{"sampled_at": "2026-09-29T05:24:45+00:00", "date_local": "2026-09-29", "source": "steam", "game_id": "neverness_to_everness", "attempted_at": "2026-09-29T05:24:45+00:00", "status": "success", "expected": 2, "succeeded": 2, "detail": ""}
+{"sampled_at": "2026-09-29T05:25:12+00:00", "date_local": "2026-09-29", "source": "steam_build", "game_id": "neverness_to_everness", "attempted_at": "2026-09-29T05:25:12+00:00", "status": "success", "expected": 1, "succeeded": 1, "detail": ""}
+{"sampled_at": "2026-09-29T06:05:10+00:00", "date_local": "2026-09-29", "source": "steam_online", "game_id": "neverness_to_everness", "attempted_at": "2026-09-29T06:05:10+00:00", "status": "success", "expected": 1, "succeeded": 1, "detail": ""}

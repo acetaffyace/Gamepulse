@@ -46,6 +46,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from collectors.common import business_date, BUSINESS_TZ, collection_result, atomic_write_text, file_lock
+
 from collectors.common import (  # noqa: E402
     OBSERVED,
     UNAVAILABLE,
@@ -120,7 +122,8 @@ def fetch_batch(sess, api_key: str, video_ids: list[str]) -> tuple[dict, dict]:
             "title": snippet.get("title"),
             "channel_id": snippet.get("channelId"),
             "channel_title": snippet.get("channelTitle"),
-            "pubdate": (snippet.get("publishedAt") or "")[:10] or None,
+            "pubdate": business_date(snippet.get("publishedAt")),
+            "published_at": snippet.get("publishedAt"),
             "view": _int_or_none(stats.get("viewCount")),
             "like": _int_or_none(stats.get("likeCount")),
             "comment": _int_or_none(stats.get("commentCount")),
@@ -181,6 +184,7 @@ def collect_game(game_id: str, api_key: str, date_local: str,
                 measured["note"] = (f"locale_mismatch:got={actual_locale},"
                                     f"declared={declared}")
 
+            measured["identity_verified"] = not any(t in measured.get("note", "") for t in ("channel_not_official", "locale_mismatch"))
             measured.update({
                 # 以登记值为准，缺失时用接口反查出的语区兜底 ——
                 # 留空会让这条视频在按语区分组时掉出所有分组，静默消失。
@@ -207,7 +211,7 @@ def collect_game(game_id: str, api_key: str, date_local: str,
     action = (upsert_video_subset_series(game_id, "youtube", record, "video_id")
               if curated_only else upsert_series(game_id, "youtube", record))
 
-    ok = sum(1 for r in results if r["status"] == OBSERVED)
+    ok = sum(1 for r in results if r["status"] == OBSERVED and r.get("identity_verified") is not False and r.get("view") is not None)
     units = (len(ids) + BATCH_SIZE - 1) // BATCH_SIZE
 
     # 按语区分别计数。合计数字掩盖不了的问题它掩盖得了：某个语区整体采空
@@ -246,15 +250,26 @@ def main() -> int:
     api_key = youtube_api_key()
     if not api_key:
         print(KEY_HELP)
+        for gid in ([args.game] if args.game else [g["game_id"] for g in load_games() if g.get("active")]):
+            collection_result("youtube", gid, args.date, 0, 0, "not_configured")
         return 0  # 可选数据源缺失不应让每日链路失败
 
     game_ids = [args.game] if args.game else [
         g["game_id"] for g in load_games() if g.get("active")]
 
+    failed = False
     for game_id in game_ids:
-        collect_game(game_id, api_key, args.date,
-                     curated_only=not args.all_registered)
-    return 0
+        try:
+            record = collect_game(game_id, api_key, args.date, curated_only=not args.all_registered)
+            videos = record.get("videos", [])
+            ok = sum(v.get("status") == OBSERVED and v.get("view") is not None and v.get("identity_verified") is not False for v in videos)
+            result = collection_result("youtube", game_id, args.date, len(videos), ok)
+            failed = failed or result["status"] in ("partial", "failed")
+        except Exception as exc:
+            collection_result("youtube", game_id, args.date, 1, 0, type(exc).__name__)
+            print(f"[failed] {game_id}: {type(exc).__name__}")
+            failed = True
+    return int(failed)
 
 
 if __name__ == "__main__":

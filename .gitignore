@@ -20,3 +20,8 @@ data/raw/20*/
 data/logs/
 dashboard/shots/_*.png
 node_modules/
+
+# Cross-process locks and recovery backups
+*.lock
+*.bak
+data/index.previous.json

@@ -19,6 +19,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from collectors.common import business_date, BUSINESS_TZ, collection_result, atomic_write_text, file_lock
+
 from collectors.common import (  # noqa: E402
     OBSERVED,
     UNAVAILABLE,
@@ -164,7 +166,7 @@ def fetch_news(sess, appid: int, count: int = 50) -> tuple[list[dict], dict]:
             # CGMagazine、GamingOnLinux 等外部条目，它们的标题同样含版本号，
             # 若不过滤会生成错误的版本事件。
             "feedname": item.get("feedname"),
-            "date_local": time.strftime("%Y-%m-%d", time.localtime(item.get("date", 0))),
+            "date_local": business_date(item.get("date")),
             "timestamp": item.get("date"),
         })
     return news, payload
@@ -198,6 +200,7 @@ def collect_game(game: dict, date_local: str) -> dict:
     news, raw_news = fetch_news(sess, appid)
     record["news_count"] = len(news)
     record["news_status"] = OBSERVED if news else UNAVAILABLE
+    record["attempt_fields"] = {k: record.get(k) for k in ("reviews_status", "current_players_status")}
 
     existing = next((r for r in read_series(game_id, "steam")
                      if r.get("date_local") == date_local), None)
@@ -209,7 +212,7 @@ def collect_game(game: dict, date_local: str) -> dict:
     })
 
     action = upsert_series(game_id, "steam", record)
-    upsert_series(game_id, "steam_news", {"date_local": date_local, "items": news})
+    upsert_series(game_id, "steam_news", {"date_local": date_local, "items": news, "status": OBSERVED if isinstance(raw_news, dict) and "appnews" in raw_news else UNAVAILABLE})
 
     ok_fields = sum(1 for k in ("current_players_status", "reviews_status", "price_status")
                     if record.get(k) == OBSERVED)
@@ -247,11 +250,19 @@ def main() -> int:
 
     failed_reviews = []
     for game in games:
-        record = collect_game(game, args.date)
-        if game.get("steam_app_id") and record.get("reviews_status") != OBSERVED:
+        try:
+            record = collect_game(game, args.date)
+            measured = record.get("attempt_fields", record)
+            expected = 2 if game.get("steam_app_id") else 0
+            ok = sum(measured.get(k) == OBSERVED for k in ("reviews_status", "current_players_status"))
+            result = collection_result("steam", game["game_id"], args.date, expected, ok)
+            if result["status"] in ("failed", "partial"):
+                failed_reviews.append(game["game_id"])
+        except Exception as exc:
+            collection_result("steam", game["game_id"], args.date, 2, 0, type(exc).__name__)
             failed_reviews.append(game["game_id"])
     if failed_reviews:
-        print("评测汇总采集失败，等待评测回填任务恢复："
+        print("Steam 核心字段采集不完整："
               + ", ".join(failed_reviews))
         return 1
     return 0

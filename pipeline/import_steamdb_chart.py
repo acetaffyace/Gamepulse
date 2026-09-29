@@ -84,10 +84,13 @@ def daily_rows(path: Path, game_id: str, app_id: int) -> list[dict]:
 
 
 def write_jsonl(path: Path, rows: list[dict]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8", newline="\n") as fh:
-        for row in rows:
-            fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+    from collectors.common import file_lock, atomic_write_text
+    if not rows:
+        raise ValueError("没有有效日汇总记录，保留原有历史")
+    with file_lock(path):
+        if path.exists():
+            atomic_write_text(path.with_suffix(path.suffix + ".bak"), path.read_text(encoding="utf-8"))
+        atomic_write_text(path, "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows))
 
 
 def main() -> int:

@@ -58,7 +58,8 @@ async function exportVideoPng(section, view) {
   ctx.font = '13px sans-serif';
   const scope = section.querySelector('[data-video-control="pair"]');
   ctx.fillText(scope.selectedOptions[0].textContent.slice(0, 85), 20, 53);
-  ctx.fillText(`${{ snapshot: '当前累计 · 按发布日期', tracking: '追踪后增量 · T0 为各自首采', age: '发布同龄 · D0 为发布日', daily: '每日净增 · 按采样日期' }[view.mode]} · ${view.sharedY || view.layout === 'overlay' ? '统一纵轴' : '独立纵轴'}${view.mode === 'age' || view.mode === 'tracking' ? ' · 首 ' + view.compareDays + ' 天' : ''}`, 20, 76);
+  const snapshotLabel = section.dataset.snapshotPresentation === 'rank' ? '当前累计 · 来源内排行' : '当前累计 · 按发布日期';
+  ctx.fillText(`${{ snapshot: snapshotLabel, tracking: '追踪后增量 · T0 为各自首采', age: '发布同龄 · D0 为发布日', daily: '每日净增 · 按采样日期' }[view.mode]} · ${view.sharedY || view.layout === 'overlay' ? '统一刻度' : '独立刻度'}${view.mode === 'age' || view.mode === 'tracking' ? ' · 首 ' + view.compareDays + ' 天' : ''}`, 20, 76);
   for (let i = 0; i < cards.length; i++) {
     const card = cards[i], x = (i % columns) * tileWidth, y = 110 + Math.floor(i / columns) * tileHeight;
     ctx.fillStyle = '#172637'; ctx.font = 'bold 14px sans-serif';

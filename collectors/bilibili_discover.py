@@ -20,6 +20,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from collectors.common import business_date
+
 from collectors.common import (  # noqa: E402
     get_json,
     load_videos,
@@ -45,6 +47,7 @@ def discover(game_id: str, since: str, rounds: int = 2) -> dict[str, dict]:
     sess = session()
     found: dict[str, dict] = {}
     visited: set[str] = set()
+    failures = []
 
     for _ in range(rounds):
         next_seeds: list[str] = []
@@ -55,6 +58,7 @@ def discover(game_id: str, since: str, rounds: int = 2) -> dict[str, dict]:
             payload, status = get_json(sess, RELATED_URL, {"bvid": bvid},
                                        headers=HEADERS)
             if status != "ok" or not payload or payload.get("code") != 0:
+                failures.append({"bvid": bvid, "reason": status})
                 print(f"  [warn] {bvid} related 不可用: {status}")
                 polite_sleep()
                 continue
@@ -62,9 +66,8 @@ def discover(game_id: str, since: str, rounds: int = 2) -> dict[str, dict]:
                 if (item.get("owner") or {}).get("mid") != mid:
                     continue
                 bv = item.get("bvid")
-                pub = time.strftime("%Y-%m-%d",
-                                    time.localtime(item.get("pubdate", 0)))
-                if pub < since:
+                pub = business_date(item.get("pubdate"))
+                if not pub or pub < since:
                     continue
                 if bv not in found:
                     found[bv] = {
@@ -78,7 +81,7 @@ def discover(game_id: str, since: str, rounds: int = 2) -> dict[str, dict]:
         if not seeds:
             break
 
-    return found
+    return {"items": found, "failures": failures, "scope": "related_candidates_only"}
 
 
 def main() -> int:
@@ -90,7 +93,9 @@ def main() -> int:
                         help="related 扩散轮数，默认 2")
     args = parser.parse_args()
 
-    found = discover(args.game, args.since, args.rounds)
+    result = discover(args.game, args.since, args.rounds)
+    found = result["items"]
+    print("仅枚举关联视频候选，不代表官方账号全部投稿；失败请求：" + str(len(result["failures"])))
     new = [v for v in found.values() if not v["registered"]]
     known = [v for v in found.values() if v["registered"]]
 
@@ -103,7 +108,7 @@ def main() -> int:
             print(f"  {v['bvid']}  {v['pubdate']}  {v['view']:>10,}  {v['title']}")
     else:
         print("\n没有未登记的新视频。")
-    return 0
+    return int(bool(result["failures"]))
 
 
 if __name__ == "__main__":

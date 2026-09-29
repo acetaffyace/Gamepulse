@@ -221,9 +221,9 @@ class TestVideoSeries(unittest.TestCase):
         slot = out["abc"]
         self.assertEqual(slot["platform"], "youtube")
         self.assertEqual(set(slot["latest"]["stats"]), set(metrics.YT_STATS))
-        # YouTube 只有点赞一项做分子，engagement 必须只反映点赞
+        # YouTube engagement = (like + comment) / view，和前端一致
         self.assertEqual(slot["latest"]["rates"]["engagement"],
-                         slot["latest"]["rates"]["like"])
+                         6.5)
 
 
 class TestInteractionRates(unittest.TestCase):

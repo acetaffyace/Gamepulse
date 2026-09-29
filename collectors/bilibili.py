@@ -16,6 +16,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from collectors.common import business_date, BUSINESS_TZ, collection_result, atomic_write_text, file_lock
+
 from collectors.common import (  # noqa: E402
     OBSERVED,
     UNAVAILABLE,
@@ -65,7 +67,7 @@ def fetch_video(sess, bvid: str,
         "title": data.get("title"),
         "owner_mid": mid,
         "owner_name": owner.get("name"),
-        "pubdate": time.strftime("%Y-%m-%d", time.localtime(data.get("pubdate", 0))),
+        "pubdate": business_date(data.get("pubdate")),
         "view": stat.get("view"),
         "danmaku": stat.get("danmaku"),
         "reply": stat.get("reply"),
@@ -73,7 +75,8 @@ def fetch_video(sess, bvid: str,
         "coin": stat.get("coin"),
         "favorite": stat.get("favorite"),
         "share": stat.get("share"),
-        "status": OBSERVED,
+        "status": OBSERVED if stat.get("view") is not None else UNAVAILABLE,
+        "identity_verified": not bool(note),
         "note": note,
     }, payload
 
@@ -119,7 +122,7 @@ def collect_game(game_id: str, date_local: str,
     action = (upsert_video_subset_series(game_id, "bilibili", record, "bvid")
               if curated_only else upsert_series(game_id, "bilibili", record))
 
-    ok = sum(1 for r in results if r["status"] == OBSERVED)
+    ok = sum(1 for r in results if r["status"] == OBSERVED and r.get("identity_verified") is not False and r.get("view") is not None)
     log_collection("bilibili", game_id, date_local, action,
                    f"observed={ok}/{len(results)};curated_only={curated_only}")
     print(f"[{action}] {game_id} {date_local}：{ok}/{len(results)} 个视频采集成功")
@@ -139,9 +142,19 @@ def main() -> int:
     else:
         game_ids = [g["game_id"] for g in load_games() if g.get("active")]
 
+    failed = False
     for game_id in game_ids:
-        collect_game(game_id, args.date, curated_only=not args.all_registered)
-    return 0
+        try:
+            record = collect_game(game_id, args.date, curated_only=not args.all_registered)
+            videos = record.get("videos", [])
+            ok = sum(v.get("status") == OBSERVED and v.get("view") is not None and v.get("identity_verified") is not False for v in videos)
+            result = collection_result("bilibili", game_id, args.date, len(videos), ok)
+            failed = failed or result["status"] in ("partial", "failed")
+        except Exception as exc:
+            collection_result("bilibili", game_id, args.date, 1, 0, type(exc).__name__)
+            print(f"[failed] {game_id}: {type(exc).__name__}")
+            failed = True
+    return int(failed)
 
 
 if __name__ == "__main__":

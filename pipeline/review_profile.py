@@ -35,7 +35,7 @@ from statistics import median
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from collectors.common import RAW_DIR  # noqa: E402
+from collectors.common import RAW_DIR, business_date  # noqa: E402
 
 RECONSTRUCTED = "reconstructed"
 
@@ -73,7 +73,7 @@ def _date_of(review: dict) -> str | None:
     ts = review.get("timestamp_created")
     if not ts:
         return None
-    return datetime.fromtimestamp(int(ts), tz=timezone.utc).strftime("%Y-%m-%d")
+    return business_date(int(ts))
 
 
 def _quantile(values: list[int], q: float) -> int | None:
@@ -154,6 +154,10 @@ def daily_profile(reviews: list[dict], collected_at: str | None = None) -> list[
             "playtime_at_review_median": _quantile(at_review, 0.5),
             "playtime_at_review_p25": _quantile(at_review, 0.25),
             "playtime_at_review_p75": _quantile(at_review, 0.75),
+            "_playtime_samples": at_review,
+            "playtime_valid_count": len(at_review),
+            "short_play_count": sum(v < SHORT_PLAY_MINUTES for v in at_review),
+            "heavy_play_count": sum(v >= HEAVY_PLAY_MINUTES for v in at_review),
             "short_play_share": _share(
                 sum(1 for v in at_review if v < SHORT_PLAY_MINUTES), len(at_review)),
             "heavy_play_share": _share(
@@ -417,7 +421,7 @@ def version_cumulative_review_rate(daily: list[dict],
 WINDOW_FIELDS = (
     ("reviews", "日均新增评测", "sum_per_day"),
     ("review_rate", "区间好评率", "weighted_rate"),
-    ("playtime_at_review_median", "评测时中位时长", "median_of_median"),
+    ("playtime_at_review_median", "评测时中位时长", "population_median"),
     ("short_play_share", "2 小时内评测占比", "weighted_share"),
     ("heavy_play_share", "100 小时以上评测占比", "weighted_share"),
 )
@@ -442,11 +446,20 @@ def _aggregate_window(days: list[dict], field: str, how: str) -> float | None:
         total = sum(d.get("reviews") or 0 for d in days)
         return round(pos / total * 100, 2) if total else None
     if how == "weighted_share":
+        counts = {"short_play_share": "short_play_count", "heavy_play_share": "heavy_play_count"}
+        if field in counts and all("playtime_valid_count" in d for d in days):
+            total = sum(d["playtime_valid_count"] for d in days)
+            return _share(sum(d[counts[field]] for d in days), total)
         # 用评测数加权，避免「只有 3 条评测的那天」和「有 300 条的那天」等权
         num = sum((d.get(field) or 0) / 100 * (d.get("reviews") or 0) for d in days)
         total = sum(d.get("reviews") or 0 for d in days if d.get(field) is not None)
         return round(num / total * 100, 2) if total else None
-    if how == "median_of_median":
+    if how in ("population_median", "median_of_median"):
+        if all("_playtime_samples" in d for d in days):
+            return _quantile([v for d in days for v in d["_playtime_samples"]], .5)
+        # Legacy aggregate-only data cannot recover the population median.
+        return None
+    if how == "daily_median_summary":
         values = [d.get(field) for d in days if d.get(field) is not None]
         return round(median(values), 1) if values else None
     return None
@@ -537,7 +550,12 @@ def build(game_id: str, boundaries: list[dict] | None = None,
         return None
 
     daily = daily_profile(reviews, collected_at)
+    windows = version_windows(daily, boundaries or [], window)
+    for row in daily:
+        row.pop("_playtime_samples", None)
     return {
+        "timezone": "Asia/Shanghai",
+        "definition_version": 2,
         "method": "appreviews_backfill",
         "status": RECONSTRUCTED,
         "collected_at": collected_at,
@@ -553,7 +571,7 @@ def build(game_id: str, boundaries: list[dict] | None = None,
         # 在同一版本上出现微小但难以解释的好评率差异。
         "version_cumulative_review_rate": version_cumulative_review_rate(
             (review_history or daily), boundaries or []),
-        "version_windows": version_windows(daily, boundaries or [], window),
+        "version_windows": windows,
         "caveats": [
             "仅含今天仍然存在的评测，越早的日期越可能低估当日真实值",
             "playtime_forever 为今天的累计值，评测后时长需按 observation_days 归一化后比较",

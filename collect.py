@@ -33,9 +33,9 @@ ROOT = Path(__file__).resolve().parent
 # 因此这里不需要为「没配 key」做特殊处理。
 STEPS = [
     ("steam", "collectors/steam.py", True),
-    ("build", "collectors/steam_build.py", False),
+    ("build", "collectors/steam_build.py", True),
     ("bilibili", "collectors/bilibili.py", True),
-    ("youtube", "collectors/youtube.py", False),
+    ("youtube", "collectors/youtube.py", True),
     # 全量翻页成本高，只由每日评测恢复任务显式调用。
     ("review_backfill", "collectors/steam_reviews_backfill.py", True),
 ]
@@ -95,9 +95,7 @@ def main() -> int:
     if run("pipeline/build_snapshot.py", scope) != 0:
         failures.append("build_snapshot")
         critical = True
-    if run("pipeline/build_dashboard_config.py", []) != 0:
-        failures.append("build_dashboard_config")
-        critical = True
+    # build_snapshot validates and publishes config in the same immutable batch.
 
     print()
     if failures:

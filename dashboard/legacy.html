@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GamePulse · 游戏长线运营情报雷达</title>
+<script src="vendor/echarts-5.5.0.min.js"></script>
+<link rel="stylesheet" href="video-dashboard.css">
+<style>
+  /* 调色板取自 dataviz 参考实例，5 个数据实体已通过 validate_palette.js（light）:
+     lightness band / chroma floor / CVD 分离 / normal-vision floor 全部 PASS。
+     aqua 与 magenta 对比度低于 3:1，触发 relief 规则 —— 因此本页提供表格视图
+     与直接标注，颜色不单独承载信息。 */
+  .viz-root {
+    color-scheme: light;
+    --surface-1:      #fcfcfb;
+    --page:           #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    /* 口径说明、指标卡注解、表头全部走这个色，是本页信息密度最高的文字。
+       原值 #898781 对 --surface-1 只有 3.50:1，未达 WCAG AA 正文 4.5:1；
+       #6f6d68 是 5.10:1（对更暗的 --page 底也有 4.99:1），保留同一个暖灰色相。 */
+    --text-muted:     #6f6d68;
+    --gridline:       #e1e0d9;
+    --baseline:       #c3c2b7;
+    /* 版本更新竖线承载信息，不能和纯装饰的网格线一样淡 */
+    --marker:         #9a978c;
+    --border:         rgba(11,11,11,0.10);
+
+    --series-new-reviews: #2a78d6;  /* slot 1 blue    每日评测净增 */
+    --series-rate-daily:  #eb6834;  /* slot 2 orange  保留色位 */
+    --series-rate-cum:    #1baf7a;  /* slot 3 aqua    累计好评率 */
+    --series-online:      #4a3aa7;  /* slot 7 violet  Steam 同时在线 */
+    --series-video:       #e87ba4;  /* slot 5 magenta B 站官方视频 */
+
+    --status-good:     #0ca30c;
+    --status-warning:  #fab219;
+    --status-critical: #d03b3b;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .shell { width: 100%; max-width: 1440px; margin: 0 auto; padding: 32px 40px 64px; }
+
+  /* ---------- header ---------- */
+  header { display: flex; align-items: flex-end; justify-content: space-between;
+           padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+  h1 { font-size: 22px; font-weight: 600; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .sub { color: var(--text-secondary); font-size: 13px; margin: 0; }
+  .meta { text-align: right; color: var(--text-muted); font-size: 12px; }
+  .meta strong { color: var(--text-secondary); font-weight: 500; }
+
+  .badge { display: inline-flex; align-items: center; gap: 5px;
+           padding: 3px 9px; border-radius: 999px; font-size: 11.5px;
+           border: 1px solid var(--border); background: var(--surface-1);
+           color: var(--text-secondary); }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge.live .dot { background: var(--status-good); }
+  .badge.recon .dot { background: var(--status-warning); }
+
+  /* ---------- filter row (one row above everything it scopes) ----------
+     必须 flex-wrap：对比对象 chip 的数量是用户决定的，不换行时它会把右侧
+     每一组都压到无处可缩，「日历日期」会被挤成竖排的一列单字。
+     标签与按钮一律 nowrap，让压力全部释放到换行上而不是字内折行。 */
+  .filters { display: flex; align-items: center; flex-wrap: wrap;
+             gap: 14px 22px; margin: 20px 0 24px; }
+  .filter-group { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .filter-label { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+  /* 右侧动作组用 margin-left:auto 而不是一个 .spacer 元素：换行时
+     spacer 会独占一整行，margin-left:auto 则自然贴到当前行尾。 */
+  .filter-actions { display: flex; align-items: center; gap: 8px;
+                    margin-left: auto; }
+  select {
+    font: inherit; font-size: 13px; padding: 6px 10px; border-radius: 7px;
+    border: 1px solid var(--border); background: var(--surface-1);
+    color: var(--text-primary); cursor: pointer; min-width: 150px;
+  }
+  .segmented { display: inline-flex; background: var(--surface-1);
+               border: 1px solid var(--border); border-radius: 8px; padding: 2px; }
+  .segmented button {
+    font: inherit; font-size: 12.5px; padding: 5px 13px; border: 0;
+    background: transparent; color: var(--text-secondary);
+    border-radius: 6px; cursor: pointer; transition: background .12s, color .12s;
+  }
+  .segmented button:hover { background: rgba(11,11,11,0.04); }
+  .segmented button[aria-pressed="true"] {
+    background: var(--text-primary); color: #fff; font-weight: 500;
+  }
+  .linkish {
+    font: inherit; font-size: 12.5px; border: 1px solid var(--border);
+    background: var(--surface-1); color: var(--text-secondary);
+    padding: 6px 12px; border-radius: 7px; cursor: pointer;
+    white-space: nowrap;
+  }
+  .linkish:hover { background: rgba(11,11,11,0.04); }
+
+  /* 键盘可达性：整页原本完全没有 focus 样式，Tab 过去看不出停在哪 */
+  :where(button, select, input, [tabindex]):focus-visible {
+    outline: 2px solid var(--series-new-reviews);
+    outline-offset: 2px;
+  }
+
+  /* 对比对象组是唯一会被内容撑大的一组，让它优先占据剩余空间并率先换行 */
+  .subject-group { flex: 1 1 340px; min-width: 260px; }
+  .subject-group select { min-width: 132px; }
+
+  /* ---------- stat tiles ----------
+     auto-fit 而不是 JS 写死列数：列数既取决于对象个数（1 个游戏 6 张卡，
+     N 个对象 N 张卡），也取决于视口宽度。交给 CSS 一次算清，JS 不再插手。 */
+  .tiles { display: grid; gap: 12px; margin-bottom: 24px;
+           grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+  .tile { background: var(--surface-1); border: 1px solid var(--border);
+          border-radius: 11px; padding: 15px 16px 14px; }
+  .tile .k { color: var(--text-muted); font-size: 11.5px; margin-bottom: 7px;
+             display: flex; align-items: center; gap: 5px; }
+  .tile .swatch { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+  .tile .v { font-size: 25px; font-weight: 600; letter-spacing: -0.02em;
+             line-height: 1.12; }
+  .tile .v .unit { font-size: 14px; font-weight: 500; color: var(--text-secondary);
+                   margin-left: 2px; }
+  .tile .n { color: var(--text-muted); font-size: 11.5px; margin-top: 5px; }
+  .tile .n.good { color: #006300; }
+  .tile .n.bad  { color: var(--status-critical); }
+
+  /* ---------- chart card ---------- */
+  .card { background: var(--surface-1); border: 1px solid var(--border);
+          border-radius: 12px; padding: 20px 22px 16px; margin-bottom: 20px; }
+  .card-head { display: flex; align-items: baseline; justify-content: space-between;
+               margin-bottom: 4px; }
+  .card-title { font-size: 15px; font-weight: 600; margin: 0; }
+  .card-note { color: var(--text-muted); font-size: 12px; margin: 3px 0 0; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 10px 16px; margin: 12px 0 2px; }
+  .legend:empty { display: none; }
+  /* 图例项是真按钮（点击可隐藏对象），所以要把 button 的默认外观清掉 */
+  .legend-item { display: inline-flex; align-items: center; gap: 6px;
+                 font: inherit; font-size: 12px; color: var(--text-secondary);
+                 cursor: pointer; user-select: none;
+                 border: 1px solid transparent; border-radius: 7px;
+                 background: none; padding: 3px 7px; text-align: left;
+                 transition: background .12s, opacity .12s; }
+  .legend-item:hover { background: rgba(11,11,11,0.04); }
+  .legend-item .mark { width: 11px; height: 3px; border-radius: 2px; flex: none; }
+  .legend-item .mark.dot { width: 9px; height: 9px; border-radius: 50%; }
+  .legend-item .mark.bar { width: 9px; height: 11px; border-radius: 2px; }
+  .legend-item[data-off="true"] { opacity: .4; }
+  .legend-item[data-off="true"] .mark { background: var(--baseline) !important; }
+  .legend-sep { width: 1px; background: var(--border); margin: 1px 2px; }
+
+  #pulse { width: 100%; height: 760px; }
+
+  /* ---------- lower grid ----------
+     必须是 minmax(0,1fr) 而不是 1fr：1fr 轨道的自动最小尺寸是 min-content，
+     而版本对比表有 8 列、声明了 min-width，于是窄屏下轨道被表格顶开，
+     整页跟着横向溢出（实测 1024px 溢出 194px）。minmax(0,…) 允许轨道
+     小于内容，把滚动压回 .table-wrap 内部。 */
+  .row2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+          gap: 20px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px;
+          font-variant-numeric: tabular-nums; }
+  th { text-align: left; color: var(--text-muted); font-weight: 500;
+       font-size: 11.5px; padding: 7px 10px; border-bottom: 1px solid var(--border);
+       white-space: nowrap; }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--gridline); }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: rgba(11,11,11,0.02); }
+  td.num, th.num { text-align: right; }
+  .pos { color: #006300; }
+  .neg { color: var(--status-critical); }
+  .muted { color: var(--text-muted); }
+  .chip { display: inline-block; padding: 1px 7px; border-radius: 5px;
+          font-size: 11px; background: rgba(11,11,11,0.05);
+          color: var(--text-secondary); }
+
+  .bar-cell { display: flex; align-items: center; gap: 8px; }
+  .bar-track { flex: 1; height: 6px; background: var(--gridline);
+               border-radius: 3px; overflow: hidden; min-width: 60px; }
+  .bar-fill { height: 100%; border-radius: 3px; }
+
+  /* ---------- sources ---------- */
+  .sources { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .source { border: 1px solid var(--border); border-radius: 9px; padding: 12px 13px;
+            background: var(--page); }
+  .source .t { font-size: 12.5px; font-weight: 500; margin-bottom: 4px; }
+  .source .d { color: var(--text-muted); font-size: 11.5px; line-height: 1.45; }
+  .tag { display: inline-block; font-size: 10.5px; padding: 1px 6px;
+         border-radius: 4px; margin-bottom: 6px; border: 1px solid var(--border);
+         color: var(--text-secondary); }
+
+  .caveat { margin-top: 16px; padding: 12px 14px; border-radius: 9px;
+            background: rgba(250,178,25,0.08);
+            border: 1px solid rgba(250,178,25,0.3);
+            color: var(--text-secondary); font-size: 12.5px; line-height: 1.55; }
+  .caveat b { color: var(--text-primary); font-weight: 600; }
+  .caveat ul { margin: 10px 0 0; padding-left: 18px; }
+  .caveat li { margin-bottom: 6px; }
+  .caveat li:last-child { margin-bottom: 0; }
+
+  /* ---------- 结论层 ----------
+     原来整页只有数字没有判断：读者要自己在 60 个「旧值→新值/增幅」
+     格子里做归纳。这一条把已经算出来的结论直接说出来。 */
+  .readout { background: var(--surface-1); border: 1px solid var(--border);
+             border-left: 3px solid var(--text-primary);
+             border-radius: 11px; padding: 14px 18px; margin-bottom: 20px; }
+  .readout p { margin: 0 0 6px; font-size: 13.5px; line-height: 1.6;
+               color: var(--text-primary); }
+  .readout p:last-child { margin-bottom: 0; }
+  .readout .rank { color: var(--text-secondary); }
+  .readout b { font-weight: 600; }
+  .readout .up   { color: #006300; font-weight: 600; }
+  .readout .down { color: var(--status-critical); font-weight: 600; }
+  .readout .flat { color: var(--text-secondary); font-weight: 600; }
+
+  .lead { margin: 0 0 12px; font-size: 13px; line-height: 1.6;
+          color: var(--text-primary); }
+  .lead:empty { display: none; }
+
+  /* ---------- 渐进披露 ----------
+     口径说明原本是底部一堵 400 字的墙，全页最难读的排版承载最该读的内容。
+     拆成：就近的 ⓘ（单个指标的口径）+ 可折叠的完整版。 */
+  details.fine-print { margin-top: 14px; }
+  details.fine-print summary {
+    cursor: pointer; font-size: 12px; color: var(--text-muted);
+    list-style: none; display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 0; user-select: none;
+  }
+  details.fine-print summary::-webkit-details-marker { display: none; }
+  details.fine-print summary::before { content: '▸'; font-size: 10px; }
+  details.fine-print[open] summary::before { content: '▾'; }
+  details.fine-print summary:hover { color: var(--text-secondary); }
+  details.fine-print p { margin: 8px 0 0; font-size: 12px; line-height: 1.65;
+                         color: var(--text-secondary); }
+
+  .info {
+    border: 0; background: none; padding: 0 0 0 4px; cursor: pointer;
+    color: var(--text-muted); font-size: 11px; line-height: 1;
+    vertical-align: middle;
+  }
+  .info:hover { color: var(--text-primary); }
+  .popover {
+    position: absolute; z-index: 60; max-width: 300px;
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 9px; padding: 10px 12px;
+    box-shadow: 0 8px 26px rgba(11,11,11,0.14);
+    font-size: 12px; line-height: 1.6; color: var(--text-secondary);
+  }
+  .popover b { color: var(--text-primary); display: block; margin-bottom: 4px;
+               font-size: 12.5px; }
+
+  /* 数据还在积累的轨道：与「这个指标是 0」明确区分开 */
+  .lane-thin { color: var(--status-warning); }
+
+  /* 页面替用户改了控件时的提示。不用 alert：它会打断操作，
+     而这里要说的只是「我刚替你做了什么、为什么」。 */
+  .toast {
+    position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 12px);
+    z-index: 80; max-width: min(520px, calc(100vw - 32px));
+    background: var(--text-primary); color: #fff;
+    font-size: 12.5px; line-height: 1.55;
+    padding: 10px 16px; border-radius: 9px;
+    box-shadow: 0 10px 30px rgba(11,11,11,0.22);
+    opacity: 0; pointer-events: none;
+    transition: opacity .18s, transform .18s;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  .hidden { display: none !important; }
+  .loading { padding: 80px; text-align: center; color: var(--text-muted); }
+
+  /* ---------- 轨道自定义面板 ---------- */
+  .scrim { position: fixed; inset: 0; background: rgba(11,11,11,0.18);
+           z-index: 40; opacity: 0; pointer-events: none; transition: opacity .16s; }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+
+  .panel {
+    position: fixed; top: 0; right: 0; height: 100vh; width: 372px; z-index: 50;
+    background: var(--surface-1); border-left: 1px solid var(--border);
+    box-shadow: -10px 0 40px rgba(11,11,11,0.10);
+    padding: 22px 22px 40px; overflow-y: auto;
+    transform: translateX(100%);
+    /* 仅靠 translateX 移出视口，面板里的控件仍然在 Tab 顺序里 ——
+       键盘用户会「掉进」一个看不见的面板。visibility 才真正把它摘出去。
+
+       visibility 不能参与补间：关闭时要等滑出动画放完再隐藏（0s 延迟 .18s），
+       打开时必须立刻可见（0s 无延迟）—— 否则刚加上 .open 的那一帧
+       计算值还是 hidden，紧接着的 focus() 会静默失败。 */
+    visibility: hidden;
+    transition: transform .18s ease, visibility 0s linear .18s;
+  }
+  .panel.open {
+    transform: none; visibility: visible;
+    transition: transform .18s ease, visibility 0s linear 0s;
+  }
+  .panel h3 { font-size: 15px; font-weight: 600; margin: 0 0 4px; }
+  .panel .hint { color: var(--text-muted); font-size: 11.5px; line-height: 1.5;
+                 margin: 0 0 16px; }
+  .panel-sec { font-size: 11.5px; color: var(--text-muted); margin: 18px 0 8px;
+               text-transform: none; letter-spacing: .02em; }
+
+  .video-config { border: 1px solid var(--border); border-radius: 10px;
+                  padding: 13px 12px 12px; background: var(--page); margin: 14px 0 16px; }
+  .video-config h4 { margin: 0 0 3px; font-size: 13px; font-weight: 600; }
+  .video-config .hint { margin: 0 0 12px; }
+  .video-control { margin: 10px 0; }
+  .video-control-title { display: block; color: var(--text-secondary);
+                         font-size: 11.5px; margin-bottom: 5px; }
+  .video-options { display: flex; flex-wrap: wrap; gap: 5px; }
+  .video-options.types { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .video-option { display: inline-flex; align-items: center; gap: 5px;
+                  border: 1px solid var(--border); border-radius: 7px;
+                  background: var(--surface-1); padding: 4px 7px;
+                  color: var(--text-secondary); font-size: 11.5px; cursor: pointer; }
+  .video-option input { margin: 0; accent-color: var(--series-new-reviews); }
+  .video-option.disabled { opacity: .48; cursor: default; }
+  .video-select { width: 100%; border: 1px solid var(--border); border-radius: 7px;
+                  padding: 6px 8px; color: var(--text-primary); background: var(--surface-1);
+                  font: inherit; font-size: 12px; }
+  .video-config .segmented button { font-size: 11px; padding: 4px 8px; }
+  .video-actions { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 12px; }
+  .video-actions button { border: 1px solid var(--border); border-radius: 7px;
+                          padding: 6px 9px; background: var(--surface-1);
+                          color: var(--text-primary); font: inherit; font-size: 11.5px;
+                          cursor: pointer; }
+  .video-actions button.primary { color: #fff; background: var(--text-primary); }
+  .video-status { color: var(--text-muted); font-size: 11px; min-height: 17px; margin: 7px 0 0; }
+  .video-view-row { display: flex; align-items: center; gap: 8px;
+                    border: 1px solid var(--border); border-radius: 8px;
+                    padding: 8px; margin-bottom: 6px; background: var(--surface-1); }
+  .video-view-name { min-width: 0; flex: 1; font-size: 11.5px; font-weight: 500; }
+  .video-view-name span { display: block; color: var(--text-muted); font-weight: 400;
+                          white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .video-view-actions { display: flex; gap: 3px; }
+  .video-view-list .height-row { margin: 0 0 9px 4px; }
+  .metric-track-details { margin-top: 14px; border-top: 1px solid var(--border); padding-top: 10px; }
+  .metric-track-details > summary { color: var(--text-secondary); font-size: 12px;
+                                    cursor: pointer; user-select: none; }
+  .metric-track-details .panel-sec { margin-top: 12px; }
+
+  .lane-row { display: flex; align-items: center; gap: 9px; padding: 9px 10px;
+              border: 1px solid var(--border); border-radius: 9px;
+              margin-bottom: 7px; background: var(--page); }
+  .lane-row[data-off="true"] { opacity: .5; }
+  .lane-row .swatch { width: 9px; height: 9px; border-radius: 2px; flex: none; }
+  .lane-row .lane-name { font-size: 12.5px; flex: 1; min-width: 0; }
+  .lane-row .lane-name span { display: block; color: var(--text-muted);
+                              font-size: 11px; white-space: nowrap;
+                              overflow: hidden; text-overflow: ellipsis; }
+  .icon-btn { border: 1px solid var(--border); background: var(--surface-1);
+              color: var(--text-secondary); border-radius: 6px; cursor: pointer;
+              width: 24px; height: 24px; font-size: 12px; line-height: 1;
+              padding: 0; flex: none; }
+  .icon-btn:hover:not(:disabled) { background: rgba(11,11,11,0.05); }
+  .icon-btn:disabled { opacity: .3; cursor: default; }
+
+  /* 某些轨道的纵轴不止一种读法（语区播放量：绝对对数 vs 相对本语区中位数），
+     开关跟着那条轨道走，而不是放进全局筛选条 —— 它只对这一条轨道有意义。 */
+  .scale-row { display: flex; align-items: center; gap: 8px;
+               margin: 0 0 10px 10px; flex-wrap: wrap; }
+  .scale-row .segmented button { font-size: 11.5px; padding: 4px 9px; }
+
+  .height-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+  .height-row input[type=range] { flex: 1; accent-color: var(--text-primary); }
+  .height-row .val { font-size: 11px; color: var(--text-muted); min-width: 34px;
+                     text-align: right; font-variant-numeric: tabular-nums; }
+
+  .panel-actions { display: flex; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
+
+  .menu-wrap { position: relative; }
+  .menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30;
+          background: var(--surface-1); border: 1px solid var(--border);
+          border-radius: 9px; padding: 5px; min-width: 210px;
+          box-shadow: 0 8px 26px rgba(11,11,11,0.12); }
+  .menu button { display: block; width: 100%; text-align: left; border: 0;
+                 background: transparent; font: inherit; font-size: 12.5px;
+                 padding: 7px 10px; border-radius: 6px; cursor: pointer;
+                 color: var(--text-primary); }
+  .menu button:hover { background: rgba(11,11,11,0.05); }
+  .menu .menu-note { color: var(--text-muted); font-size: 11px;
+                     padding: 4px 10px 7px; line-height: 1.45; }
+
+  /* 对比对象 chip：颜色块 = 该对象在图上的颜色，所以控件与图例是同一套语义 */
+  .subject-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .subject-chip { display: inline-flex; align-items: center; gap: 6px;
+                  border: 1px solid #e1e0d9; border-radius: 999px;
+                  padding: 3px 4px 3px 9px; background: #fff; font-size: 12px; }
+  .subject-chip .mark { width: 9px; height: 9px; border-radius: 2px; flex: none; }
+  .subject-chip .sc-label { font-weight: 500; }
+  .subject-chip .sc-x { border: 0; background: none; cursor: pointer;
+                        color: #898781; font-size: 14px; line-height: 1;
+                        padding: 2px 5px; border-radius: 999px; }
+  .subject-chip .sc-x:hover { background: #f1f0ea; color: #0b0b0b; }
+
+  /* ---------- 响应式 ----------
+     原来页面是死的 1440px：1366 的笔记本要横向拖 74px，手机要拖 1050px。
+     下面按内容自己的断点收拢，而不是照搬设备尺寸。 */
+
+  /* 宽列表格（版本对比有 8 列）在窄列里必须能横滑，否则单元格会被压烂 */
+  .table-wrap { overflow-x: auto; }
+  .table-wrap table { min-width: 460px; }
+
+  @media (max-width: 1180px) {
+    .shell { padding: 28px 28px 56px; }
+    .sources { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 960px) {
+    /* 左右并排的两块在这个宽度以下各自都太窄了，改上下堆叠 */
+    .row2 { grid-template-columns: minmax(0, 1fr); }
+    header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .meta { text-align: left; }
+  }
+
+  @media (max-width: 720px) {
+    .shell { padding: 20px 16px 48px; }
+    h1 { font-size: 19px; }
+    .card { padding: 16px 14px 12px; border-radius: 10px; }
+    .sources { grid-template-columns: 1fr; }
+    .tiles { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+    /* 动作组在窄屏不再贴右，跟着正常流走，避免和上一组挤在同一行尾 */
+    .filter-actions { margin-left: 0; width: 100%; }
+    .panel { width: 100%; }
+    .legend { gap: 8px 12px; }
+  }
+</style>
+</head>
+<body class="viz-root">
+<div class="shell">
+
+  <header>
+    <div>
+      <h1>GamePulse · 游戏长线运营情报雷达</h1>
+      <p class="sub">基于 Steam / B 站 / YouTube 公开数据的长线运营观测 · 仅公开信号，不含内部 DAU / 收入 / 留存</p>
+    </div>
+    <div class="meta">
+      <div id="metaBadges" style="margin-bottom:6px"></div>
+      <div>快照生成 <strong id="metaDate">—</strong></div><span id="dataStatus" class="badge recon" hidden></span><button class="linkish" id="reloadSnapshot" hidden>有新数据 · 点击更新</button>
+    </div>
+  </header>
+
+  <div class="filters">
+    <div class="filter-group subject-group">
+      <span class="filter-label" id="subjectLabel">对比对象</span>
+      <div id="subjectChips" class="subject-chips"></div>
+      <select id="subjectAdd" aria-labelledby="subjectLabel"></select>
+    </div>
+    <div class="filter-group" id="alignGroup" role="group" aria-labelledby="alignLabel">
+      <span class="filter-label" id="alignLabel">对齐</span>
+      <div class="segmented" id="alignSeg">
+        <button data-align="calendar" aria-pressed="true">日历日期</button>
+        <button data-align="day0" title="游戏从上线日起算，版本从该版本更新日起算">各自起点</button>
+      </div>
+    </div>
+    <!-- 标签会随对齐方式在「最近 / 起点后」之间切换：同样是「30 天」，
+         日历对齐取的是最近 30 天，起点对齐取的是起点后的头 30 天，
+         方向相反，不能共用一个中性标签。见 app.js:syncRangeLabel -->
+    <div class="filter-group" role="group" aria-labelledby="rangeLabel">
+      <span class="filter-label" id="rangeLabel">最近</span>
+      <div class="segmented" id="rangeSeg">
+        <button data-days="3">3 天</button>
+        <button data-days="7">7 天</button>
+        <button data-days="14">14 天</button>
+        <button data-days="30">30 天</button>
+        <button data-days="60">60 天</button>
+        <button data-days="90" aria-pressed="true">90 天</button>
+        <button data-days="0">全部</button>
+      </div>
+    </div>
+    <div class="filter-group custom-range"><label for="customDays">自定义</label><input id="customDays" type="number" min="1" max="3650" step="1" required aria-label="自定义天数"><span>天</span><button class="linkish" id="applyDays">应用</button></div>
+    <div class="filter-group" id="presetGroup">
+      <span class="filter-label" id="presetLabel">预设</span>
+      <select id="presetSelect" aria-labelledby="presetLabel"></select>
+    </div>
+    <div class="filter-actions">
+      <button class="linkish" id="jumpVideos">视频对比 ↓</button>
+      <button class="linkish" id="openPanel" aria-haspopup="dialog"
+              aria-expanded="false" aria-controls="lanePanel">轨道配置</button>
+      <div class="menu-wrap">
+        <button class="linkish" id="openExport" aria-haspopup="menu"
+                aria-expanded="false">导出</button>
+        <div class="menu hidden" id="exportMenu" role="menu">
+          <button role="menuitem" data-export="csv">当前范围 CSV（按日期）</button>
+          <button role="menuitem" data-export="videos">全部重点登记视频 CSV</button>
+          <button role="menuitem" data-export="png">综合图 PNG</button>
+          <button role="menuitem" data-export="link">复制当前视图链接</button>
+          <div class="menu-note">导出内容仅含公开数据，不含密钥、Cookie 或本机路径。</div>
+        </div>
+      </div>
+      <button class="linkish" id="toggleTable" aria-expanded="false"
+              aria-controls="tableCard">显示数据表</button>
+    </div>
+  </div>
+
+  <!-- ============ 轨道配置面板 ============ -->
+  <div class="scrim" id="panelScrim"></div>
+  <aside class="panel" id="lanePanel" role="dialog" aria-modal="true"
+         aria-labelledby="lanePanelTitle">
+    <h3 id="lanePanelTitle">轨道配置</h3>
+    <p class="hint">
+      先配置视频视图；其他指标可在下方展开。设置会保存到本机，也会写入当前视图链接。
+      按 <kbd>Esc</kbd> 关闭。
+    </p>
+    <section class="video-config" aria-labelledby="videoConfigTitle">
+      <h4 id="videoConfigTitle">视频</h4>
+      <p class="hint">多选来源后默认分面展示，可在视频区切换叠图、指标与比较天数。</p>
+      <div class="video-control">
+        <span class="video-control-title">平台</span>
+        <div class="video-options" id="videoPlatformOptions"></div>
+      </div>
+      <div class="video-control" id="youtubeLocaleOptions">
+        <span class="video-control-title">YouTube 频道语区</span>
+        <div class="video-options" id="videoLocaleOptions"></div>
+      </div>
+      <div class="video-control">
+        <span class="video-control-title">内容类型</span>
+        <div class="video-options types" id="videoTypeOptions"></div>
+      </div>
+      <div class="video-control">
+        <label class="video-control-title" for="videoMetric">指标</label>
+        <select class="video-select" id="videoMetric"></select>
+      </div>
+      <div class="video-control" id="videoScaleOptions">
+        <span class="video-control-title">播放量标尺</span>
+        <div class="segmented">
+          <button type="button" data-video-scale="abs">实际播放量</button>
+          <button type="button" data-video-scale="index">相对来源中位数</button>
+        </div>
+      </div>
+      <div class="video-actions">
+        <button class="primary" id="addVideoCompare">添加视频视图</button>
+        <button id="addVideoTrack">添加为独立轨道</button>
+      </div>
+      <p class="video-status" id="videoStatus" aria-live="polite"></p>
+      <div class="panel-sec">已添加的视频视图</div>
+      <div class="video-view-list" id="videoViewList"></div>
+    </section>
+    <details class="metric-track-details">
+      <summary>其他指标轨道</summary>
+      <div class="panel-sec">已启用的轨道</div>
+      <div id="laneList"></div>
+      <div class="panel-sec">未启用的轨道</div>
+      <div id="laneListOff"></div>
+    </details>
+    <div class="panel-actions">
+      <button class="linkish" id="resetLanes">恢复默认</button>
+      <button class="linkish" id="closePanel">完成</button>
+    </div>
+  </aside>
+
+  <div id="app" class="hidden">
+    <div class="tiles" id="tiles"></div>
+
+    <details class="numeric-summary"><summary>数值摘要</summary><section class="readout" id="readout" aria-live="polite"></section></details>
+
+    <section class="card" id="timelineCard">
+      <div class="card-head">
+        <div>
+          <h2 class="card-title">运营趋势</h2>
+          <p class="card-note" id="pulseNote"></p>
+        </div>
+      </div>
+      <div class="legend" id="legend"></div>
+      <div id="pulse"></div>
+      <details class="fine-print" id="pulseFine">
+        <summary>坐标轴与轨道口径</summary>
+        <p id="pulseFineText"></p>
+      </details>
+    </section>
+
+    <div id="videoDashboards"></div>
+    <details class="dashboard-details"><summary>窗口、版本与评测结构明细</summary>
+    <div class="row2">
+      <section class="card">
+        <div class="card-head"><h2 class="card-title">窗口对照<button class="info" data-info="window_table" aria-label="窗口对照 的口径说明">ⓘ</button></h2></div>
+        <p class="card-note" id="cmpWindowNote" style="margin-bottom:12px"></p>
+        <div class="table-wrap"><table id="cmpTable"><thead><tr>
+          <th>对比对象</th>
+          <th class="num">Steam净变化 / 回填存活评测</th>
+          <th class="num">日均评测变化</th>
+          <th class="num">Steam 累计 / 版本回填好评率</th>
+          <th class="num">当前在线</th>
+          <th class="num">版本</th>
+        </tr></thead><tbody></tbody></table></div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h2 class="card-title">版本节奏<button class="info" data-info="cadence_table" aria-label="版本节奏 的口径说明">ⓘ</button></h2></div>
+        <p class="card-note" style="margin-bottom:12px">最近 6 个版本的更新间隔，取自各自 Steam 官方公告。</p>
+        <div class="table-wrap"><table id="cadenceTable"><thead><tr>
+          <th>游戏</th><th>最近版本</th><th class="num">平均间隔</th>
+        </tr></thead><tbody></tbody></table></div>
+      </section>
+    </div>
+
+    <div class="row2">
+      <section class="card">
+        <div class="card-head">
+          <h2 class="card-title">版本更新前后 7 天对比<button class="info" data-info="version_table" aria-label="版本更新前后 7 天对比 的口径说明">ⓘ</button></h2>
+        </div>
+        <p class="card-note" style="margin-bottom:12px">以评测口径衡量版本的声量、口碑与玩家结构变化。仅比较有完整前后窗口的版本。</p>
+        <p class="lead" id="versionLead"></p>
+        <div class="table-wrap"><table id="versionTable"><thead><tr>
+          <th>版本</th><th>更新日</th>
+        </tr></thead><tbody></tbody></table></div>
+        <details class="fine-print" id="versionFine">
+          <summary>这张表怎么读 · 不看什么</summary>
+          <p id="versionNote"></p>
+        </details>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <h2 class="card-title">评测语言分布<button class="info" data-info="lang_table" aria-label="评测语言分布 的口径说明">ⓘ</button></h2>
+        </div>
+        <p class="card-note" id="langNote" style="margin-bottom:12px"></p>
+        <div class="table-wrap"><table id="langTable"><thead><tr></tr></thead><tbody></tbody></table></div>
+      </section>
+    </div>
+
+    </details>
+    <section class="card hidden" id="tableCard">
+      <div class="card-head">
+        <h2 class="card-title">数据表视图</h2>
+      </div>
+      <p class="card-note" style="margin-bottom:12px">图表的等价表格，供无法依赖颜色区分的读者使用。</p>
+      <div style="max-height:420px; overflow:auto">
+        <table id="dataTable"><thead><tr>
+          <th>日期</th>
+          <th class="num">评测净增</th>
+          <th class="num">Steam 全局累计好评率</th>
+          <th class="num">Steam 同时在线</th>
+          <th>事件</th>
+        </tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+
+    <details class="dashboard-details"><summary>数据来源与口径</summary><section class="card">
+      <div class="card-head">
+        <h2 class="card-title">数据来源与口径</h2>
+      </div>
+      <div class="sources" id="sources" style="margin-top:12px"></div>
+      <div class="caveat" id="caveat"></div>
+    </section></details>
+  </div>
+
+  <div class="loading" id="loading">正在加载快照…</div>
+</div>
+
+<!-- 版本参数避免本地静态服务继续复用旧的引擎脚本缓存。 -->
+<script src="video-model.js?v=20260929"></script>
+<script src="engine.js?v=20260929"></script>
+<script src="video-dashboard.js?v=20260929"></script>
+<script src="app.js?v=20260929"></script>
+</body>
+</html>

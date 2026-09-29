@@ -259,6 +259,12 @@ def build_events(news_records: list[dict], price_points: list[dict],
 
 
 def build(game_id: str) -> dict:
+    from collectors.common import file_lock, RAW_DIR
+    with file_lock(RAW_DIR / "backfill" / f"{game_id}.operation", timeout=30):
+        return _build(game_id)
+
+
+def _build(game_id: str) -> dict:
     game = get_game(game_id)
     steam = read_series(game_id, "steam")
     news = read_series(game_id, "steam_news")
@@ -290,6 +296,7 @@ def build(game_id: str) -> dict:
         return {
             **slot,
             "pair_id": pair.get("pair_id"),
+            "locale": pair.get("locale", slot.get("locale")),
             "character_id": pair.get("character_id"),
             "character_name": pair.get("character_name"),
             "version_id": pair.get("version_id"),
@@ -333,6 +340,15 @@ def build(game_id: str) -> dict:
     boundaries = [e for e in events if e.get("is_version_boundary")]
     profile = review_profile.build(game_id, boundaries,
                                    review_history=review_history)
+    health = quality.source_health({"steam": steam, "bilibili": bili, "youtube": youtube,
+                                   "steam_online": online_hourly, "steam_build": builds},
+                                  profile, today_local(), read_series(game_id, "collection_attempts"))
+    for source, state in health.items():
+        if state["status"] not in ("healthy", "skipped", "disabled"):
+            issues.append({"level": "error" if state["status"] == "failed" else "warn",
+                           "code": f"source_health:{source}", "source": source,
+                           "message": f"{source}: {state['status']}，最近有效数据 {state['data_through'] or '暂无'}",
+                           **state})
 
     # Keep a valid SteamDB or hourly point when the official daily request
     # timed out. Null must never replace an already observed value.
@@ -352,7 +368,10 @@ def build(game_id: str) -> dict:
 
     snapshot = {
         "snapshot_date": today_local(),
-        "freshness_status": "live",
+        "freshness_status": "degraded" if any(v["status"] not in ("healthy", "skipped", "disabled") for v in health.values()) else "live",
+        "source_health": health,
+        "timezone": "Asia/Shanghai",
+        "definition_version": 2,
         "is_demo": False,
         "game": {
             "game_id": game_id,
@@ -485,43 +504,39 @@ def main() -> int:
     parser.add_argument("--game", help="game_id；省略则处理所有 active 游戏")
     args = parser.parse_args()
 
-    game_ids = [args.game] if args.game else [
-        g["game_id"] for g in load_games() if g.get("active")]
+    from collectors.common import file_lock
+    from pipeline.publication import load_published, compile_config, publish
+    games = [g for g in load_games() if g.get("active")]
+    configured = {g["game_id"]: i for i, g in enumerate(games)}
+    if args.game and args.game not in configured:
+        parser.error("game_id 必须是配置中的 active 游戏")
+    targets = [args.game] if args.game else list(configured)
+    with file_lock(DATA_DIR / "publication", timeout=120):
+        previous, snapshots = load_published(DATA_DIR)
+        entries = {g["game_id"]: g for g in previous.get("games", []) if g["game_id"] in configured}
+        for game_id in targets:
+            snapshot = build(game_id)
+            snapshots[game_id] = snapshot
+            cov = snapshot["coverage"]
+            entries[game_id] = {
+                "game_id": game_id,
+                "display_name": snapshot["game"]["display_name"],
+                "short_name": snapshot["game"].get("short_name") or snapshot["game"]["display_name"],
+                "developer": snapshot["game"].get("developer"),
+                "color": entries.get(game_id, {}).get("color") or SLOT_COLORS[configured[game_id] % len(SLOT_COLORS)],
+                "valid_days": cov["valid_days"],
+                "review_start": (snapshot.get("review_history_coverage") or {}).get("start"),
+                "review_days": (snapshot.get("review_history_coverage") or {}).get("days"),
+                "snapshot_date": snapshot["snapshot_date"],
+                "versions": version_catalog(snapshot),
+            }
+            print(f"已构建 {game_id}: {cov['valid_days']} 天，质量 {snapshot['quality']['summary']}")
+        snapshots = {gid: snap for gid, snap in snapshots.items() if gid in configured}
+        ordered = [entries[gid] for gid in configured if gid in entries]
+        compiled = compile_config(snapshots)
+        manifest = publish(DATA_DIR, ordered, snapshots, compiled)
+        print(f"已发布完整批次 {manifest['build_id']}，{len(ordered)} 款游戏")
 
-    index = []
-    for slot, game_id in enumerate(game_ids):
-        snapshot = build(game_id)
-        out = DATA_DIR / f"snapshot_{game_id}.json"
-        write_json(out, snapshot)
-        cov = snapshot["coverage"]
-        summary = snapshot["quality"]["summary"]
-        index.append({
-            "game_id": game_id,
-            "display_name": snapshot["game"]["display_name"],
-            "short_name": snapshot["game"].get("short_name")
-                          or snapshot["game"]["display_name"],
-            "developer": snapshot["game"].get("developer"),
-            "color": SLOT_COLORS[slot % len(SLOT_COLORS)],
-            "file": out.name,
-            "valid_days": cov["valid_days"],
-            "review_start": (snapshot.get("review_history_coverage") or {}).get("start"),
-            "review_days": (snapshot.get("review_history_coverage") or {}).get("days"),
-            "snapshot_date": snapshot["snapshot_date"],
-            "versions": version_catalog(snapshot),
-        })
-        print(f"已生成 {out.name}")
-        print(f"  覆盖 : {cov['start']} → {cov['end']}，"
-              f"{cov['valid_days']} 天（缺 {cov['missing_days']} 天）")
-        print(f"  事件 : {len(snapshot['events'])} 条")
-        print(f"  视频 : {len(snapshot['character_videos'])} 个")
-        print(f"  质量 : error={summary['error']} warn={summary['warn']} "
-              f"info={summary['info']}")
-        for issue in snapshot["quality"]["issues"]:
-            if issue["level"] in ("error", "warn"):
-                print(f"    [{issue['level']}] {issue['message']}")
-
-    write_json(DATA_DIR / "index.json", {"games": index,
-                                         "generated_at": today_local()})
     return 0
 
 

@@ -8,7 +8,7 @@
  * 数据表对两种情形一视同仁，不存在「这个功能只有某个视图才有」。
  */
 
-const STORAGE_KEY = 'gamepulse.view.v3';
+const STORAGE_KEY = document.body.dataset.viewStorage || 'gamepulse.view.v3';
 const VIEW_STATE_VERSION = 6;
 
 let config = null;            // dashboard_config.json
@@ -16,6 +16,7 @@ let catalog = [];             // index.json 的 games，即对比对象目录
 const snapCache = new Map();  // game_id -> snapshot
 const onlineHistoryCache = new Map();
 let snapshotBuildId = null;
+let versionedBatch = false;
 let chart = null;
 
 let subjects = [];            // 当前对比对象（长度 1 即单游戏）
@@ -233,7 +234,8 @@ async function updateCatalogOnlineDate(entry) {
    「正在加载快照…」，只在控制台留一句 Failed to fetch。 */
 async function snapshotOf(gameId) {
   if (!snapCache.has(gameId)) {
-    const url = `../data/snapshot_${gameId}.json?build=${encodeURIComponent(snapshotBuildId || 'latest')}`;
+    const file = catalog.find(g => g.game_id === gameId)?.file || `snapshot_${gameId}.json`;
+    const url = `../data/${file}?build=${encodeURIComponent(snapshotBuildId || 'latest')}`;
     let res;
     try {
       res = await fetch(url, { cache: 'no-store' });
@@ -248,8 +250,9 @@ async function snapshotOf(gameId) {
     }
     try {
       const snapshot = await res.json();
+      if (versionedBatch && snapshot.build_id !== snapshotBuildId) throw new Error("快照批次不一致");
       const onlineByDate = new Map(
-        (await steamDbOnlineOf(gameId)).map(row => [row.date_local, row]));
+        (versionedBatch ? [] : await steamDbOnlineOf(gameId)).map(row => [row.date_local, row]));
       (snapshot.online_series || []).forEach(row => {
         const fallback = onlineByDate.get(row.date_local);
         if (row.value != null || !fallback || fallback.value == null) {
@@ -933,7 +936,7 @@ function singleGameTiles(subject) {
     { k: w.dailyAvgBasis === 'surviving_review_backfill' ? '近 7 日均回填存活评测' : '近 7 日日均评测净变化',
       swatch: color('slot1'), info: 'avg7',
       v: w.avg7 != null ? w.avg7.toFixed(1) : '—',
-      n: w.delta7 != null ? `${deltaHtml(w.delta7)} 对比前 7 日` : '—' },
+      n: w.delta7 != null ? `${deltaHtml(w.delta7)} 对比前 7 日` : w.avg7 == null ? '近 7 自然日数据不完整，暂不计算' : '前一周期数据不足，暂不比较' },
     { k: '日中位时长的中位数', swatch: color('slot2'), info: 'playtime',
       v: medianPlaytime != null ? (medianPlaytime / 60).toFixed(1) : '—', unit: 'h',
       n: '所选窗口末 14 个日点 · 非全样本中位数' },
@@ -1195,7 +1198,7 @@ function renderVersionTable(ctx) {
       const why = c.confounded ? ` title="${c.note}"` : '';
       return `<td class="num"${why}>${arrow}<br><span class="muted" style="font-size:11px">不可比</span></td>`;
     }
-    const cls = c.change >= 0 ? 'pos' : 'neg';
+    const cls = c.field === 'review_rate' ? (c.change >= 0 ? 'pos' : 'neg') : 'muted';
     const sign = c.change >= 0 ? '+' : '';
     const suffix = c.change_kind === 'pp' ? 'pp' : '%';
     return `<td class="num">${arrow}<br>
@@ -1804,18 +1807,16 @@ async function boot() {
   window.addEventListener('resize', () => chart.resize());
 
   const loading = document.getElementById('loading');
-  config = await fetch(`../data/dashboard_config.json?build=${Date.now()}`, { cache: 'no-store' })
-    .then(r => r.json()).catch(() => null);
-  if (!config) {
-    fail('读不到 ../data/dashboard_config.json',
-      '先运行 <code>python pipeline/build_dashboard_config.py</code> 编译轨道配置。' +
-      '如果文件确实存在，检查 HTTP 服务是不是从项目根目录启动的。');
+  const idx = await fetch(`../data/index.json?build=${Date.now()}`, { cache: 'no-store' })
+    .then(r => r.ok ? r.json() : null).catch(() => null);
+  snapshotBuildId = idx?.build_id || null;
+  versionedBatch = Boolean(idx?.config_file);
+  config = await fetch(`../data/${idx?.config_file || 'dashboard_config.json'}`, { cache: 'no-store' })
+    .then(r => r.ok ? r.json() : null).catch(() => null);
+  if (!config || (versionedBatch && config.build_id !== snapshotBuildId)) {
+    fail('看板数据暂时无法加载', '请点击重试。页面需要完整且一致的数据快照。');
     return;
   }
-
-  const idx = await fetch(`../data/index.json?build=${Date.now()}`, { cache: 'no-store' })
-    .then(r => r.json()).catch(() => null);
-  snapshotBuildId = idx?.build_id || null;
   catalog = (idx && idx.games) || [];
   if (!catalog.length) {
     fail('没有可用快照',
@@ -1823,7 +1824,7 @@ async function boot() {
     return;
   }
 
-  const updatedDates = await Promise.all(catalog.map(updateCatalogOnlineDate));
+  const updatedDates = versionedBatch ? catalog.map(g => g.snapshot_date) : await Promise.all(catalog.map(updateCatalogOnlineDate));
   const displayDate = updatedDates.filter(Boolean).sort().at(-1) || idx.generated_at;
 
   const wantedKeys = restoreView();
