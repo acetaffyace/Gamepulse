@@ -136,3 +136,4 @@
 {"sampled_at": "2026-09-29T05:05:07+00:00", "date_local": "2026-09-29", "hour_local": 13, "game_id": "neverness_to_everness", "steam_app_id": 4508340, "players": 2215, "status": "observed", "note": ""}
 {"sampled_at": "2026-09-29T06:05:10+00:00", "date_local": "2026-09-29", "hour_local": 14, "game_id": "neverness_to_everness", "steam_app_id": 4508340, "players": 2165, "status": "observed", "note": ""}
 {"sampled_at": "2026-09-29T07:05:10+00:00", "date_local": "2026-09-29", "hour_local": 15, "game_id": "neverness_to_everness", "steam_app_id": 4508340, "players": 2154, "status": "observed", "note": ""}
+{"sampled_at": "2026-09-29T08:05:07+00:00", "date_local": "2026-09-29", "hour_local": 16, "game_id": "neverness_to_everness", "steam_app_id": 4508340, "players": 2282, "status": "observed", "note": ""}

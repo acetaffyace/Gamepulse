@@ -78,18 +78,36 @@
     },
     {
       "id": "online",
-      "title": "Steam 同时在线人数",
-      "subtitle": "Steam 日点 / SteamDB / 小时采样兜底 · 平台同时在线，非 DAU",
+      "title": "Steam 日均同时在线",
+      "subtitle": "SteamDB 全天平均 · 虚线为 Steam 官方每日定时采样 · 非 DAU",
       "adapter": "series",
       "path": "online_series",
-      "field": "value",
       "chart": "line",
-      "color": "slot7",
       "height": 110,
       "unit": "count",
       "enabled": true,
       "symbol": true,
-      "caveat": "同日优先用有效的 Steam 官方日采样，其次用 SteamDB 图表点位，最后用当天最新的有效小时采样。来源与采样时刻可能不同；都是平台同时在线观测，不是 DAU"
+      "compare_field": "value",
+      "series": [
+        {
+          "field": "value",
+          "name": "日均同时在线（SteamDB）",
+          "color": "slot7",
+          "width": 2.4,
+          "connect_nulls": false,
+          "end_label": true
+        },
+        {
+          "field": "spot",
+          "name": "每日定时采样（Steam 官方）",
+          "color": "slot7",
+          "width": 1.2,
+          "opacity": 0.6,
+          "dashed": true,
+          "connect_nulls": false
+        }
+      ],
+      "caveat": "实线是 SteamDB 统计的全天平均同时在线，可跨版本比较；SteamDB 需手动导入，更新到最近一次导入日。虚线是 Steam 官方接口在每日采集时刻的瞬时在线，只作最近几天的参考，与日均不是同一口径。都不是 DAU"
     },
     {
       "id": "online_band",
@@ -117,7 +135,7 @@
           "dashed": true
         }
       ],
-      "caveat": "采样点少于 6 个的日期标 partial，半天的样本算不出真实日峰值"
+      "caveat": "小时采样依赖本机开机，夜间常缺；采样点少于 20 个的日期标 partial，只覆盖白天几个小时的样本算不出真实日峰值"
     },
     {
       "id": "version_marks",
@@ -701,5 +719,5 @@
     "video_ramp",
     "video_scatter"
   ],
-  "build_id": "b5b183f1ed0e4539bc5b0a08728c8182"
+  "build_id": "3a2c3de04d034487bb9c83f59669612a"
 }

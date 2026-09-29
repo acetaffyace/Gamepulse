@@ -1,6 +1,10 @@
 # GamePulse · 游戏长线运营情报看板
 
+[![CI](https://github.com/acetaffyace/Gamepulse/actions/workflows/ci.yml/badge.svg)](https://github.com/acetaffyace/Gamepulse/actions/workflows/ci.yml)
+
 用公开的 Steam、B 站和 YouTube 数据，观察游戏版本更新前后的口碑、玩家讨论与官方内容表现。目前跟踪《鸣潮》《绝区零》《异环》。
+
+**在线演示：** <https://acetaffyace.github.io/Gamepulse/>（静态页面，打开即用）
 
 **30 秒了解项目：** 选一个或多个游戏、版本，按日历日期或“更新后第 N 天”对齐；在同一页面查看评测、同时在线、官方视频和版本事件，并能切换指标、导出数据。仓库自带真实采集的快照，打开页面即可查看，无需先申请 API Key 或采集数据。
 
@@ -57,7 +61,7 @@ python collect.py
 - 视频播放量是累计值。B 站和 YouTube 的受众、统计口径不同，不合成为一个“综合热度”；多数视频是事后登记，缺少发布首周数据。
 - 历史在线数据包含手工导入的第三方 SteamDB 日点；来源在看板中标注。
 
-这是独立研究项目，不代表相关平台或游戏公司。
+这是独立研究项目，不代表相关平台或游戏公司。代码以 [MIT 许可证](LICENSE) 发布；采集的数据来自各平台公开接口，其使用仍受相应平台条款约束。ECharts 按其 Apache-2.0 许可随附于 `dashboard/vendor/`。
 
 ## 验证
 
@@ -69,3 +73,5 @@ npm run test:studio                          # 工作台端到端
 npm run test:browser                         # 探索视图端到端
 python tools/verify_release.py               # 独立核对当前发布批次
 ```
+
+每次推送到 main 时，GitHub Actions 会在 Ubuntu 与 Windows 上运行 Python 测试，并在 Ubuntu 上运行前端与浏览器测试。
