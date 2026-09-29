@@ -4,8 +4,8 @@ REM
 REM ASCII comments only -- cmd.exe decodes .cmd with the system ANSI codepage,
 REM so UTF-8 Chinese comments come out mangled and get run as commands.
 REM
-REM The server MUST be started from the project root, not from dashboard/:
-REM the page fetches ../data/*.json and would 404 otherwise.
+REM Serves the release bundle in dist/ (built by "python -m store.build" or
+REM "python collect.py"); the bundle is exactly what GitHub Pages serves.
 REM
 REM Just double-click this file. Close the window to stop the server.
 
@@ -17,13 +17,14 @@ if not "%~1"=="" set PORT=%~1
 
 echo.
 echo   GamePulse dashboard
-echo   http://127.0.0.1:%PORT%/dashboard/index.html
+echo   http://127.0.0.1:%PORT%/
 echo.
 echo   Close this window to stop the server.
 echo.
 
 REM Give the server a moment to bind before the browser hits it.
-start "" /b cmd /c "timeout /t 2 /nobreak >nul && start http://127.0.0.1:%PORT%/dashboard/index.html"
+start "" /b cmd /c "timeout /t 2 /nobreak >nul && start http://127.0.0.1:%PORT%/"
 
-python -m http.server %PORT% --bind 127.0.0.1
+if not exist dist\data\manifest.json python -m store.build --no-backup
+python -m http.server %PORT% --bind 127.0.0.1 -d dist
 endlocal

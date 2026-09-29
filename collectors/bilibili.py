@@ -1,160 +1,103 @@
-"""B 站视频公开字段采集器。
+"""B 站登记视频的公开计数（官方 view 接口，无需登录/Cookie，不调用有风控的搜索接口）。
 
-只读取 config/bilibili_videos.yml 中人工登记并已核验的 BV 号，
-使用官方 view 接口（无需登录/Cookie）。不调用搜索接口，不做全站发现。
+默认只采 config/video_pairs.yml 精选范围内的视频（--all-registered 采注册表全部 active 视频）。
+采集时复核 owner.mid 是否属于登记的官方账号：不一致的（搬运号冒充）不写入，只记在采集记录里。
+B 站请求始终直连（见 common.PROXY_HOSTS / DIRECT_HOSTS 的说明）。
 
-采集时复核 owner.mid 是否等于登记的官方账号 mid：
-若不一致则标记 owner_mismatch，避免搬运号数据混入官方传播口径。
+    python collectors/bilibili.py
 """
 
 from __future__ import annotations
 
 import argparse
 import sys
-import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from collectors.common import business_date, BUSINESS_TZ, collection_result, atomic_write_text, file_lock
-
 from collectors.common import (  # noqa: E402
-    OBSERVED,
-    UNAVAILABLE,
-    get_json,
-    load_curated_video_pairs,
-    load_games,
-    load_videos,
-    log_collection,
-    official_mids,
-    polite_sleep,
-    save_raw,
-    session,
-    today_local,
-    upsert_series,
-    upsert_video_subset_series,
+    active_games, business_date, get_json, load_curated_video_pairs, load_videos, now_iso, official_mids,
+    polite_sleep, run_per_game, save_raw, session, today_local,
 )
+from store import config_sync, db  # noqa: E402
 
 VIEW_URL = "https://api.bilibili.com/x/web-interface/view"
 HEADERS = {"Referer": "https://www.bilibili.com/"}
 
 
-def fetch_video(sess, bvid: str,
-                expected_mid: int | set[int] | None) -> tuple[dict, dict]:
-    payload, status = get_json(sess, VIEW_URL, {"bvid": bvid},
-                               headers=HEADERS)
-    if status != "ok" or not payload:
-        return {"bvid": bvid, "view": None, "status": UNAVAILABLE,
-                "note": status}, payload or {}
+def fetch_video(sess, bvid: str, official: set[int]) -> tuple[dict | None, str, dict]:
+    """返回 (计数与元数据, 失败原因, 原始响应)。身份不符也算失败。"""
+    payload, status = get_json(sess, VIEW_URL, {"bvid": bvid}, headers=HEADERS)
+    if status != "ok":
+        return None, status, payload or {}
     if payload.get("code") != 0:
-        return {"bvid": bvid, "view": None, "status": UNAVAILABLE,
-                "note": f"code={payload.get('code')}:{payload.get('message')}"}, payload
-
+        return None, f"code={payload.get('code')}:{payload.get('message')}", payload
     data = payload.get("data") or {}
     stat = data.get("stat") or {}
     owner = data.get("owner") or {}
-    mid = owner.get("mid")
-
-    note = ""
-    expected_mids = ({expected_mid} if isinstance(expected_mid, int)
-                     else set(expected_mid or []))
-    if expected_mids and mid not in expected_mids:
-        expected = ",".join(str(value) for value in sorted(expected_mids))
-        note = f"owner_mismatch:got={mid},expected_any={expected}"
-
+    if official and owner.get("mid") not in official:
+        return None, f"owner_mismatch:got={owner.get('mid')}", payload
+    if stat.get("view") is None:
+        return None, "no_view_count", payload
     return {
-        "bvid": bvid,
-        "title": data.get("title"),
-        "owner_mid": mid,
-        "owner_name": owner.get("name"),
-        "pubdate": business_date(data.get("pubdate")),
-        "view": stat.get("view"),
+        "views": stat.get("view"), "likes": stat.get("like"), "comments": stat.get("reply"),
+        "coins": stat.get("coin"), "favorites": stat.get("favorite"), "shares": stat.get("share"),
         "danmaku": stat.get("danmaku"),
-        "reply": stat.get("reply"),
-        "like": stat.get("like"),
-        "coin": stat.get("coin"),
-        "favorite": stat.get("favorite"),
-        "share": stat.get("share"),
-        "status": OBSERVED if stat.get("view") is not None else UNAVAILABLE,
-        "identity_verified": not bool(note),
-        "note": note,
-    }, payload
+        "title": data.get("title"), "channel": owner.get("name"), "pubdate": business_date(data.get("pubdate")),
+    }, "", payload
 
 
-def collect_game(game_id: str, date_local: str,
-                 curated_only: bool = True) -> dict:
-    videos = (load_curated_video_pairs(game_id) if curated_only
-              else load_videos(game_id))
-    if not videos:
-        reason = "no_curated_videos" if curated_only else "no_active_videos"
-        log_collection("bilibili", game_id, date_local, "skipped", reason)
-        print(f"[skip] {game_id}: 没有可采集的 B 站视频")
-        return {}
+def targets(game_id: str, curated_only: bool) -> list[str]:
+    if curated_only:
+        return [p["bvid"] for p in load_curated_video_pairs(game_id) if p.get("bvid")]
+    return [v["bvid"] for v in load_videos(game_id)]
 
+
+def collect_one(conn, game: dict, date_local: str, curated_only: bool = True) -> tuple[int, int, str]:
+    bvids = targets(game["game_id"], curated_only)
+    if not bvids:
+        return 0, 0, "no_registered_videos"
     sess = session()
-    expected_mid = official_mids(game_id)
-    results, raws = [], {}
-
-    for entry in videos:
-        bvid = entry["bvid"]
-        measured, raw = fetch_video(sess, bvid, expected_mid)
-        # 合并登记的业务维度（角色、版本、内容类型）
-        measured.update({
-            "character_id": entry.get("character_id"),
-            "character_name": entry.get("character_name"),
-            "version_id": entry.get("version_id"),
-            "version_confirmed": entry.get("version_confirmed", False),
-            "content_type": entry.get("content_type"),
-            "pair_id": entry.get("pair_id"),
-        })
-        results.append(measured)
+    official = official_mids(game["game_id"])
+    rows, meta, raws, errors = [], [], {}, []
+    observed_at = now_iso()
+    for bvid in bvids:
+        got, err, raw = fetch_video(sess, bvid, official)
         raws[bvid] = raw
-
-        if measured["status"] == OBSERVED:
-            flag = f"  ⚠ {measured['note']}" if measured["note"] else ""
-            print(f"  {bvid}  view={measured['view']:>12,}  {measured['title']}{flag}")
+        if got is None:
+            errors.append(f"{bvid}:{err}")
         else:
-            print(f"  {bvid}  不可用 ({measured['note']})")
+            rows.append({"platform": "bilibili", "video_id": bvid, "date": date_local, "observed_at": observed_at,
+                         **{k: got[k] for k in ("views", "likes", "comments", "coins", "favorites", "shares", "danmaku")}})
+            meta.append((got["title"], got["channel"], bvid))
         polite_sleep()
+    save_raw("bilibili", game["game_id"], date_local, raws)
+    with db.transaction(conn):
+        db.upsert(conn, "video_obs", rows)
+        conn.executemany("UPDATE video SET observed_title = ?, observed_channel = ? "
+                         "WHERE platform = 'bilibili' AND video_id = ?", meta)
+    print(f"  {game['display_name']}: {len(rows)}/{len(bvids)} 个视频采集成功")
+    return len(bvids), len(rows), "; ".join(errors[:5])
 
-    save_raw("bilibili", game_id, date_local, raws)
-    record = {"date_local": date_local, "game_id": game_id, "videos": results}
-    action = (upsert_video_subset_series(game_id, "bilibili", record, "bvid")
-              if curated_only else upsert_series(game_id, "bilibili", record))
 
-    ok = sum(1 for r in results if r["status"] == OBSERVED and r.get("identity_verified") is not False and r.get("view") is not None)
-    log_collection("bilibili", game_id, date_local, action,
-                   f"observed={ok}/{len(results)};curated_only={curated_only}")
-    print(f"[{action}] {game_id} {date_local}：{ok}/{len(results)} 个视频采集成功")
-    return record
+def run(conn, games: list[dict], date_local: str, curated_only: bool = True) -> bool:
+    return run_per_game(conn, "bilibili", games, date_local,
+                        lambda c, g, d: collect_one(c, g, d, curated_only))
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="采集 B 站登记视频的公开播放数据")
-    parser.add_argument("--game", help="game_id；省略则采集所有 active 游戏")
-    parser.add_argument("--date", default=today_local(), help="YYYY-MM-DD，默认今天")
+    parser = argparse.ArgumentParser(description="采集 B 站登记视频的公开计数")
+    parser.add_argument("--game")
+    parser.add_argument("--date", default=today_local())
     parser.add_argument("--all-registered", action="store_true",
-                        help="采集注册表全部 active 视频，默认只采 video_pairs.yml 白名单")
+                        help="采集注册表全部 active 视频，默认只采 video_pairs.yml 精选范围")
     args = parser.parse_args()
-
-    if args.game:
-        game_ids = [args.game]
-    else:
-        game_ids = [g["game_id"] for g in load_games() if g.get("active")]
-
-    failed = False
-    for game_id in game_ids:
-        try:
-            record = collect_game(game_id, args.date, curated_only=not args.all_registered)
-            videos = record.get("videos", [])
-            ok = sum(v.get("status") == OBSERVED and v.get("view") is not None and v.get("identity_verified") is not False for v in videos)
-            result = collection_result("bilibili", game_id, args.date, len(videos), ok)
-            failed = failed or result["status"] in ("partial", "failed")
-        except Exception as exc:
-            collection_result("bilibili", game_id, args.date, 1, 0, type(exc).__name__)
-            print(f"[failed] {game_id}: {type(exc).__name__}")
-            failed = True
-    return int(failed)
+    conn = db.connect()
+    try:
+        config_sync.sync(conn)   # 视频观测引用视频维表，先确保登记表已同步
+        return int(run(conn, active_games(args.game), args.date, curated_only=not args.all_registered))
+    finally:
+        conn.close()
 
 
 if __name__ == "__main__":

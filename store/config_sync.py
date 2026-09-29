@@ -9,6 +9,7 @@ YAML 是这些信息的唯一来源，数据库里的维度表每次构建都按
 
 from __future__ import annotations
 
+import copy
 import sqlite3
 from pathlib import Path
 
@@ -23,11 +24,24 @@ SLOT_COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#4a3aa7", "#e87ba4"]
 BILIBILI_LOCALE = "zh-cn"   # B 站视频的"频道语区"：面向中国大陆的中文频道
 
 
+_LOADER = getattr(yaml, "CSafeLoader", yaml.SafeLoader)   # C 版解析器快一个数量级（youtube_videos.yml 有 1.5 万行）
+_CACHE: dict[Path, tuple[tuple[int, int], dict]] = {}
+
+
+def read_yaml(path: Path) -> dict:
+    """按文件修改时间与大小缓存解析结果；文件改动后自动重新解析。返回副本，调用方可以随意修改。"""
+    stat = path.stat()
+    key = (stat.st_mtime_ns, stat.st_size)
+    cached = _CACHE.get(path)
+    if cached is None or cached[0] != key:
+        cached = (key, yaml.load(path.read_text(encoding="utf-8"), Loader=_LOADER) or {})
+        _CACHE[path] = cached
+    return copy.deepcopy(cached[1])
+
+
 def load_yaml(name: str, config_dir: Path = CONFIG_DIR) -> dict:
     path = config_dir / name
-    if not path.exists():
-        return {}
-    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    return read_yaml(path) if path.exists() else {}
 
 
 def _flag(value) -> int | None:

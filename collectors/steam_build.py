@@ -1,25 +1,13 @@
-"""Steam 版本构建号采集器（SteamCMD 公开镜像）。
+"""Steam public 分支构建号（SteamCMD 公开镜像 api.steamcmd.net）。
 
-为什么需要它
-------------
-现有的版本事件全部靠解析官方公告标题，而三家发行商的措辞完全不同
-（Update Announcement / New Content in / Patch Notes），漏一种就整家漏掉，
-公告延迟发布或标题不含版本号时也会漏。
+构建号是版本更新的独立证据：public 分支的 buildid 一变，说明客户端真的更新了，
+与公告怎么写无关。它和版本表、官方公告对照，能发现漏登记的版本。
+SteamCMD 镜像是第三方站点，不是 Valve 官方源（fact_source 里登记为 third_party）。
 
-构建号是另一条独立证据：public 分支的 buildid 一变，说明客户端真的更新了，
-这与公告怎么写无关。两条证据对上，版本竖线才可信；对不上，说明有一方漏了，
-这本身就是需要在看板上标出来的事情。
+实测（2026-09-14）：api.steamcmd.net/v1/info/4162040 → buildid 24927009，
+timeupdated 2026-09-09 06:06，与绝区零 3.2 的版本日吻合。
 
-实测（2026-09-14）：
-    api.steamcmd.net/v1/info/4162040 → buildid 24927009, timeupdated 2026-09-09 06:06
-    与公告解析出的绝区零 3.2 版本日 2026-09-09 吻合。
-
-注意：SteamCMD 镜像是第三方站点，不是 Valve 官方源，因此这里产生的事件
-统一标 third_party，与来自官方公告的 observed 事件区分开。
-
-用法：
     python collectors/steam_build.py
-    python collectors/steam_build.py --game zenless_zone_zero
 """
 
 from __future__ import annotations
@@ -31,116 +19,48 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from collectors.common import business_date, BUSINESS_TZ, collection_result, atomic_write_text, file_lock
-
 from collectors.common import (  # noqa: E402
-    UNAVAILABLE,
-    get_game,
-    get_json,
-    load_games,
-    log_collection,
-    polite_sleep,
-    save_raw,
-    session,
-    today_local,
-    upsert_series,
+    BUSINESS_TZ, active_games, get_json, now_iso, polite_sleep, run_per_game, save_raw, session, today_local,
 )
+from store import db  # noqa: E402
 
 INFO_URL = "https://api.steamcmd.net/v1/info/{appid}"
-THIRD_PARTY = "third_party"
 
 
-def fetch_build(sess, appid: int) -> tuple[dict, dict]:
+def fetch_build(sess, appid: int) -> tuple[dict | None, str, dict]:
     payload, status = get_json(sess, INFO_URL.format(appid=appid), timeout=30)
-    if status != "ok" or not payload or payload.get("status") != "success":
-        return {"buildid": None, "build_updated_at": None,
-                "build_status": UNAVAILABLE,
-                "build_note": status if status != "ok" else
-                f"status={(payload or {}).get('status')}"}, payload or {}
-
+    if status != "ok":
+        return None, status, payload or {}
+    if payload.get("status") != "success":
+        return None, f"status={payload.get('status')}", payload
     data = (payload.get("data") or {}).get(str(appid)) or {}
-    branches = (data.get("depots") or {}).get("branches") or {}
-    public = branches.get("public") or {}
-    buildid = public.get("buildid")
+    public = ((data.get("depots") or {}).get("branches") or {}).get("public") or {}
+    if not public.get("buildid"):
+        return None, "no_public_branch", payload
     updated = public.get("timeupdated")
-
-    if not buildid:
-        return {"buildid": None, "build_updated_at": None,
-                "build_status": UNAVAILABLE,
-                "build_note": "no_public_branch"}, payload
-
-    updated_iso = None
-    updated_date = None
-    if updated:
-        dt = datetime.fromtimestamp(int(updated), BUSINESS_TZ)
-        updated_iso = dt.isoformat(timespec="seconds")
-        updated_date = dt.strftime("%Y-%m-%d")
-
-    return {
-        "buildid": str(buildid),
-        "build_updated_at": updated_iso,
-        "build_updated_date": updated_date,
-        "build_name": (data.get("common") or {}).get("name"),
-        "build_status": THIRD_PARTY,
-        "build_note": "",
-    }, payload
+    at = datetime.fromtimestamp(int(updated), BUSINESS_TZ) if updated else None
+    return {"buildid": str(public["buildid"]),
+            "build_updated_at": at.isoformat(timespec="seconds") if at else None,
+            "build_updated_date": at.date().isoformat() if at else None}, "", payload
 
 
-def collect_game(game: dict, date_local: str) -> dict:
-    game_id = game["game_id"]
+def collect_one(conn, game: dict, date_local: str) -> tuple[int, int, str]:
     appid = game.get("steam_app_id")
     if not appid:
-        log_collection("steam_build", game_id, date_local, "skipped", "no_steam_app_id")
-        return {}
-
-    sess = session()
-    build, raw = fetch_build(sess, appid)
-    record = {"date_local": date_local, "game_id": game_id,
-              "steam_app_id": appid, **build}
-
-    save_raw("steam_build", game_id, date_local, raw)
-    action = upsert_series(game_id, "steam_build", record)
-    log_collection("steam_build", game_id, date_local, action,
-                   f"buildid={build.get('buildid')};"
-                   f"updated={build.get('build_updated_date')}")
-
-    print(f"  [{action}] {game['display_name']:<8} buildid={build.get('buildid')} "
-          f"构建更新于 {build.get('build_updated_date') or '不可用'}")
-    return record
+        return 0, 0, "no_steam_app_id"
+    build, err, raw = fetch_build(session(), appid)
+    save_raw("steam_build", game["game_id"], date_local, raw)
+    if build:
+        db.upsert(conn, "steam_build", [{"game_id": game["game_id"], "date": date_local, **build,
+                                         "observed_at": now_iso()}])
+    print(f"  {game['display_name']}: buildid {build['buildid'] if build else '失败'}"
+          f"{'，构建更新于 ' + build['build_updated_date'] if build and build['build_updated_date'] else ''}")
+    polite_sleep(.8)
+    return 1, int(build is not None), err
 
 
-def build_events(build_records: list[dict]) -> list[dict]:
-    """buildid 发生变化即产生一条构建更新事件。
-
-    事件日期用 timeupdated（客户端真正更新的时刻），不是发现变化的采集日 ——
-    采集可能晚于更新若干天，用采集日会把竖线画歪。
-    """
-    events: list[dict] = []
-    prev_build = None
-    seen_dates: set[str] = set()
-
-    for rec in sorted(build_records, key=lambda r: r["date_local"]):
-        buildid = rec.get("buildid")
-        if not buildid:
-            continue
-        updated_date = rec.get("build_updated_date")
-        if prev_build is not None and buildid != prev_build and updated_date:
-            if updated_date not in seen_dates:
-                seen_dates.add(updated_date)
-                events.append({
-                    "date_local": updated_date,
-                    "type": "build_update",
-                    "label": f"构建 {buildid}",
-                    "title": f"public 分支构建号 {prev_build} → {buildid}",
-                    "buildid": buildid,
-                    "previous_buildid": prev_build,
-                    "source": "steamcmd",
-                    "source_url": f"https://api.steamcmd.net/v1/info/{rec['steam_app_id']}",
-                    "evidence": THIRD_PARTY,
-                })
-        prev_build = buildid
-
-    return events
+def run(conn, games: list[dict], date_local: str) -> bool:
+    return run_per_game(conn, "steam_build", games, date_local, collect_one)
 
 
 def main() -> int:
@@ -148,23 +68,11 @@ def main() -> int:
     parser.add_argument("--game")
     parser.add_argument("--date", default=today_local())
     args = parser.parse_args()
-
-    games = [get_game(args.game)] if args.game else [
-        g for g in load_games() if g.get("active")]
-
-    failures = 0
-    for game in games:
-        try:
-            record = collect_game(game, args.date)
-            valid = bool(record.get("buildid"))
-            collection_result("steam_build", game["game_id"], args.date, 1 if game.get("steam_app_id") else 0, int(valid))
-            failures += int(bool(game.get("steam_app_id")) and not valid)
-        except Exception as exc:
-            collection_result("steam_build", game["game_id"], args.date, 1, 0, type(exc).__name__)
-            failures += 1
-        polite_sleep(.8)
-
-    return int(bool(failures))
+    conn = db.connect()
+    try:
+        return int(run(conn, active_games(args.game), args.date))
+    finally:
+        conn.close()
 
 
 if __name__ == "__main__":

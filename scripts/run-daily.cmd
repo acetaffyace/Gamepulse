@@ -27,5 +27,8 @@ echo ================================================== >> "%LOG%"
 python collect.py >> "%LOG%" 2>&1
 set RC=%ERRORLEVEL%
 
+REM Pushes dist/ to the gh-pages branch only when .env sets GAMEPULSE_AUTO_PUBLISH=1.
+python tools\publish_pages.py --auto >> "%LOG%" 2>&1
+
 echo exit_code=%RC% >> "%LOG%"
 endlocal & exit /b %RC%

@@ -5,8 +5,8 @@
 #   直接返回 HTTP 412），Steam 商店接口也会按 IP 跳区，导致同一个指标
 #   在不同日子来自不同地区口径。数据一致性比"云端自动跑"重要得多。
 #
-# 代价：关机的时段会漏采。评测创建日可由后续回填补齐；无法回填的观测
-#   仍在曲线上留空，由 quality 检查标出，不插值或编造在线人数。
+# 代价：关机的时段会漏采。评测创建日可由后续回填补齐；视频计数的缺口
+#   在曲线上留空并标出跨了几天，不插值。在线人数来自 SteamDB 导出（见 data/inbox/steamdb/）。
 #
 # 用法（普通权限即可，任务注册在当前用户下）：
 #   powershell -ExecutionPolicy Bypass -File scripts\register-tasks.ps1
@@ -23,17 +23,18 @@ param(
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $daily = Join-Path $root "scripts\run-daily.cmd"
-$hourly = Join-Path $root "scripts\run-hourly.cmd"
 $reviewRecovery = Join-Path $root "scripts\run-review-recovery.cmd"
 $weeklyReviews = Join-Path $root "scripts\run-weekly-review-backfill.cmd"
 
 $TASK_DAILY = "GamePulse-Daily"
+# v2 的小时在线采样任务：v3 已停用，注册时顺带删除
+# v2 hourly online sampling task: retired in v3, removed when registering
 $TASK_HOURLY = "GamePulse-HourlyOnline"
 $TASK_REVIEW_RECOVERY = "GamePulse-ReviewRecovery"
 $TASK_WEEKLY_REVIEWS = "GamePulse-WeeklyReviewBackfill"
 
 function Show-Status {
-    foreach ($name in @($TASK_DAILY, $TASK_HOURLY, $TASK_REVIEW_RECOVERY, $TASK_WEEKLY_REVIEWS)) {
+    foreach ($name in @($TASK_DAILY, $TASK_REVIEW_RECOVERY, $TASK_WEEKLY_REVIEWS)) {
         try {
             $task = Get-ScheduledTask -TaskName $name -ErrorAction Stop
             $info = Get-ScheduledTaskInfo -TaskName $name -ErrorAction Stop
@@ -67,8 +68,13 @@ if ($Remove) {
     exit 0
 }
 
-foreach ($path in @($daily, $hourly, $reviewRecovery, $weeklyReviews)) {
+foreach ($path in @($daily, $reviewRecovery, $weeklyReviews)) {
     if (-not (Test-Path $path)) { throw "找不到 $path" }
+}
+
+if (Get-ScheduledTask -TaskName $TASK_HOURLY -ErrorAction SilentlyContinue) {
+    Unregister-ScheduledTask -TaskName $TASK_HOURLY -Confirm:$false
+    Write-Host "已删除 v2 的小时在线采样任务 $TASK_HOURLY（在线人数改用 SteamDB 日均）"
 }
 
 # 通用设置：
@@ -92,17 +98,6 @@ Register-ScheduledTask -TaskName $TASK_DAILY `
     -Action $dailyAction -Trigger $dailyTrigger `
     -Settings $settings -Principal $principal -Force | Out-Null
 Write-Host "已注册 $TASK_DAILY（每天 $DailyAt）"
-
-# 小时级在线采样：从 00:05 起每小时一次。
-# 错开整点是因为整点是各类定时任务最拥挤的时刻，也避免和每日任务撞上。
-$hourlyAction = New-ScheduledTaskAction -Execute $hourly -WorkingDirectory $root
-$hourlyTrigger = New-ScheduledTaskTrigger -Once -At "00:05" `
-    -RepetitionInterval (New-TimeSpan -Hours 1) `
-    -RepetitionDuration (New-TimeSpan -Days 3650)
-Register-ScheduledTask -TaskName $TASK_HOURLY `
-    -Action $hourlyAction -Trigger $hourlyTrigger `
-    -Settings $settings -Principal $principal -Force | Out-Null
-Write-Host "已注册 $TASK_HOURLY（每小时第 5 分钟）"
 
 # 每日仅抓近期评测，修复临时接口超时留下的日缺口，
 # 同时把版本滚动好评率追到当天。失败时计划任务一小时后自动重试一次。
@@ -139,9 +134,8 @@ Write-Host @"
 提示
   · 日志在 data\logs\，按日期分文件；
   · 每天 17:00 增量回填近期评测；每周日 18:00 全量校准；失败会重试并保留旧数据；
-  · YouTube 需要 API Key 才会采集。计划任务读不到你终端里 set 的变量，
-    要用 setx 写进用户环境变量：  setx YOUTUBE_API_KEY "你的密钥"
-    设完要重新注册任务或重启，任务才能读到；
-  · 关机时段的评测创建日可回填；无法回填的在线观测仍留空，不插值或填 0；
+  · YouTube 需要 API Key：写进仓库根目录的 .env（YOUTUBE_API_KEY=…），计划任务也能读到；
+  · 在线人数：把 SteamDB 导出的 CSV 放进 data\inbox\steamdb\，下次采集自动导入；
+  · 发布到 GitHub Pages：在 .env 里设 GAMEPULSE_AUTO_PUBLISH=1 后，每日任务会自动推送；
   · 随时可以手动补跑：python collect.py
 "@

@@ -13,7 +13,7 @@ echo ================================================== >> "%LOG%"
 powershell -NoProfile -Command "Get-Date -Format 'yyyy-MM-dd HH:mm:ss'" >> "%LOG%"
 echo ================================================== >> "%LOG%"
 
-python collect.py --only review_backfill --incremental-review-backfill >> "%LOG%" 2>&1
+python collect.py --only reviews --incremental >> "%LOG%" 2>&1
 set RC=%ERRORLEVEL%
 
 echo exit_code=%RC% >> "%LOG%"

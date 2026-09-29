@@ -34,6 +34,18 @@ def build(db_path: Path = db.DB_PATH, out_dir: Path = DIST_DIR, *, config_dir: P
             "backup": str(backup_path) if backup_path else None}
 
 
+def main_quiet(db_path: Path = db.DB_PATH, out_dir: Path = DIST_DIR) -> int:
+    """供 collect.py 调用：构建并打印一行结果，失败时返回 1 而不抛异常。"""
+    try:
+        result = build(db_path, out_dir)
+    except (catalog.CatalogError, checks.CheckFailed, ValueError) as exc:
+        print(exc)
+        return 1
+    m = result["manifest"]
+    print(f"已发布 {m['build_id']}：{m['database']['file']}（{m['database']['gzip_bytes'] / 1e6:.2f} MB）→ {out_dir}")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="校验数据并生成发布包")
     parser.add_argument("--db", type=Path, default=db.DB_PATH)
