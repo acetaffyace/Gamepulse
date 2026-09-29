@@ -31,3 +31,7 @@ notes/
 
 # 采集流水日志：每小时追加，机器本地产物
 data/collect-log.tsv
+
+# spike 产物
+spike/out/
+spike/node_modules/

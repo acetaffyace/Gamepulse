@@ -1,0 +1,69 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>GamePulse SQLite spike</title>
+<pre id="out">running…</pre>
+<script src="node_modules/sql.js/dist/sql-wasm.js"></script>
+<script>
+// 浏览器端基准：加载 wasm 与压缩数据库，跑看板典型查询
+const QUERIES = {
+  version_d0: `SELECT version_id, day_index, COUNT(*) AS reviews, SUM(voted_up = 1) AS positive
+               FROM v_review WHERE game_id = 'wuthering_waves' AND version_id IN ('3.5','3.6')
+               AND day_index BETWEEN 0 AND 13 GROUP BY version_id, day_index`,
+  slice_3dims: `SELECT version_id, language, playtime_band, COUNT(*) AS reviews,
+                ROUND(100.0 * SUM(voted_up = 1) / COUNT(*), 2) AS positive_rate
+                FROM v_review WHERE game_id = 'wuthering_waves'
+                GROUP BY version_id, language, playtime_band`,
+  median_by_version: `WITH s AS (SELECT game_id, version_id, playtime_at_review AS p,
+                        ROW_NUMBER() OVER (PARTITION BY game_id, version_id ORDER BY playtime_at_review) - 1 AS i,
+                        COUNT(*) OVER (PARTITION BY game_id, version_id) AS n
+                      FROM v_review WHERE playtime_at_review IS NOT NULL AND version_id IS NOT NULL)
+                      SELECT game_id, version_id, p AS median_minutes, n FROM s
+                      WHERE i = CAST(0.5 * (n - 1) + 0.5 AS INTEGER)`,
+  cross_game_90d: `SELECT d.game_id, d.date, d.reviews, d.positive, o.avg_players
+                   FROM v_review_daily d LEFT JOIN online_daily o USING (game_id, date)
+                   WHERE d.date >= date('2026-09-29', '-90 day') ORDER BY d.game_id, d.date`,
+  video_top: `SELECT v.platform, v.locale, v.title, SUM(d.views_delta) AS views_gain
+              FROM v_video_delta d JOIN video v USING (platform, video_id)
+              WHERE d.views_delta IS NOT NULL GROUP BY d.platform, d.video_id
+              ORDER BY views_gain DESC LIMIT 20`,
+};
+
+async function run() {
+  const t = {};
+  const t0 = performance.now();
+  const SQL = await initSqlJs({ locateFile: f => `node_modules/sql.js/dist/${f}` });
+  t.wasm_init_ms = performance.now() - t0;
+
+  const t1 = performance.now();
+  const res = await fetch('out/gamepulse.sqlite.gz', { cache: 'no-store' });
+  const bytes = new Uint8Array(await new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+  t.fetch_decompress_ms = performance.now() - t1;
+
+  const t2 = performance.now();
+  const db = new SQL.Database(bytes);
+  t.open_ms = performance.now() - t2;
+  t.ready_total_ms = performance.now() - t0;
+
+  const queries = {};
+  for (const [name, sql] of Object.entries(QUERIES)) {
+    const runs = [];
+    let rows = 0;
+    for (let k = 0; k < 5; k++) {
+      const s = performance.now();
+      const r = db.exec(sql);
+      runs.push(performance.now() - s);
+      rows = r[0] ? r[0].values.length : 0;
+    }
+    runs.sort((a, b) => a - b);
+    queries[name] = { rows, first_ms: +runs.at(-1).toFixed(1), median_ms: +runs[2].toFixed(1) };
+  }
+  const check = db.exec(QUERIES.version_d0)[0].values
+    .reduce((acc, [v, , n, p]) => { acc[v] = acc[v] || [0, 0]; acc[v][0] += n; acc[v][1] += p; return acc; }, {});
+  const result = { timings: Object.fromEntries(Object.entries(t).map(([k, v]) => [k, +v.toFixed(1)])),
+                   queries, check_version_window: check,
+                   heap_mb: performance.memory ? +(performance.memory.usedJSHeapSize / 1048576).toFixed(1) : null };
+  document.getElementById('out').textContent = JSON.stringify(result, null, 2);
+  window.__result = result;
+}
+run().catch(e => { document.getElementById('out').textContent = e.stack; window.__result = { error: String(e) }; });
+</script>
