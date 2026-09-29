@@ -23,7 +23,8 @@ function params() {
   return new URLSearchParams(location.search);
 }
 
-function setParams(updates, { push = false } = {}) {
+// 筛选变化默认记入浏览器历史，"后退"可以撤销上一次筛选
+function setParams(updates, { push = true } = {}) {
   const next = params();
   for (const [k, v] of Object.entries(updates)) {
     if (v === null || v === undefined || v === '') next.delete(k);

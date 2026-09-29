@@ -90,7 +90,8 @@ select, input[type="date"], input[type="number"], input[type="text"], textarea {
 /* 筛选行：一行，放在它影响的全部内容之上 */
 .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 12px 14px;
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 16px; }
-.filters label { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); }
+.filters label, .filters .field { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); }
+.field-label { color: var(--ink-2); }
 .segmented { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; max-width: 100%; overflow-x: auto; }
 .segmented button { flex: none; }
 .segmented button { border: 0; border-radius: 0; min-height: 30px; padding: 4px 10px; background: transparent; }
@@ -148,8 +149,10 @@ table.data td.num, table.data th.num { text-align: right; }
 .panel .option { display: flex; gap: 8px; align-items: flex-start; padding: 3px 0; }
 .panel .option small { display: block; color: var(--muted); }
 .panel select { width: 100%; }
+.panel fieldset > .field,
 .panel fieldset > label:not(.option) { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 10px; color: var(--ink-2); }
-.panel fieldset > label:not(.option) > select, .panel fieldset > label:not(.option) > .chips { flex-basis: 100%; }
+.panel fieldset > label:not(.option) > select, .panel fieldset > label:not(.option) > .chips,
+.panel fieldset > .field > .chips { flex-basis: 100%; }
 .panel input[type="date"] { flex: 1 1 130px; }
 .error { color: var(--bad-text); background: var(--surface-2); border-radius: 8px; padding: 8px 10px; margin: 8px 0; }
 pre.sql { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; white-space: pre-wrap; word-break: break-all; background: var(--surface-2); padding: 10px; border-radius: 8px;
@@ -172,10 +175,10 @@ textarea.sql { width: 100%; min-height: 140px; font-family: ui-monospace, Consol
   main { padding: 16px 14px 32px; }
   .banner { margin: 12px 14px 0; }
   .grid-2 { grid-template-columns: 1fr; }
-  .explore { grid-template-columns: 1fr; }
+  .explore { grid-template-columns: minmax(0, 1fr); }
   .chart { height: 260px; }
   .card-head { flex-wrap: wrap; }
-  .filters label { flex-wrap: wrap; max-width: 100%; }
+  .filters label, .filters .field { flex-wrap: wrap; max-width: 100%; }
   .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tile-value { font-size: 22px; }
 }

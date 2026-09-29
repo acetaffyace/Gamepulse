@@ -26,10 +26,13 @@ export function render({ store, root, params, set }) {
 
   const { start, end } = windowRange(anchor, days, first);
   const n = rangeDays(start, end);
-  const prev = days === 'all' ? null : { start: addDays(start, -n), end: addDays(start, -1) };
+  // 之前的同样天数必须完整落在评测数据范围内才比较，否则"变化"是拿空白日子比出来的
+  const candidate = days === 'all' ? null : { start: addDays(start, -n), end: addDays(start, -1) };
+  const prev = candidate && candidate.start >= first ? candidate : null;
   root.append(scopeLine(`统计范围 ${start} 至 ${end}，共 ${n} 天（北京时间）`,
     '截止日是最后一个完整的评测日，最后一次回填当天只统计到运行时刻，不计入',
-    prev ? `变化与之前的 ${n} 天（${prev.start} 至 ${prev.end}）比较` : null));
+    prev ? `变化与之前的 ${n} 天（${prev.start} 至 ${prev.end}）比较`
+      : candidate ? `评测数据从 ${first} 开始，之前没有完整的 ${n} 天可比，不显示变化` : null));
 
   const inRange = (r, dim = 'date') => [f.eq('game_id', game), f.between(dim, r.start, r.end)];
   const daily = r => one(store, { metrics: ['daily_reviews', 'reviews_per_day', 'daily_positive_rate', 'review_days'],

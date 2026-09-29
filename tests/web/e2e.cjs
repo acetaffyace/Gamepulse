@@ -87,6 +87,8 @@ test('version comparison uses the same window for both versions and can swap', a
   assert.deepEqual(firstTile.map(number), counts.map(r => r.n));
   await page.getByRole('button', { name: '交换 A 和 B' }).click();
   await page.waitForFunction(() => new URLSearchParams(location.search).get('a') === '1.2');
+  // 网址先变、页面随后重绘：等指标卡真正换过来再读
+  await page.waitForFunction(first => document.querySelector('.tile .tile-value')?.textContent !== first, firstTile[0]);
   const swapped = await page.locator('.tile').first().locator('.tile-value').allTextContents();
   assert.deepEqual(swapped.map(number), counts.map(r => r.n).reverse());
   await context.close();
@@ -134,6 +136,70 @@ test('explore: presets run, rules block meaningless queries, SQL mode is read-on
   await context.close();
 });
 
+test('explore refuses stacked rates, keeps date gaps and validates filters', async () => {
+  const { page, context } = await open('?page=explore&fact=review_daily&m=daily_positive_rate&x=week_start&s=game_id&chart=stacked');
+  await ready(page);
+  assert.match(await page.textContent('.error'), /不能画成堆叠图/);
+  await page.goto(`${BASE}?page=explore&fact=review_daily&m=daily_reviews&x=date&from=2026-09-10&to=2026-09-01`);
+  await ready(page);
+  assert.match(await page.textContent('.error'), /晚于结束日期/);
+  await page.goto(`${BASE}?page=explore&fact=review_daily&m=daily_reviews&x=date&d0=abc`);
+  await ready(page);
+  assert.match(await page.textContent('.error'), /必须是整数/);
+  // 视频观测按日期看，每支视频中间漏采的日子应当留空
+  await page.goto(`${BASE}?page=explore&fact=video_obs&m=video_views&x=date&s=video_id&locales=global&games=beta`);
+  await ready(page);
+  assert.equal(await page.locator('.error').count(), 0);
+  await context.close();
+});
+
+test('raw SQL from a link is not run automatically and writes are impossible', async () => {
+  const evil = encodeURIComponent('WITH x AS (SELECT 1) DELETE FROM version');
+  const { page, context } = await open(`?page=explore&mode=sql&sql=${evil}`);
+  await ready(page);
+  assert.equal(await page.locator('table.data').count(), 0);
+  assert.match(await page.textContent('main'), /确认内容后点"运行"/);
+  await page.getByRole('button', { name: '运行' }).click();
+  await page.waitForSelector('.error');
+  assert.match(await page.textContent('.error'), /不能修改数据/);
+  // 就算绕过了文字检查，数据库本身也是只读的
+  const error = await page.evaluate(() => { try { window.gamepulse.db.run('DELETE FROM version'); return ''; } catch (e) { return e.message; } });
+  assert.match(error, /readonly|read-only|attempt to write/i);
+  assert.ok((await sql(page, 'SELECT COUNT(*) AS n FROM version'))[0].n > 0);
+  await context.close();
+});
+
+test('version selection never compares a version with itself', async () => {
+  const { page, context } = await open('?page=versions&game=alpha&b=1.0&days=-5');
+  await ready(page);
+  const [a, b] = await page.locator('.filters select').evaluateAll(els => els.slice(1, 3).map(e => e.value));
+  assert.notEqual(a, b);
+  assert.match(await page.textContent('.scope'), /共 \d+ 天/);
+  assert.doesNotMatch(await page.textContent('.scope'), /共 -/);
+  await page.selectOption('.filters select >> nth=1', b);   // 把 A 选成和 B 一样：应当交换
+  await page.waitForFunction(() => { const q = new URLSearchParams(location.search); return q.get('a') !== q.get('b'); });
+  await context.close();
+});
+
+test('clicking a filter caption does not change the filter', async () => {
+  const { page, context } = await open('?page=overview&game=alpha&days=90');
+  await ready(page);
+  await page.getByText('时间范围', { exact: true }).click();
+  await page.waitForTimeout(300);
+  assert.equal(new URL(page.url()).searchParams.get('days'), '90');
+  await context.close();
+});
+
+test('back button undoes a filter change', async () => {
+  const { page, context } = await open('?page=overview&game=alpha&days=90');
+  await ready(page);
+  await page.getByRole('button', { name: '7 天' }).click();
+  await page.waitForFunction(() => new URLSearchParams(location.search).get('days') === '7');
+  await page.goBack();
+  await page.waitForFunction(() => new URLSearchParams(location.search).get('days') === '90');
+  await context.close();
+});
+
 test('dark mode is selectable and remembered', async () => {
   const { page, context } = await open('?page=players&game=alpha');
   await ready(page);
@@ -154,7 +220,7 @@ test('share button copies the current view', async () => {
 });
 
 test('pages fit a 390px phone without horizontal scrolling', async () => {
-  for (const name of Object.keys(PAGES)) {
+  for (const name of [...Object.keys(PAGES), 'explore&mode=sql']) {
     const { page, context } = await open(`?page=${name}&game=alpha`, { viewport: { width: 390, height: 844 } });
     await ready(page);
     const width = await page.evaluate(() => document.documentElement.scrollWidth);

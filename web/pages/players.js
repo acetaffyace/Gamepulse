@@ -12,7 +12,8 @@ export function render({ store, root, params, set }) {
   const game = currentGame(store, params);
   const versions = sortedVersions(store, game);
   const recentOptions = [{ value: 6, label: '最近 6 个' }, { value: 12, label: '最近 12 个' }, { value: 'all', label: '全部' }];
-  const count = params.get('versions') === 'all' ? 'all' : (Number(params.get('versions')) || 6);
+  const count = recentOptions.some(o => String(o.value) === params.get('versions'))
+    ? (params.get('versions') === 'all' ? 'all' : Number(params.get('versions'))) : 6;
   const shown = count === 'all' ? versions : versions.slice(-count);
   const ids = shown.map(v => v.version_id);
 
@@ -59,12 +60,11 @@ export function render({ store, root, params, set }) {
   );
   root.append(grid);
 
-  // 语种：前几种按全部所选版本的评测总数选出，颜色跟语种固定
+  // 语种：前几种按这款游戏全部评测的排名选出，颜色也按这个排名固定——换显示多少个版本，语种不会换颜色
   const langRows = store.query({ metrics: ['review_share', 'review_count'], dims: ['version_id', 'language'],
     filters: scope, shareDim: 'language' }).rows;
-  const totals = {};
-  for (const r of langRows) totals[r.language] = (totals[r.language] || 0) + r.review_count;
-  const top = Object.keys(totals).sort((a, b) => totals[b] - totals[a]).slice(0, TOP_LANGUAGES);
+  const top = store.query({ metrics: ['review_count'], dims: ['language'], filters: [f.eq('game_id', game)],
+    order: [{ key: 'review_count', desc: true }], limit: TOP_LANGUAGES }).rows.map(r => r.language);
   const langShare = (v, lang) => langRows.find(r => r.version_id === v && r.language === lang)?.review_share ?? 0;
   const langSeries = top.map((lang, i) => ({ name: dimText(store, 'language', lang), color: slot(i), data: ids.map(v => langShare(v, lang)) }));
   langSeries.push({ name: '其他', color: otherColor(), data: ids.map(v => Math.max(0, 100 - top.reduce((s, l) => s + langShare(v, l), 0))) });
@@ -73,7 +73,7 @@ export function render({ store, root, params, set }) {
     filters: [...scope, { dim: 'playtime_band', op: 'notnull' }] }).rows;
   const rateValue = (v, band) => bandRate.find(r => r.version_id === v && r.playtime_band === band)?.positive_rate ?? null;
   const grid2 = el('div', { class: 'grid-2' },
-    chartCard({ title: '评测语种构成', sub: `前 ${TOP_LANGUAGES} 种语言按所选版本的评测总数选出，其余合并为"其他"`,
+    chartCard({ title: '评测语种构成', sub: `这款游戏评测最多的 ${TOP_LANGUAGES} 种语言，其余合并为"其他"`,
       caveat: '语种是写评测时选择的语言，不等于玩家所在地区。', filename: `${game}-languages`,
       chart: { type: 'stacked100', x: ids.map(label), series: langSeries, format: v => metricText(store, 'review_share', v), axisFormat: v => `${v}%` },
       columns: [{ key: 'version_id', label: '版本' }, { key: 'language', label: '语种', format: v => dimText(store, 'language', v) },

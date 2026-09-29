@@ -2,9 +2,9 @@
 // 和固定看板用同一份指标目录与查询生成器，所以这里查出来的数和看板上的数一定一致。
 // 目录里的规则（例如播放量不能跨语区相加）在生成 SQL 时强制执行，违反时给出原因而不是给出一个错数。
 
-import { compareVersions, compact, dimLabel, formatValue, shortDate } from '../lib/format.js';
+import { addDays, compareVersions, compact, daysBetween, dimLabel, formatValue, shortDate } from '../lib/format.js';
 import { colorByOrder, ordinal, otherColor, slot, themed } from '../lib/palette.js';
-import { QueryError, checkReadOnlySql } from '../lib/query.js';
+import { QueryError, checkReadOnlySql, limitSql } from '../lib/query.js';
 import { chartCard, chips, download, el, select, tableCard } from '../lib/ui.js';
 import { header } from './shared.js';
 
@@ -90,10 +90,10 @@ export function render({ store, root, params, set }) {
     filterFields(store, fact, params, set, gameIds),
   );
 
-  const spec = { metrics: chosen, dims: s ? [x, s] : [x], filters: buildFilters(store, fact, params, gameIds),
-                 useDefaultFilters: params.get('all_videos') !== '1', shareDim: s || x };
   let result;
   try {
+    const spec = { metrics: chosen, dims: s ? [x, s] : [x], filters: buildFilters(store, fact, params, gameIds),
+                   useDefaultFilters: params.get('nodefault') !== '1', shareDim: s || x };
     result = store.query(spec);
   } catch (err) {
     if (!(err instanceof QueryError)) throw err;
@@ -105,7 +105,7 @@ export function render({ store, root, params, set }) {
 
 function presetParams(p) {
   const clear = { fact: null, m: null, x: null, s: null, games: null, versions: null, from: null, to: null, d0: null, d1: null,
-                  locales: null, types: null, chart: null, all_videos: null, mode: null };
+                  locales: null, types: null, chart: null, nodefault: null, mode: null, sql: null };
   return { ...clear, ...p };
 }
 
@@ -122,14 +122,16 @@ function filterFields(store, fact, params, set, gameIds) {
       v => set({ versions: v.length === versions.length ? null : v })));
   }
   const dateDim = fact.date_dimension;
-  box.append(el('label', {}, `${cat.dimensions[dateDim].label}从`,
-    el('input', { type: 'date', value: params.get('from') || '', onchange: e => set({ from: e.target.value }) }), '到',
-    el('input', { type: 'date', value: params.get('to') || '', onchange: e => set({ to: e.target.value }) })));
+  const dateLabel = cat.dimensions[dateDim].label;
+  box.append(el('div', { class: 'field' }, el('span', { class: 'field-label' }, `${dateLabel}从`),
+    el('input', { type: 'date', 'aria-label': `${dateLabel}起始`, value: params.get('from') || '', onchange: e => set({ from: e.target.value }) }), '到',
+    el('input', { type: 'date', 'aria-label': `${dateLabel}结束`, value: params.get('to') || '', onchange: e => set({ to: e.target.value }) })));
   const range = has('day_index') ? 'day_index' : has('days_since_pub') ? 'days_since_pub' : null;
   if (range) {
-    box.append(el('label', {}, `${cat.dimensions[range].label}从`,
-      el('input', { type: 'number', min: -60, max: 400, style: { width: '70px' }, value: params.get('d0') ?? '', onchange: e => set({ d0: e.target.value }) }), '到',
-      el('input', { type: 'number', min: -60, max: 400, style: { width: '70px' }, value: params.get('d1') ?? '', onchange: e => set({ d1: e.target.value }) })));
+    const rangeLabel = cat.dimensions[range].label;
+    box.append(el('div', { class: 'field' }, el('span', { class: 'field-label' }, `${rangeLabel}从`),
+      el('input', { type: 'number', step: 1, 'aria-label': `${rangeLabel}起始`, style: { width: '70px' }, value: params.get('d0') ?? '', onchange: e => set({ d0: e.target.value }) }), '到',
+      el('input', { type: 'number', step: 1, 'aria-label': `${rangeLabel}结束`, style: { width: '70px' }, value: params.get('d1') ?? '', onchange: e => set({ d1: e.target.value }) })));
   }
   if (has('locale')) {
     const order = cat.dimensions.locale.order;
@@ -143,9 +145,11 @@ function filterFields(store, fact, params, set, gameIds) {
     box.append(chips('内容类型', types.map(t => ({ value: t, label: dimLabel(cat, store, 'content_type', t) })),
       picked.length ? picked : types, v => set({ types: v.length === types.length ? null : v })));
   }
-  if (fact.default_filters?.curated !== undefined) {
-    box.append(el('label', { class: 'option' }, el('input', { type: 'checkbox', checked: params.get('all_videos') === '1',
-      onchange: e => set({ all_videos: e.target.checked ? '1' : null }) }), el('span', {}, '包含精选范围以外的登记视频')));
+  const defaults = Object.keys(fact.default_filters || {});
+  if (defaults.length) {
+    const text = defaults.map(d => ({ curated: '包含精选范围以外的登记视频', complete_day: '包含最后一次回填当天（只统计到运行时刻，不完整）' }[d] || d));
+    box.append(el('label', { class: 'option' }, el('input', { type: 'checkbox', checked: params.get('nodefault') === '1',
+      onchange: e => set({ nodefault: e.target.checked ? '1' : null }) }), el('span', {}, text.join('；'))));
   }
   return box;
 }
@@ -153,6 +157,16 @@ function filterFields(store, fact, params, set, gameIds) {
 function buildFilters(store, fact, params, gameIds) {
   const has = d => fact.dimensions.includes(d);
   const out = [];
+  const from = params.get('from');
+  const to = params.get('to');
+  if (from && to && from > to) throw new QueryError(`起始日期 ${from} 晚于结束日期 ${to}`);
+  for (const key of ['d0', 'd1']) {
+    const v = params.get(key);
+    if (v !== null && v !== '' && !Number.isInteger(Number(v))) throw new QueryError(`天数必须是整数：${v}`);
+  }
+  if (params.get('d0') && params.get('d1') && Number(params.get('d0')) > Number(params.get('d1'))) {
+    throw new QueryError('起始天数大于结束天数');
+  }
   if (gameIds.length < store.games.length) out.push({ dim: 'game_id', op: 'in', value: gameIds });
   if (has('version_id') && list(params.get('versions')).length) out.push({ dim: 'version_id', op: 'in', value: list(params.get('versions')) });
   const dateDim = fact.date_dimension;
@@ -179,7 +193,8 @@ function showResult(store, output, result, { x, s, chosen, chartType, factId }) 
   const rows = result.rows;
   const label = (dim, v) => dimLabel(cat, store, dim, v);
   const sortX = (a, b) => (x === 'version_id' ? compareVersions(a, b) : (a > b) - (a < b));
-  const xs = [...new Set(rows.map(r => r[x]))].sort(sortX);
+  const xs = fillAxis(cat.dimensions[x].type, [...new Set(rows.map(r => r[x]))].sort(sortX));
+  const index = new Map(rows.map(r => [`${r[x]}\u0000${s ? r[s] : ''}`, r]));
   const type = chartType === 'auto'
     ? (['date', 'integer'].includes(cat.dimensions[x].type) ? 'line' : 'bar') : chartType;
 
@@ -190,6 +205,11 @@ function showResult(store, output, result, { x, s, chosen, chartType, factId }) 
   } else if (type !== 'table') {
     for (const id of chosen) {
       const m = cat.metrics[id];
+      if (type === 'stacked' && !additive(m)) {
+        output.append(el('div', { class: 'error', role: 'alert' },
+          `「${m.label}」是比率或分位数，不同类别的值不能相加，不能画成堆叠图。请改用折线或柱状。`));
+        continue;
+      }
       let groups = s ? [...new Set(rows.map(r => r[s]))] : [null];
       let note = '';
       let rest = [];
@@ -203,7 +223,7 @@ function showResult(store, output, result, { x, s, chosen, chartType, factId }) 
           : `拆分出的类别超过 ${MAX_SERIES} 个，图中只画数值最大的 ${groups.length} 个（这个指标不能相加，不合并为"其他"），完整结果见数据表。`;
       }
       if (s === 'version_id') groups.sort(compareVersions);
-      const value = (v, g) => rows.find(r => r[x] === v && (!s || r[s] === g))?.[id] ?? null;
+      const value = (v, g) => index.get(`${v}\u0000${s ? g : ''}`)?.[id] ?? null;
       const series = groups.map((g, i) => ({
         name: s ? label(s, g) : m.label, color: s ? seriesColor(store, s, g, i) : slot(0), data: xs.map(v => value(v, g)) }));
       if (rest.length && additive(m)) {
@@ -211,7 +231,8 @@ function showResult(store, output, result, { x, s, chosen, chartType, factId }) 
       }
       const fmt = v => (m.format === 'integer' && Math.abs(v) >= 1e4 ? compact(v) : formatValue(v, m.format));
       output.append(chartCard({ title: `${m.label}（${m.unit}）`, sub: `按「${cat.dimensions[x].label}」${s ? `，拆分为「${cat.dimensions[s].label}」` : ''}`,
-        caveat: [m.note, note].filter(Boolean).join(' '), filename: `gamepulse-${factId}-${id}`,
+        caveat: [m.note, note, gapNote(cat.dimensions[x].type, xs, rows, x)].filter(Boolean).join(' '),
+        filename: `gamepulse-${factId}-${id}`,
         chart: { type: type === 'stacked' ? 'stacked' : type, x: xs.map(v => label(x, v)),
                  xFormat: cat.dimensions[x].type === 'date' ? shortDate : undefined, series, format: fmt,
                  axisFormat: v => (m.format === 'percent' ? `${v}%` : compact(v)), fitY: type === 'line', percent: m.format === 'percent',
@@ -227,6 +248,22 @@ function showResult(store, output, result, { x, s, chosen, chartType, factId }) 
     el('div', { class: 'card-actions' }, el('button', { type: 'button', onclick: () => navigator.clipboard?.writeText(sqlText) }, '复制'))),
     el('pre', { class: 'sql' }, sqlText),
     el('p', { class: 'note' }, 'quantile(x, p) 是本项目注册的分位数函数（线性插值，p = 0.5 为中位数）。可以复制到"直接写 SQL"里修改。')));
+}
+
+// 日期、整数横轴补齐中间缺的值：缺采的日子留空，而不是被直接跳过、让折线直接连过去
+function fillAxis(type, xs) {
+  if (xs.length < 2 || !['date', 'integer'].includes(type)) return xs;
+  const [first, last] = [xs[0], xs[xs.length - 1]];
+  const span = type === 'date' ? daysBetween(first, last) : last - first;
+  if (span > 3000) return xs;
+  return Array.from({ length: span + 1 }, (_, i) => (type === 'date' ? addDays(first, i) : first + i));
+}
+
+function gapNote(type, xs, rows, x) {
+  if (!['date', 'integer'].includes(type)) return '';
+  const have = new Set(rows.map(r => r[x]));
+  const missing = xs.filter(v => !have.has(v)).length;
+  return missing ? `其中 ${missing} 个${type === 'date' ? '日期' : '位置'}没有数据，图上留空。` : '';
 }
 
 // 可以把若干类别加总成"其他"的指标：计数、求和、占比。比率和分位数不能相加。
@@ -250,6 +287,7 @@ function formatSql(sql, params) {
   return inlined.replace(/ (FROM|WHERE|GROUP BY|ORDER BY|LIMIT) /g, '\n$1 ');
 }
 
+const SQL_ROW_LIMIT = 5000;
 const SQL_EXAMPLE = `-- 各游戏各版本：评测数、好评率、写评测时时长中位数（小时）
 SELECT game_id, version_id, COUNT(*) AS reviews,
        ROUND(100.0 * SUM(voted_up = 1) / SUM(voted_up IS NOT NULL), 2) AS positive_rate,
@@ -260,7 +298,8 @@ GROUP BY game_id, version_id
 ORDER BY game_id, MIN(created_date)`;
 
 function sqlMode(store, root, params, set) {
-  const text = params.get('sql') || SQL_EXAMPLE;
+  const fromLink = params.get('sql');
+  const text = fromLink || SQL_EXAMPLE;
   const area = el('textarea', { class: 'sql', spellcheck: 'false', 'aria-label': 'SQL 查询' });
   area.value = text;
   const out = el('div', {});
@@ -269,14 +308,16 @@ function sqlMode(store, root, params, set) {
     let result;
     const started = performance.now();
     try {
-      result = store.raw(checkReadOnlySql(area.value));
+      result = store.raw(limitSql(checkReadOnlySql(area.value), SQL_ROW_LIMIT + 1));
     } catch (err) {
       out.append(el('div', { class: 'error', role: 'alert' }, err.message));
       return;
     }
     const columns = result.columns.map(c => ({ key: c, label: c, num: false }));
-    const rows = result.values.map(v => Object.fromEntries(result.columns.map((c, i) => [c, v[i]])));
-    out.append(el('p', { class: 'scope' }, `${rows.length} 行 · ${(performance.now() - started).toFixed(0)} ms`),
+    const truncated = result.values.length > SQL_ROW_LIMIT;
+    const rows = result.values.slice(0, SQL_ROW_LIMIT).map(v => Object.fromEntries(result.columns.map((c, i) => [c, v[i]])));
+    out.append(el('p', { class: 'scope' }, `${rows.length} 行 · ${(performance.now() - started).toFixed(0)} ms`,
+      truncated ? ` · 超过 ${SQL_ROW_LIMIT} 行，只取前 ${SQL_ROW_LIMIT} 行` : ''),
       tableCard({ title: '查询结果', filename: 'gamepulse-sql', columns, rows }));
   };
   const views = store.rows("SELECT name, type FROM sqlite_master WHERE type IN ('table', 'view') AND name NOT LIKE 'sqlite_%' ORDER BY type DESC, name");
@@ -292,9 +333,20 @@ function sqlMode(store, root, params, set) {
     el('div', {},
       el('section', { class: 'card' }, area,
         el('div', { class: 'card-actions', style: { marginTop: '8px' } },
-          el('button', { type: 'button', class: 'primary', onclick: () => { set({ sql: area.value === SQL_EXAMPLE ? null : area.value }); } }, '运行'),
+          el('button', { type: 'button', class: 'primary', onclick: () => {
+            // 把查询记进网址方便分享，但不重新渲染页面
+            const next = new URLSearchParams(location.search);
+            if (area.value === SQL_EXAMPLE) next.delete('sql'); else next.set('sql', area.value);
+            history.replaceState(null, '', `${location.pathname}?${next}`);
+            run();
+          } }, '运行'),
           el('button', { type: 'button', onclick: () => download('query.sql', area.value, 'text/plain;charset=utf-8') }, '保存 SQL')),
         el('p', { class: 'note' }, '只能执行一条 SELECT / WITH 查询。数据库是浏览器里的一份副本，不会影响任何人。')),
       out)));
-  run();
+  if (fromLink) {
+    // 链接里带来的查询不自动执行：先让人看清楚内容再点"运行"
+    out.append(el('p', { class: 'note' }, '这个链接带来了一条查询，确认内容后点"运行"。'));
+  } else {
+    run();
+  }
 }

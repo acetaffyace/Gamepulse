@@ -35,7 +35,12 @@ export function segmented(label, options, current, onChange) {
     group.append(el('button', { type: 'button', 'aria-pressed': String(String(o.value) === String(current)),
       onclick: () => onChange(o.value) }, o.label));
   }
-  return el('label', {}, label, group);
+  return field(label, group);
+}
+
+// 按钮组的外层不能用 <label>：点到文字时浏览器会把点击转给里面的第一个按钮
+function field(label, control) {
+  return el('div', { class: 'field' }, el('span', { class: 'field-label' }, label), control);
 }
 
 export function select(label, options, current, onChange, attrs = {}) {
@@ -59,7 +64,7 @@ export function chips(label, options, selected, onChange) {
       onChange(options.map(x => x.value).filter(v => next.has(String(v))));
     } }, o.color ? el('span', { class: 'swatch', style: { background: o.color } }) : null, o.label));
   }
-  return el('label', {}, label, group);
+  return field(label, group);
 }
 
 export function tile({ label, value, unit, delta, note }) {
@@ -71,18 +76,26 @@ export function tile({ label, value, unit, delta, note }) {
 }
 
 // 表格：columns = [{ key, label, num, format }]
+// 页面上最多画这么多行：再多浏览器会明显变慢，完整结果用"导出 CSV"
+export const TABLE_ROW_LIMIT = 500;
+
 export function table(columns, rows) {
   const head = el('tr', {}, columns.map(c => el('th', { class: c.num ? 'num' : undefined, scope: 'col' }, c.label)));
-  const body = rows.map(r => el('tr', {}, columns.map(c => {
+  const body = rows.slice(0, TABLE_ROW_LIMIT).map(r => el('tr', {}, columns.map(c => {
     const v = r[c.key];
     return el('td', { class: c.num ? 'num' : undefined }, c.format ? c.format(v, r) : (v ?? '—'));
   })));
-  return el('div', { class: 'table-wrap' }, el('table', { class: 'data' }, el('thead', {}, head), el('tbody', {}, body)));
+  return el('div', {},
+    el('div', { class: 'table-wrap' }, el('table', { class: 'data' }, el('thead', {}, head), el('tbody', {}, body))),
+    rows.length > TABLE_ROW_LIMIT
+      ? el('p', { class: 'note' }, `共 ${rows.length} 行，页面上只显示前 ${TABLE_ROW_LIMIT} 行；完整结果请导出 CSV。`) : null);
 }
 
 export function toCsv(columns, rows) {
   const cell = v => {
-    const s = v === null || v === undefined ? '' : String(v);
+    let s = v === null || v === undefined ? '' : String(v);
+    // 以 = + - @ 开头的文字在表格软件里会被当成公式执行（视频标题来自外部），前面加 ' 让它保持为文字
+    if (typeof v === 'string' && /^[=+\-@\t\r]/.test(s)) s = `'${s}`;
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
   return '﻿' + [columns.map(c => cell(c.label)).join(','),

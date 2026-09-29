@@ -74,7 +74,7 @@ export function renderChart(el, spec) {
   // 百分比数据接近 100% 时把上限固定为 100%，避免出现 105% 这种不存在的刻度。
   const dataMax = Math.max(...spec.series.flatMap(s => s.data).filter(v => typeof v === 'number'));
   const value = { type: spec.log ? 'log' : 'value', min: spec.yMin, scale: Boolean(spec.fitY),
-    max: spec.type === 'stacked100' || (spec.percent && dataMax > 95) ? 100 : undefined,
+    max: spec.type === 'stacked100' || (spec.percent && !stacked && dataMax > 95) ? 100 : undefined,
     splitLine: { lineStyle: { color: t.grid, type: 'solid', width: 1 } },
     axisLabel: { color: t.muted, fontSize: 11, formatter: v => axisFmt(v) }, axisLine: { show: false } };
 

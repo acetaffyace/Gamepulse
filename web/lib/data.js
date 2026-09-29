@@ -37,6 +37,8 @@ export async function openStore(manifest, onProgress) {
     download(`data/${manifest.database.file}`, manifest.database.gzip_bytes, onProgress),
   ]);
   const db = new SQL.Database(bytes);
+  // 页面从不写数据库。打开后立即设为只读：自助查询里任何写语句（包括 WITH … DELETE）都会被 SQLite 本身拒绝
+  db.run('PRAGMA query_only = 1');
   registerQuantile(db);
   const store = new Store(db, manifest);
   const build = JSON.parse(store.scalar("SELECT value FROM app_config WHERE key = 'build'"));

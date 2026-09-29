@@ -2,7 +2,7 @@
 // 同一支 PV 在各语区频道各发一次，播放量不能跨语区相加（指标目录强制按语区分组）。
 // 不同视频的发布天数不同，"最新值"只适合在同一语区内粗看；比较传播节奏用"发布后同龄"。
 
-import { compact, dimLabel, shortDate } from '../lib/format.js';
+import { compact, compareVersions, dimLabel, shortDate } from '../lib/format.js';
 import { colorByOrder, slot } from '../lib/palette.js';
 import { chartCard, chips, el, segmented, select, tableCard } from '../lib/ui.js';
 import { currentGame, dimText, f, gameSelect, header, metricText, scopeLine, sortedVersions } from './shared.js';
@@ -48,7 +48,7 @@ export function render({ store, root, params, set }) {
   root.append(chartCard({ title: metric === 'views' ? '最新累计播放' : '最新互动率',
     sub: '每支视频最近一次采到的值；发布越早的视频累计时间越长，只适合粗看', filename: `${game}-${locale}-latest`,
     empty: ranked.length ? null : '没有符合条件的视频',
-    chart: { type: 'hbar', x: ranked.map(v => v.title), labelWidth: 260,
+    chart: { type: 'hbar', x: ranked.map(v => v.title), labelWidth: window.innerWidth < 600 ? 120 : 260,
              series: [{ name: metric === 'views' ? '最新累计播放' : '最新互动率', color, data: ranked.map(v => v[latestId]) }],
              format: fmt, axisFormat: metric === 'views' ? compact : v => `${v}%` },
     columns: videoColumns(store, latestId), rows: latest }));
@@ -71,7 +71,9 @@ export function render({ store, root, params, set }) {
   const starts = missingStart.map(v => v.first_obs_age);
   root.append(chartCard({ title: '发布后同龄对比', sub: `按发布后第几天对齐（D0 = 发布当天），发布最晚的 ${recent.length} 支`,
     filename: `${game}-${locale}-by-age`,
-    empty: curveRows.length ? null : `符合条件的 ${latest.length} 支视频都是在发布 ${age} 天之后才开始采集，没有这一段的数据。可以把"同龄对比"调到更长的天数。`,
+    empty: curveRows.length ? null : latest.length
+      ? `符合条件的 ${latest.length} 支视频都是在发布 ${age} 天之后才开始采集，没有这一段的数据。可以把"同龄对比"调到更长的天数。`
+      : '没有符合条件的视频',
     caveat: [missingStart.length ? `${missingStart.length} 支视频首次采到时已发布 ${Math.min(...starts)}–${Math.max(...starts)} 天（虚线），之前的起跑段没有数据，不从累计值倒推；中间漏采的日子留空，不连线。` : '',
              skipped ? `另有 ${skipped} 支视频在前 ${age} 天内没有任何观测，未画出。` : ''].filter(Boolean).join('') || '所有曲线都从发布当天开始采集。',
     chart: { type: 'line', x: ages.map(d => `D${d}`), series, format: fmt, axisFormat: metric === 'views' ? compact : v => `${v}%`,
@@ -110,7 +112,7 @@ function pairTable(store, game, types, version, metric) {
     p[r.locale] = r[id];
     pairs.set(r.pair_id, p);
   }
-  const list = [...pairs.values()].sort((a, b) => String(b.version_id).localeCompare(String(a.version_id)));
+  const list = [...pairs.values()].sort((a, b) => compareVersions(b.version_id ?? '0', a.version_id ?? '0'));
   return tableCard({ title: '同一内容在各语区', sub: `同一支内容在 B 站与 YouTube 各语区频道的${metric === 'views' ? '最新累计播放' : '最新互动率'}，只并排展示、不相加`,
     caveat: '不同语区频道的订阅规模、推荐机制不同；频道语区是"发给谁看"，不是观众所在地区。',
     filename: `${game}-pairs`,

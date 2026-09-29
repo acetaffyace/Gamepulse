@@ -35,7 +35,8 @@ facts:
     source_table: review
     date_dimension: date
     dimensions: [game_id, date, version_id, day_index, game_day_index, week_start, complete_day]
-    note: 覆盖范围内没有评测的日子记 0。最后一次回填当天只统计到运行时刻（complete_day = 0）。
+    default_filters: {complete_day: 1}
+    note: 覆盖范围内没有评测的日子记 0。最后一次回填当天只统计到运行时刻，默认不计入。
 
   online:
     view: v_online
@@ -319,11 +320,12 @@ metrics:
     fact: video_obs
     label: 累计播放
     agg: SUM(views)
-    must_group_by: [locale]
+    # 每天采到的视频集合不同（新登记、漏采），多支视频的累计值相加会把"多追踪了几支"画成增长，所以按视频拆开
+    must_group_by: [locale, video_id]
     must_group_by_one_of: [[date], [days_since_pub]]
     unit: 次
     format: integer
-    note: 累计值，只能在同一天或同一发布天数下相加；不同语区不能相加。
+    note: 累计值，按视频分开看；不同语区不能相加。多数视频发布后才开始采集，缺少发布初期。
   video_views_gain:
     fact: video_obs
     label: 播放增量
@@ -345,11 +347,11 @@ metrics:
       100.0 * SUM(CASE WHEN platform = 'bilibili' THEN likes + coins + favorites ELSE likes + comments END)
       / NULLIF(SUM(CASE WHEN (CASE WHEN platform = 'bilibili' THEN likes + coins + favorites
                                    ELSE likes + comments END) IS NOT NULL THEN views END), 0)
-    must_group_by: [locale]
+    must_group_by: [locale, video_id]
     must_group_by_one_of: [[date], [days_since_pub]]
     unit: '%'
     format: percent
-    note: B 站为（点赞+投币+收藏）÷ 播放，YouTube 为（点赞+评论）÷ 播放；两平台公式不同，不能直接比较。
+    note: B 站为（点赞+投币+收藏）÷ 播放，YouTube 为（点赞+评论）÷ 播放；两平台公式不同，不能直接比较。按视频分开看。
   video_count:
     fact: video_obs
     label: 视频数

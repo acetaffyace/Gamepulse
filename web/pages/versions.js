@@ -23,19 +23,22 @@ export function render({ store, root, params, set }) {
   }
   const ids = versions.map(v => v.version_id);
   const b = ids.includes(params.get('b')) ? params.get('b') : ids[ids.length - 1];
-  const a = ids.includes(params.get('a')) && params.get('a') !== b ? params.get('a') : ids[Math.max(0, ids.indexOf(b) - 1)];
+  // A 默认取 B 的上一个版本；B 已经是第一个版本时取下一个，保证两边不是同一个版本
+  const fallback = ids[ids.indexOf(b) - 1] ?? ids[ids.indexOf(b) + 1];
+  const a = ids.includes(params.get('a')) && params.get('a') !== b ? params.get('a') : fallback;
   const va = versions.find(v => v.version_id === a);
   const vb = versions.find(v => v.version_id === b);
   const dayParam = params.get('days');
-  const wanted = dayParam === 'all' ? 'all' : (Number(dayParam) || 14);
+  const wanted = WINDOWS.some(w => String(w.value) === dayParam) ? (dayParam === 'all' ? 'all' : Number(dayParam)) : 14;
   const common = Math.min(availableDays(va, anchor), availableDays(vb, anchor));
   const n = wanted === 'all' ? common : Math.min(Number(wanted), common);
 
   const options = versions.map(v => ({ value: v.version_id, label: `${v.version_id} · ${v.start_date}` }));
   root.append(el('div', { class: 'filters' }, gameSelect(store, game, set),
-    select('基准版本 A', options, a, v => set({ a: v })),
+    // 选成和另一边同一个版本时直接交换，避免 A、B 相同
+    select('基准版本 A', options, a, v => set(v === b ? { a: v, b: a } : { a: v, b })),
     el('button', { type: 'button', onclick: () => set({ a: b, b: a }), 'aria-label': '交换 A 和 B' }, '⇄ 交换'),
-    select('对比版本 B', options, b, v => set({ b: v })),
+    select('对比版本 B', options, b, v => set(v === a ? { b: v, a: b } : { b: v, a })),
     segmented('更新后', WINDOWS, wanted, v => set({ days: v }))));
 
   const shortNote = wanted !== 'all' && n < Number(wanted)
@@ -55,11 +58,11 @@ export function render({ store, root, params, set }) {
   const online = perVersion(['avg_players', 'online_days']);
   const detail = perVersion(['playtime_median_h', 'short_play_share']);
 
-  const pairTile = (title, id, source, unit, note) => {
+  const pairTile = (title, id, source, unit, note, comparable = true) => {
     const m = store.catalog.metrics[id];
     const av = source[a]?.[id];
     const bv = source[b]?.[id];
-    const diff = formatDelta(m, bv, av);
+    const diff = comparable ? formatDelta(m, bv, av) : null;
     return el('div', { class: 'tile' },
       el('div', { class: 'tile-label' }, title),
       el('div', { class: 'pair' },
@@ -70,14 +73,15 @@ export function render({ store, root, params, set }) {
       diff ? el('div', { class: 'tile-delta' }, `B 较 A ${diff}`) : null,
       note ? el('div', { class: 'tile-note' }, note) : null);
   };
-  const onlineNote = [a, b].every(v => online[v]?.online_days === n)
+  const onlineComparable = [a, b].every(v => online[v]?.online_days === n);
+  const onlineNote = onlineComparable
     ? 'SteamDB 全天平均的窗口均值，不是 DAU'
-    : `SteamDB 覆盖：A ${online[a]?.online_days ?? 0}/${n} 天，B ${online[b]?.online_days ?? 0}/${n} 天`;
+    : `SteamDB 覆盖：A ${online[a]?.online_days ?? 0}/${n} 天，B ${online[b]?.online_days ?? 0}/${n} 天；覆盖天数不同，不比较`;
   root.append(el('div', { class: 'tiles' },
     pairTile('窗口评测数', 'daily_reviews', daily, '条', '按创建日统计仍存续的评测'),
     pairTile('日均评测数', 'reviews_per_day', daily, '条/日'),
     pairTile('窗口好评率', 'daily_positive_rate', daily, null, '窗口内好评 ÷ 评价已知的评测'),
-    pairTile('日均同时在线', 'avg_players', online, '人', onlineNote),
+    pairTile('日均同时在线', 'avg_players', online, '人', onlineNote, onlineComparable),
     pairTile('写评测时游戏时长（中位数）', 'playtime_median_h', detail, '小时'),
   ));
 

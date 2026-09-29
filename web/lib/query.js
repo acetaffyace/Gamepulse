@@ -122,13 +122,29 @@ export function buildQuery(catalog, spec) {
   return { sql, params, fact: factId, filters, columns };
 }
 
-// 自助查询的"直接写 SQL"模式：只允许单条只读语句。
-// 数据库是浏览器内存里的副本，就算写入也不会影响发布的文件，这里只是防止误操作把页面弄乱。
+// 去掉字符串、带引号的标识符和注释，剩下的才是语句结构（用来判断分号和开头的关键字）
+function skeleton(sql) {
+  return sql
+    .replace(/'(?:[^']|'')*'/g, "''")
+    .replace(/"(?:[^"]|"")*"/g, '""')
+    .replace(/--[^\n]*/g, ' ')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ');
+}
+
+// 自助查询的"直接写 SQL"模式：只允许单条以 SELECT / WITH 开头的查询。
+// 真正的只读保证在数据库层（data.js 打开后设了 PRAGMA query_only），这里只负责给出看得懂的提示。
 export function checkReadOnlySql(sql) {
-  const text = sql.trim().replace(/;\s*$/, '');
-  // 开头的注释（-- 行注释与 /* 块注释 */）不算语句
-  const body = text.replace(/^(?:\s*(?:--[^\n]*(?:\n|$)|\/\*[\s\S]*?\*\/))*\s*/, '');
+  const text = sql.trim();
+  const body = skeleton(text).trim().replace(/;\s*$/, '');
   if (!/^(select|with)\b/i.test(body)) throw new QueryError('只能执行 SELECT 或 WITH 开头的查询');
-  if (text.includes(';')) throw new QueryError('一次只能执行一条语句');
-  return text;
+  if (body.includes(';')) throw new QueryError('一次只能执行一条语句');
+  if (/\b(insert|update|delete|drop|alter|create|attach|detach|pragma|vacuum|reindex)\b/i.test(body)) {
+    throw new QueryError('只能查询，不能修改数据');
+  }
+  return text.replace(/;\s*$/, '');
+}
+
+// 给查询套上行数上限；同时让无限递归的 WITH RECURSIVE 在取够行数后停下
+export function limitSql(sql, limit) {
+  return `SELECT * FROM (\n${sql}\n) LIMIT ${limit}`;
 }

@@ -9,7 +9,7 @@ import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import { before, describe, test } from 'node:test';
 
-import { QueryError, buildQuery, checkReadOnlySql } from '../../web/lib/query.js';
+import { QueryError, buildQuery, checkReadOnlySql, limitSql } from '../../web/lib/query.js';
 import { quantile, registerQuantile } from '../../web/lib/quantile.js';
 import { compareVersions, formatDelta, formatValue } from '../../web/lib/format.js';
 
@@ -78,9 +78,11 @@ describe('buildQuery rules', () => {
     assert.throws(() => buildQuery(catalog, { metrics: ['latest_views'], dims: ['content_type'],
       filters: [{ dim: 'locale', op: 'in', value: ['ja', 'ko'] }] }), QueryError);
   });
-  test('cumulative views need a date or an age', () => {
-    assert.throws(() => buildQuery(catalog, { metrics: ['video_views'], dims: ['locale'] }), /「日期」 或 「发布后第几天」/);
-    assert.doesNotThrow(() => buildQuery(catalog, { metrics: ['video_views'], dims: ['locale', 'days_since_pub'] }));
+  test('cumulative views need a date or an age, per video', () => {
+    assert.throws(() => buildQuery(catalog, { metrics: ['video_views'], dims: ['locale', 'video_id'] }), /「日期」 或 「发布后第几天」/);
+    // 审核 1：多支视频的累计值按日期相加，会把"多追踪了几支视频"画成增长
+    assert.throws(() => buildQuery(catalog, { metrics: ['video_views'], dims: ['locale', 'date'] }), /必须按「视频」分开看/);
+    assert.doesNotThrow(() => buildQuery(catalog, { metrics: ['video_views'], dims: ['locale', 'video_id', 'days_since_pub'] }));
   });
   test('values are bound as parameters, never spliced into SQL', () => {
     const evil = "x'); DROP TABLE game; --";
@@ -105,18 +107,25 @@ describe('buildQuery rules', () => {
     const commented = '-- 说明\n/* 块注释 */\nSELECT 1';
     assert.equal(checkReadOnlySql(commented), commented);
     assert.throws(() => checkReadOnlySql('-- 说明\nDROP TABLE game'), QueryError);
+    // 审核 3：WITH 后面可以跟写语句
+    assert.throws(() => checkReadOnlySql('WITH x AS (SELECT 1) DELETE FROM game'), /不能修改数据/);
+    // 审核 15：字符串和注释里的分号不是语句分隔
+    assert.doesNotThrow(() => checkReadOnlySql("SELECT ';'"));
+    assert.doesNotThrow(() => checkReadOnlySql('SELECT 1 /* ; */'));
+    assert.doesNotThrow(() => checkReadOnlySql('SELECT 1; -- note'));
+    assert.doesNotThrow(() => checkReadOnlySql("SELECT replace(title, 'a', 'b'), created_date FROM v_video"));
   });
 });
 
 describe('buildQuery results on the fixture database', () => {
   test('daily totals equal the review rows', () => {
-    const viaDaily = run({ metrics: ['daily_reviews'], dims: ['game_id'] });
+    const viaDaily = run({ metrics: ['daily_reviews'], dims: ['game_id'], useDefaultFilters: false });
     const viaRows = run({ metrics: ['review_count'], dims: ['game_id'] });
     assert.deepEqual(viaDaily.map(r => [r.game_id, r.daily_reviews]), viaRows.map(r => [r.game_id, r.review_count]));
   });
   test('positive rate is pooled, not an average of daily rates', () => {
     const [pooled] = run({ metrics: ['daily_positive_rate'], filters: [{ dim: 'game_id', op: 'eq', value: 'alpha' }] });
-    const raw = rows("SELECT 100.0 * SUM(positive) / (SUM(positive) + SUM(negative)) AS r FROM v_review_daily WHERE game_id = 'alpha'")[0];
+    const raw = rows("SELECT 100.0 * SUM(positive) / (SUM(positive) + SUM(negative)) AS r FROM v_review_daily WHERE game_id = 'alpha' AND complete_day = 1")[0];
     assert.ok(Math.abs(pooled.daily_positive_rate - raw.r) < 1e-9);
   });
   test('shares add up to 100 within each group', () => {
@@ -138,6 +147,21 @@ describe('buildQuery results on the fixture database', () => {
     const yt = rows("SELECT 100.0 * SUM(likes + comments) / SUM(views) AS e FROM v_video_latest WHERE game_id = 'alpha' AND locale = 'global' AND curated = 1")[0].e;
     assert.ok(Math.abs(got.find(r => r.locale === 'zh-cn').latest_engagement - bili) < 1e-9);
     assert.ok(Math.abs(got.find(r => r.locale === 'global').latest_engagement - yt) < 1e-9);
+  });
+  test('daily reviews exclude the incomplete last day by default', () => {
+    const [withDefault] = run({ metrics: ['review_days'], filters: [{ dim: 'game_id', op: 'eq', value: 'alpha' }] });
+    const [all] = run({ metrics: ['review_days'], filters: [{ dim: 'game_id', op: 'eq', value: 'alpha' }], useDefaultFilters: false });
+    assert.equal(all.review_days - withDefault.review_days, 1);
+  });
+  test('the page opens the database read-only', () => {
+    db.run('PRAGMA query_only = 1');
+    assert.throws(() => db.run('DELETE FROM game'), /readonly|read-only|attempt to write/i);
+    assert.throws(() => db.run('WITH x AS (SELECT 1) UPDATE v_review_daily SET reviews = 0'), /readonly|read-only|attempt to write/i);
+    assert.equal(rows('SELECT COUNT(*) AS n FROM game')[0].n, 2);
+  });
+  test('row limit stops an endless recursive query', () => {
+    const got = rows(limitSql('WITH RECURSIVE c(x) AS (SELECT 1 UNION ALL SELECT x + 1 FROM c) SELECT x FROM c', 10));
+    assert.equal(got.length, 10);
   });
   test('every catalog metric runs', () => {
     for (const [id, m] of Object.entries(catalog.metrics)) {
