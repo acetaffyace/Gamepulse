@@ -25,6 +25,7 @@ from pipeline.build_snapshot import (  # noqa: E402
     extract_version,
     is_official_news,
     steam_release,
+    version_catalog,
 )
 from pipeline.quality import version_table_issues  # noqa: E402
 
@@ -190,6 +191,28 @@ class TestVersionTable(unittest.TestCase):
                                      "is_version_boundary": True})
             self.assertEqual(version_table_issues(released, versions), [], game_id)
 
+
+
+class TestVersionCatalog(unittest.TestCase):
+    def _snapshot(self, *dates):
+        return {"snapshot_date": "2026-09-29", "events": [
+            {"date_local": d, "version_id": v, "is_version_boundary": True,
+             "source_url": f"https://example.com/{v}", "evidence": "manual"}
+            for d, v in dates] + [{"date_local": "2026-08-01", "is_version_boundary": False}]}
+
+    def test_windows_are_contiguous_and_last_is_open_ended(self):
+        catalog = version_catalog(self._snapshot(("2026-08-20", "3.6"), ("2026-07-10", "3.5")))
+        self.assertEqual([(v["version_id"], v["date_local"], v["end_local"], v["days"])
+                          for v in catalog],
+                         [("3.5", "2026-07-10", "2026-08-19", 41),
+                          ("3.6", "2026-08-20", "2026-09-29", 41)])
+        self.assertEqual([v["open_ended"] for v in catalog], [False, True])
+        self.assertEqual(catalog[0]["next_version"], "3.6")
+        self.assertEqual(catalog[0]["source_url"], "https://example.com/3.5")
+
+    def test_same_day_boundaries_do_not_create_empty_window(self):
+        catalog = version_catalog(self._snapshot(("2026-07-10", "3.5"), ("2026-07-10", "3.5b")))
+        self.assertEqual(len(catalog), 1)
 
 if __name__ == "__main__":
     unittest.main()

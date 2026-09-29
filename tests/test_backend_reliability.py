@@ -122,6 +122,45 @@ for i in range(15):
         with self.assertRaises(ValueError): import_steamdb_chart.write_jsonl(path, [])
         self.assertEqual(path.read_text(), 'old')
 
+    def test_partial_steamdb_export_merges_instead_of_replacing(self):
+        path = self.root / "steamdb_online.jsonl"
+        history = [{"date_local": f"2026-09-{d:02d}", "average_players": d} for d in (1, 2, 3)]
+        path.write_text("".join(json.dumps(r) + "\n" for r in history), encoding="utf-8")
+        total = import_steamdb_chart.write_jsonl(path, [{"date_local": "2026-09-03", "average_players": 30},
+                                                        {"date_local": "2026-09-04", "average_players": 4}])
+        rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+        self.assertEqual(total, 4)
+        self.assertEqual([r["average_players"] for r in rows], [1, 2, 30, 4])
+        import_steamdb_chart.write_jsonl(path, [{"date_local": "2026-09-04", "average_players": 5}], replace=True)
+        self.assertEqual(len(path.read_text(encoding="utf-8").splitlines()), 1)
+
+    def test_bilibili_account_update_keeps_additional_mids_and_tolerates_missing_fans(self):
+        registry = {"official_accounts": {"g": {"mid": 1, "name": "官方",
+                                                "additional_mids": [{"mid": 2, "name": "音乐号"}]}}}
+        view = ({"code": 0, "data": {"title": "t", "owner": {"mid": 1, "name": "官方"}}}, "ok")
+        card = ({"data": {"card": {"name": "官方"}}}, "ok")  # 接口未返回 fans
+        with patch.object(add_game, "get_json", side_effect=[view, card]), \
+                patch.object(add_game, "polite_sleep"), patch("builtins.input", return_value="y"), \
+                patch.object(add_game, "edit_yaml", side_effect=lambda _, mutate: mutate(registry)), \
+                contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(add_game.add_bili("BV1xx411c7mD", "g"), 0)
+        self.assertEqual(registry["official_accounts"]["g"]["additional_mids"][0]["mid"], 2)
+
+    def test_missing_vote_is_not_counted_as_negative(self):
+        self.assertIsNone(backfill.review_row({"recommendationid": "1"})["voted_up"])
+        rows = backfill.aggregate_by_date([
+            {"timestamp_created": 1790000000, "voted_up": True},
+            {"timestamp_created": 1790000000, "voted_up": None},
+        ])
+        self.assertEqual((rows[0]["new_positive"], rows[0]["new_negative"]), (1, 0))
+
+    def test_youtube_discovery_append_merges_with_latest_registry(self):
+        registry = {"videos": [{"video_id": "a"}]}
+        with patch.object(youtube_discover, "edit_config_yaml",
+                          side_effect=lambda _, mutate: mutate(registry)):
+            youtube_discover.update_registry(lambda latest: latest["videos"].append({"video_id": "b"}))
+        self.assertEqual([v["video_id"] for v in registry["videos"]], ["a", "b"])
+
     def test_successful_response_with_hidden_counter_does_not_mix_old_counts(self):
         common.upsert_video_subset_series('g','youtube',{'date_local':'2026-09-29','videos':[{'video_id':'v','status':'observed','view':100,'like':10}]},'video_id')
         common.upsert_video_subset_series('g','youtube',{'date_local':'2026-09-29','videos':[{'video_id':'v','status':'observed','view':200,'like':None}]},'video_id')

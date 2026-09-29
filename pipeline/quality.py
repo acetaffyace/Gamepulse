@@ -99,7 +99,10 @@ def _parse(d: str):
 
 def check(steam_records: list[dict], bili_records: list[dict],
           today: str | None = None) -> list[dict]:
-    today_d = _parse(today) if today else datetime.now().date()
+    if today is None:
+        from collectors.common import today_local
+        today = today_local()  # UTC+8 业务日，不随运行机器的时区变化
+    today_d = _parse(today)
     issues: list[dict] = []
 
     def add(level, code, message, **extra):

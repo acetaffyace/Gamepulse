@@ -139,7 +139,8 @@ def daily_profile(reviews: list[dict], collected_at: str | None = None) -> list[
                 post_per_day.append(delta / observation_days)
 
         languages = Counter(r.get("language") for r in group if r.get("language"))
-        positive = sum(1 for r in group if r.get("voted_up"))
+        positive = sum(1 for r in group if r.get("voted_up") is True)
+        negative = sum(1 for r in group if r.get("voted_up") is False)
         purchased = sum(1 for r in group if r.get("steam_purchase"))
         free = sum(1 for r in group if r.get("received_for_free"))
 
@@ -147,7 +148,7 @@ def daily_profile(reviews: list[dict], collected_at: str | None = None) -> list[
             "date_local": date_local,
             "reviews": total,
             "positive": positive,
-            "negative": total - positive,
+            "negative": negative,
             "review_rate": _share(positive, total),
 
             # 评测时点的游戏时长分布（分钟）

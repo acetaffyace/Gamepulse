@@ -38,7 +38,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from collectors.common import file_lock, atomic_write_text
+from collectors.common import edit_config_yaml as edit_yaml
 
 from collectors.common import (  # noqa: E402
     CONFIG_DIR,
@@ -58,29 +58,6 @@ BILI_CARD = "https://api.bilibili.com/x/web-interface/card"
 YT_CHANNELS = "https://www.googleapis.com/youtube/v3/channels"
 
 BV_PATTERN = re.compile(r"(BV[0-9A-Za-z]{10})")
-
-
-def edit_yaml(name: str, mutate) -> None:
-    """改 YAML 但保留文件头部的口径说明注释。
-
-    这些文件的注释块记录了核验方式与踩过的坑，被 yaml.dump 抹掉的话
-    下一个人（包括三个月后的自己）就不知道为什么不能用搜索接口了。
-    """
-    path = CONFIG_DIR / name
-    with file_lock(path):
-        original = path.read_text(encoding="utf-8")
-        data = yaml.safe_load(original) or {}
-
-        header = []
-        for line in original.splitlines():
-            if line.startswith("#") or not line.strip():
-                header.append(line)
-            else:
-                break
-
-        mutate(data)
-        body = yaml.dump(data, allow_unicode=True, sort_keys=False, width=100)
-        atomic_write_text(path, "\n".join(header) + "\n" + body)
 
 
 def search_steam(term: str) -> int:
@@ -184,8 +161,9 @@ def add_bili(url_or_bvid: str, game_id: str) -> int:
     if confirmed.get("name") != owner_name:
         print(f"⚠ card 接口返回的账号名是 {confirmed.get('name')}，与 view 不一致，未写入")
         return 1
-    print(f"card 接口二次确认通过：{confirmed.get('name')}"
-          f"（粉丝 {confirmed.get('fans', '?'):,}）")
+    fans = confirmed.get("fans")
+    fans_text = f"{fans:,}" if isinstance(fans, int) else "未知"
+    print(f"card 接口二次确认通过：{confirmed.get('name')}（粉丝 {fans_text}）")
 
     print("\n请确认这确实是**该游戏的官方账号**，而不是游戏中心、攻略组或搬运号。")
     print("（核验历史上剔除过多个伪装度很高的非官方投稿，见 bilibili_videos.yml 注释）")
@@ -195,8 +173,9 @@ def add_bili(url_or_bvid: str, game_id: str) -> int:
 
     def mutate(data_yaml):
         accounts = data_yaml.setdefault("official_accounts", {})
-        accounts[game_id] = {"mid": mid, "name": owner_name,
-                             "verified_at": today_local()}
+        # 只更新主账号字段；additional_mids 等人工登记的附属账号必须保留
+        accounts[game_id] = {**(accounts.get(game_id) or {}), "mid": mid,
+                             "name": owner_name, "verified_at": today_local()}
     edit_yaml("bilibili_videos.yml", mutate)
     print(f"已登记 {game_id} 的官方账号 mid={mid}")
     print(f"下一步：python collectors/bilibili_discover.py --game {game_id} "

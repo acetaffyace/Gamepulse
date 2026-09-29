@@ -31,16 +31,17 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from collectors.common import business_date
-
 from collectors.common import (  # noqa: E402
     CONFIG_DIR,
     YOUTUBE_LOCALES,
+    business_date,
+    edit_config_yaml,
     get_json,
     load_games,
     now_iso,
     polite_sleep,
     session,
+    today_local,
     youtube_api_key,
 )
 
@@ -83,18 +84,10 @@ def load_registry() -> dict:
         return yaml.safe_load(fh) or {}
 
 
-def save_registry(data: dict) -> None:
-    """只重写 YAML 的数据部分，文件头部的口径说明由 yaml.dump 丢弃，
-    因此这里手动把原文件的注释块保留下来。"""
-    original = REGISTRY.read_text(encoding="utf-8")
-    header_lines = []
-    for line in original.splitlines():
-        if line.startswith("#") or not line.strip():
-            header_lines.append(line)
-        else:
-            break
-    body = yaml.dump(data, allow_unicode=True, sort_keys=False, width=100)
-    REGISTRY.write_text("\n".join(header_lines) + "\n" + body, encoding="utf-8")
+def update_registry(mutate) -> None:
+    """网络请求期间不持锁；写回时在锁内重新读取最新文件再合并，
+    不覆盖 add_game.py 等其他写入者同期登记的条目。"""
+    edit_config_yaml(REGISTRY.name, mutate)
 
 
 # 官方频道的订阅数下限。低于此值几乎肯定不是官方号，而是同人号或搬运号。
@@ -119,6 +112,7 @@ def resolve_channels(sess, api_key: str) -> int:
     channels = data.get("official_channels") or {}
     resolved = 0
     suspicious = 0
+    updates: dict[tuple[str, str], dict] = {}
     total = sum(len(locales or {}) for locales in channels.values())
 
     for game_id, locales in channels.items():
@@ -163,18 +157,24 @@ def resolve_channels(sess, api_key: str) -> int:
                 polite_sleep(0.5)
                 continue
 
-            entry["channel_id"] = item["id"]
-            entry["title"] = title
-            entry["uploads_playlist"] = (
-                (item.get("contentDetails") or {}).get("relatedPlaylists") or {}).get("uploads")
-            entry["subscribers"] = subs
-            entry["resolved_at"] = now_iso()
+            updates[(game_id, locale)] = {
+                "channel_id": item["id"],
+                "title": title,
+                "uploads_playlist": ((item.get("contentDetails") or {})
+                                     .get("relatedPlaylists") or {}).get("uploads"),
+                "subscribers": subs,
+                "resolved_at": now_iso(),
+            }
             resolved += 1
             print(f"  [ok] {locale:<6} {title} → {item['id']} "
                   f"（订阅 {f'{subs:,}' if subs is not None else '已隐藏'}）")
             polite_sleep(0.5)
 
-    save_registry(data)
+    def apply(latest: dict) -> None:
+        channels_now = latest.setdefault("official_channels", {})
+        for (game_id, locale), fields in updates.items():
+            channels_now.setdefault(game_id, {}).setdefault(locale, {}).update(fields)
+    update_registry(apply)
     print(f"\n已解析 {resolved}/{total} 个频道并回填 {REGISTRY.name}")
     if suspicious:
         print(f"其中 {suspicious} 个因订阅量级可疑被拒绝写入，见上方 [warn]。")
@@ -283,7 +283,7 @@ def discover(sess, api_key: str, since: str, game_filter: str | None,
                     "title": video["title"],
                     "pubdate": video["pubdate"],
                     "is_official_account": True,
-                    "discovered_at": now_iso()[:10],
+                    "discovered_at": today_local(),
                     "active": True,
                 })
                 per_locale[locale] = per_locale.get(locale, 0) + 1
@@ -303,9 +303,11 @@ def discover(sess, api_key: str, since: str, game_filter: str | None,
         print("写入后请人工补 character_name 与 version_id —— 脚本不猜版本归属。")
         return int(incomplete)
 
-    data.setdefault("videos", [])
-    data["videos"] = (data["videos"] or []) + new_entries
-    save_registry(data)
+    def append_new(latest: dict) -> None:
+        known = {v["video_id"] for v in (latest.get("videos") or [])}
+        latest["videos"] = (latest.get("videos") or []) + [
+            e for e in new_entries if e["video_id"] not in known]
+    update_registry(append_new)
     print(f"\n已写入 {len(new_entries)} 条到 {REGISTRY.name}。"
           f"请人工补 character_name 与 version_id。")
     return int(incomplete)

@@ -83,14 +83,27 @@ def daily_rows(path: Path, game_id: str, app_id: int) -> list[dict]:
     return [summaries[d][1] for d in sorted(summaries)]
 
 
-def write_jsonl(path: Path, rows: list[dict]) -> None:
+def write_jsonl(path: Path, rows: list[dict], replace: bool = False) -> int:
+    """默认按日期合并：导出只覆盖部分日期时，其余历史保持不变。
+
+    SteamDB 的「完整历史」导出与「最近一段」导出文件名相同，误传一份
+    只有几行的 CSV 曾会整段替换 500 多天的历史。只有显式 --replace
+    才整段替换，并保留一份 .bak。返回写入后的总行数。
+    """
     from collectors.common import file_lock, atomic_write_text
     if not rows:
         raise ValueError("没有有效日汇总记录，保留原有历史")
     with file_lock(path):
+        existing = []
         if path.exists():
-            atomic_write_text(path.with_suffix(path.suffix + ".bak"), path.read_text(encoding="utf-8"))
-        atomic_write_text(path, "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows))
+            text = path.read_text(encoding="utf-8")
+            atomic_write_text(path.with_suffix(path.suffix + ".bak"), text)
+            existing = [json.loads(line) for line in text.splitlines() if line.strip()]
+        merged = {} if replace else {r["date_local"]: r for r in existing}
+        merged.update({r["date_local"]: r for r in rows})
+        ordered = [merged[d] for d in sorted(merged)]
+        atomic_write_text(path, "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in ordered))
+    return len(ordered)
 
 
 def main() -> int:
@@ -98,6 +111,10 @@ def main() -> int:
     parser.add_argument(
         "--game-file", action="append", required=True,
         help="GAME_ID=CSV_PATH，可重复传入多个游戏",
+    )
+    parser.add_argument(
+        "--replace", action="store_true",
+        help="用 CSV 整段替换该游戏的 SteamDB 历史（默认按日期合并）",
     )
     args = parser.parse_args()
 
@@ -120,8 +137,9 @@ def main() -> int:
 
         rows = daily_rows(path, game_id, app_id)
         out = series_path(game_id, "steamdb_online")
-        write_jsonl(out, rows)
-        print(f"{game_id}: {len(rows)} daily rows → {out}")
+        total = write_jsonl(out, rows, replace=args.replace)
+        mode = "替换" if args.replace else "合并"
+        print(f"{game_id}: {mode} {len(rows)} 个日汇总，历史共 {total} 天 → {out}")
 
     return 0
 

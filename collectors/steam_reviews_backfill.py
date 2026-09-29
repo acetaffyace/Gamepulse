@@ -56,7 +56,8 @@ def review_row(review: dict) -> dict:
     return {
         "recommendationid": review.get("recommendationid"),
         "timestamp_created": review.get("timestamp_created"),
-        "voted_up": bool(review.get("voted_up")),
+        # 字段缺失记 None，不能当作差评：bool(None) 会把未知悄悄计入负面
+        "voted_up": review["voted_up"] if isinstance(review.get("voted_up"), bool) else None,
         "language": review.get("language"),
         "playtime_forever": author.get("playtime_forever"),
         "playtime_at_review": author.get("playtime_at_review"),
@@ -220,9 +221,9 @@ def aggregate_by_date(reviews: list[dict],
         date_local = business_date(ts)
         slot = daily[date_local]
         slot["new_reviews"] += 1
-        if r["voted_up"]:
+        if r.get("voted_up") is True:
             slot["new_positive"] += 1
-        else:
+        elif r.get("voted_up") is False:
             slot["new_negative"] += 1
         if r.get("language"):
             slot["languages"][r["language"]] += 1
@@ -372,13 +373,13 @@ def main() -> int:
     args = parser.parse_args()
 
     with file_lock(RAW_DIR / "backfill" / f"{args.game}.operation", timeout=1):
+        source = "steam_reviews_incremental" if args.incremental else "steam_reviews_backfill"
         try:
             result = run_backfill(args)
         except Exception as exc:
-            collection_result("steam_reviews_backfill", args.game, today_local(), 1, 0, type(exc).__name__)
+            collection_result(source, args.game, today_local(), 1, 0, type(exc).__name__)
             raise
-        collection_result("steam_reviews_incremental" if args.incremental else "steam_reviews_backfill",
-                          args.game, today_local(), 1, int(result == 0))
+        collection_result(source, args.game, today_local(), 1, int(result == 0))
         return result
 
 

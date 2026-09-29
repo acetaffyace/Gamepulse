@@ -179,6 +179,30 @@ def load_yaml(name: str) -> dict:
         return yaml.safe_load(fh) or {}
 
 
+
+def edit_config_yaml(name: str, mutate) -> None:
+    """在跨进程锁内完成「读取 → 修改 → 原子写回」，并保留文件头部的口径说明注释。
+
+    这些文件的注释块记录了核验方式与踩过的坑，被 yaml.dump 抹掉的话
+    下一个人（包括三个月后的自己）就不知道为什么不能用搜索接口了。
+    """
+    path = CONFIG_DIR / name
+    with file_lock(path):
+        original = path.read_text(encoding="utf-8")
+        data = yaml.safe_load(original) or {}
+
+        header = []
+        for line in original.splitlines():
+            if line.startswith("#") or not line.strip():
+                header.append(line)
+            else:
+                break
+
+        mutate(data)
+        body = yaml.dump(data, allow_unicode=True, sort_keys=False, width=100)
+        atomic_write_text(path, "\n".join(header) + "\n" + body)
+
+
 def load_games() -> list[dict]:
     return load_yaml("games.yml").get("games", [])
 
