@@ -1,0 +1,7 @@
+# 仓库里统一用 LF；Windows 的 cmd / PowerShell 脚本保持 CRLF
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+*.wasm binary
+*.png binary
+*.gz binary

@@ -1,8 +1,0 @@
-[
-  {"platform":"youtube","stats":{"view":100,"like":4,"comment":3},"engagement":7},
-  {"platform":"youtube","stats":{"view":100,"like":4,"comment":null},"engagement":null},
-  {"platform":"bilibili","stats":{"view":100,"like":4,"coin":3,"favorite":2},"engagement":9},
-  {"platform":"bilibili","stats":{"view":100,"like":4,"coin":null,"favorite":2},"engagement":null},
-  {"platform":"youtube","stats":{"view":0,"like":0,"comment":0},"engagement":null},
-  {"platform":"youtube","stats":{"view":100,"like":0,"comment":0},"engagement":0}
-]

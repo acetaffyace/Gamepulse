@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, v3]
   pull_request:
 
 permissions:
@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 采集器在 Windows 计划任务中运行，锁与路径逻辑需要两个平台都验证
+        # 采集器在 Windows 计划任务中运行，路径与数据库行为需要两个平台都验证
         os: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
@@ -24,19 +24,23 @@ jobs:
           python-version: "3.11"
           cache: pip
       - run: pip install -r requirements.txt
-      - run: python -m compileall -q collect.py collectors pipeline tools
+      - run: python -m compileall -q collect.py collectors store tools
+      # 没有真实数据时，与 v2 的口径对照测试会自动跳过；其余测试全部用合成数据
       - run: python -m unittest discover -s tests -v
-      - name: Verify published release batch
-        run: python tools/verify_release.py
 
-  dashboard:
-    name: Dashboard tests
+  web:
+    name: Web tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: npm
       - run: npm ci
       - name: Install Chromium and CJK fonts
@@ -44,5 +48,4 @@ jobs:
           npx playwright install --with-deps chromium
           sudo apt-get install -y fonts-noto-cjk
       - run: npm test
-      - run: npm run test:studio
-      - run: npm run test:browser
+      - run: npm run test:e2e

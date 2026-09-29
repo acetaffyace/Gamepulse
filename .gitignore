@@ -2,44 +2,22 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
-*.tmp
-*.jsonl.tmp
+node_modules/
 .env
 .DS_Store
 Thumbs.db
 
-# 采集产生的大体积原始响应：评测回填单文件可达 10MB+，
-# 且可由 steam_reviews_backfill.py 随时重建，不进版本库。
-data/raw/backfill/
-data/raw/20*/
+# 本机数据：SQLite 数据库、每日备份、原始接口响应、SteamDB 收件箱、日志。
+# 数据不进版本库：公开的数据库随发布包推送到 gh-pages 分支（tools/publish_pages.py）。
+/data/
 
-# 时间序列与快照是项目的真实产出，必须入库，打开页面即可查看真实采集数据。
-# 不要在这里忽略 data/series/ 或 data/snapshot_*.json。
+# 发布包（python -m store.build 生成）与推送用的工作目录
+/dist/
+/.publish/
 
-# 计划任务日志：机器本地产物，不入版本库
-data/logs/
-dashboard/shots/_*.png
-node_modules/
-
-# Cross-process locks and recovery backups
-*.lock
-*.bak
-data/index.previous.json
-
-# 本地工作笔记与历史审查记录，不入库
-notes/
-
-# 采集流水日志：每小时追加，机器本地产物
-data/collect-log.tsv
-
-# spike 产物
+# spike 的产物
 spike/out/
 spike/node_modules/
 
-# v3 本机数据库与每日备份：不进版本库
-data/gamepulse.sqlite
-data/gamepulse.sqlite-*
-data/backups/
-
-# v3 发布包（由 python -m store.build 生成）
-dist/
+# 本地工作笔记
+notes/
