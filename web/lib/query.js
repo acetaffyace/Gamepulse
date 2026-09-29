@@ -126,7 +126,9 @@ export function buildQuery(catalog, spec) {
 // 数据库是浏览器内存里的副本，就算写入也不会影响发布的文件，这里只是防止误操作把页面弄乱。
 export function checkReadOnlySql(sql) {
   const text = sql.trim().replace(/;\s*$/, '');
-  if (!/^(select|with)\b/i.test(text)) throw new QueryError('只能执行 SELECT 或 WITH 开头的查询');
+  // 开头的注释（-- 行注释与 /* 块注释 */）不算语句
+  const body = text.replace(/^(?:\s*(?:--[^\n]*(?:\n|$)|\/\*[\s\S]*?\*\/))*\s*/, '');
+  if (!/^(select|with)\b/i.test(body)) throw new QueryError('只能执行 SELECT 或 WITH 开头的查询');
   if (text.includes(';')) throw new QueryError('一次只能执行一条语句');
   return text;
 }

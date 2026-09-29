@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GamePulse · 游戏长线运营看板</title>
+<meta name="description" content="用 Steam、B 站、YouTube 公开数据观察游戏版本更新前后的评测、在线与官方视频表现。">
+<link rel="stylesheet" href="app.css">
+<link rel="preload" href="vendor/sql-wasm.wasm" as="fetch" type="application/wasm" crossorigin>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" aria-label="页面导航">
+    <a class="brand" href="?page=overview">
+      <span class="brand-mark" aria-hidden="true">GP</span>
+      <span><strong>GamePulse</strong><small>游戏长线运营看板</small></span>
+    </a>
+    <nav>
+      <a data-page="overview" href="?page=overview">运营总览</a>
+      <a data-page="versions" href="?page=versions">版本对比</a>
+      <a data-page="videos" href="?page=videos">视频传播</a>
+      <a data-page="players" href="?page=players">玩家结构</a>
+      <a data-page="explore" href="?page=explore">自助查询</a>
+      <a data-page="sources" href="?page=sources">数据来源</a>
+    </nav>
+    <p class="sidebar-note">公开数据 · Steam / B 站 / YouTube<br>Steam 在线不是 DAU</p>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="data-status" id="data-status" role="status">正在读取数据目录…</div>
+      <div class="topbar-actions">
+        <button type="button" class="ghost" id="share">复制链接</button>
+        <button type="button" class="ghost" id="theme-toggle" aria-label="切换深浅色">深色</button>
+      </div>
+    </header>
+    <div class="banner" id="banner" hidden></div>
+    <main id="page" tabindex="-1">
+      <div class="loading" id="loading">
+        <p>正在加载数据库…</p>
+        <progress id="load-progress" max="1" value="0"></progress>
+      </div>
+    </main>
+    <footer class="footer">
+      GamePulse 是独立研究项目，使用各平台公开数据，不代表相关平台或游戏公司。
+      <a href="https://github.com/acetaffyace/Gamepulse">源码与口径说明</a>
+    </footer>
+  </div>
+</div>
+<div class="tooltip-toast" id="toast" role="status" hidden></div>
+<script src="vendor/echarts.min.js"></script>
+<script src="vendor/sql-wasm.js"></script>
+<script type="module" src="lib/app.js"></script>
+</body>
+</html>

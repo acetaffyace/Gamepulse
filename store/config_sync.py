@@ -19,8 +19,9 @@ from store import db
 
 CONFIG_DIR = db.ROOT / "config"
 
-# 与 v2 相同的游戏配色顺序（games.yml 可用 color 字段覆盖）
-SLOT_COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#4a3aa7", "#e87ba4"]
+# 游戏的默认配色：按经过色盲校验的分类色顺序依次分配（games.yml 可用 color 字段覆盖）。
+# 前三款游戏的颜色与 v2 相同；浏览器端 web/lib/palette.js 有同一顺序及深色模式的对应色。
+SLOT_COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948"]
 BILIBILI_LOCALE = "zh-cn"   # B 站视频的"频道语区"：面向中国大陆的中文频道
 
 
