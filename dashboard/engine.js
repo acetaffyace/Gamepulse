@@ -41,6 +41,20 @@ const C = {
 
 const fmt = n => (n === null || n === undefined) ? '—' : n.toLocaleString('zh-CN');
 
+/* 所有来自数据或配置的字符串（视频标题、游戏名、版本号、来源说明、轨道标题…）
+   只要进 innerHTML 或 ECharts 的 HTML 提示框，都必须先过这一道。
+   页面其余脚本（app / video-dashboard / studio）共用这一个实现。 */
+const HTML_ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => HTML_ESCAPES[c]);
+
+/* 快照里的数据状态标签是给程序读的英文枚举，展示给人时一律换成中文。 */
+const SOURCE_KIND_LABEL = {
+  observed: '直接采集', derived: '派生计算', reconstructed: '评测回填重建',
+  third_party: '第三方来源', manual: '人工核验', unavailable: '缺失',
+  partial: '部分缺失', estimated: '估算',
+};
+const sourceKindLabel = kind => SOURCE_KIND_LABEL[kind] || '其他来源';
+
 /* 全程使用 UTC 构造日期：本地时间解析 + toISOString 会在 UTC+8 下退回一天，
    使 addDays 永远返回同一天。 */
 function addDays(iso, n) {
@@ -111,9 +125,32 @@ const scaleOf = u => SCALES[u] || (v => v);
 
 /* ---------- 颜色 ---------- */
 
-/* 颜色代表**对比对象**这个身份。同一个游戏的多个版本共享基色，
-   靠明度拉开 —— 这样「蓝色是鸣潮」这条规则不会被版本对比破坏。
-   只有当整屏只有一个对象时，颜色才退回去区分轨道内的指标系列。 */
+/* 颜色代表**对比对象**这个身份，而且必须是固定的：同一个版本在版本对比、
+   视频、玩家结构页、筛选 chip 和表格里都是同一个颜色，与这次选了哪几个
+   对象无关。整段游戏用 index.json 的 color；版本按目录顺序从下面这组
+   固定色相里取色。
+
+   这组 7 色是参考调色板的同一批色值、重新排过序：按目录相邻（也包括
+   首尾回绕）的两个版本已用 dataviz 的 validate_palette.js 校验 ——
+   CVD ΔE ≥ 9.2、正常视觉 ΔE ≥ 15.6，所以「这一版 vs 上一版」永远分得开。
+   超过 7 个版本时按顺序循环；相隔 7 个版本的两个对象同色，靠标签区分。
+   不同游戏用不同起点错开，降低跨游戏对比时撞色的概率。 */
+const VERSION_PALETTE = ['#2a78d6', '#eb6834', '#1baf7a', '#008300',
+                         '#e87ba4', '#4a3aa7', '#e34948'];
+
+function versionColor(catalog, gameId, versionKey) {
+  const gameIndex = Math.max(0, catalog.findIndex(g => g.game_id === gameId));
+  const versions = (catalog[gameIndex] || {}).versions || [];
+  const index = Math.max(0, versions.findIndex(v => v.key === versionKey));
+  return VERSION_PALETTE[(index + gameIndex * 3) % VERSION_PALETTE.length];
+}
+
+function subjectColor(catalog, subject) {
+  const entry = catalog.find(g => g.game_id === subject.gameId);
+  if (subject.kind === 'version') return versionColor(catalog, subject.gameId, subject.versionKey);
+  return (entry && entry.color) || C.muted;
+}
+
 function shade(hex, amount) {
   const n = parseInt(hex.slice(1), 16);
   const ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(c => {
@@ -196,22 +233,18 @@ function subjectFromKey(catalog, key) {
   if (!entry) return null;
   if (!versionKey) return makeGameSubject(entry);
   const version = (entry.versions || []).find(v => v.key === versionKey);
-  return version ? makeVersionSubject(entry, version) : null;
+  if (!version) return null;
+  const subject = makeVersionSubject(entry, version);
+  subject.color = versionColor(catalog, gameId, version.key);
+  return subject;
 }
 
-/* 同游戏的多个版本按时间顺序取明度，颜色才与版本先后一致。 */
+/* 颜色在 subjectFromKey 里就已按 (游戏, 版本) 固定下来。这里只把颜色
+   重置回固定值 —— 旧代码按「本次选中的第几个版本」调明度，同一个版本
+   换一组对比对象就会换色。保留这个入口，调用方不用改。 */
 function paintSubjects(subjects) {
-  const byGame = new Map();
-  subjects.forEach(s => {
-    if (s.kind !== 'version') return;
-    const list = byGame.get(s.gameId) || [];
-    list.push(s);
-    byGame.set(s.gameId, list);
-  });
-  byGame.forEach(list => {
-    list.sort((a, b) => a.day0 < b.day0 ? -1 : 1);
-    list.forEach((s, i) => { s.color = shade(s.color, shadeFor(i, list.length)); });
-  });
+  const list = typeof catalog !== 'undefined' ? catalog : [];
+  subjects.forEach(s => { if (list.length) s.color = subjectColor(list, s); });
   return subjects;
 }
 
@@ -514,8 +547,12 @@ const ADAPTERS = {
           return (v === undefined) ? null : scale(v);
         });
         if (values.some(v => v != null)) any = true;
+        // 版本对象身上的「累计好评率」是整个游戏上线至今的存量口碑，
+        // 必须和版本窗口好评率分开命名，否则同一个名字会对应两个数
+        const defName = subject.kind === 'version' && def.field === 'display_cumulative_review_rate'
+          ? '游戏整体累计好评率' : def.name;
         out.push({
-          name: ctx.multi ? `${subject.label} · ${def.name}` : def.name,
+          name: ctx.multi ? `${subject.label} · ${defName}` : defName,
           subject,
           kind: lane.chart === 'bar' ? 'bar' : 'line',
           color: ctx.multi ? subject.color : color(def.color || lane.color),
@@ -545,8 +582,8 @@ const ADAPTERS = {
         });
         if (values.some(v => v != null)) any = true;
         out.push({
-          name: ctx.multi ? `${subject.label} · 版本滚动累计好评率`
-                          : '版本滚动累计好评率',
+          name: ctx.multi ? `${subject.label} · 版本窗口好评率（自更新日累计）`
+                          : '版本窗口好评率（自更新日累计）',
         subject, kind: 'line', color: ctx.multi ? subject.color : color('slot5'),
           width: 2.8, smooth: true, dashed: true,
           endLabel: !ctx.multi, values,
@@ -557,7 +594,7 @@ const ADAPTERS = {
       series: out,
       empty: !any,
       note: reviewLag.length
-        ? `版本滚动好评率待回填：${reviewLag.join('、')}` : null,
+        ? `版本窗口好评率待回填：${reviewLag.join('、')}` : null,
     };
   },
 
@@ -1028,13 +1065,18 @@ const LANE_GAP = 46;     // 轨道之间的留白，需容纳轨道标题
 const CHART_TOP = 44;
 const CHART_BOTTOM = 42;
 
-function laneTitle(lane, top, note, thin) {
+function laneTitle(lane, top, note, thin, layout = {}) {
   const sub = [lane.subtitle, note].filter(Boolean).join(' · ');
+  // 窄屏上标题和副标题排不下一行：副标题换到第二行并按宽度折行，不再被裁掉
+  const joiner = layout.narrow ? '\n' : '  ';
   return {
-    text: `{h|${lane.title}}` + (sub ? `  {${thin ? 'w' : 's'}|${sub}}` : ''),
-    left: 2, top: top - 30,
+    text: `{h|${lane.title}}` + (sub ? `${joiner}{${thin ? 'w' : 's'}|${sub}}` : ''),
+    left: 2, top: top - (layout.titleOffset || 30),
     textStyle: {
       fontFamily: FONT,
+      width: layout.narrow ? layout.width : undefined,
+      overflow: layout.narrow ? 'break' : undefined,
+      lineHeight: layout.narrow ? 16 : undefined,
       rich: {
         h: { fontSize: 12.5, fontWeight: 600, color: C.primary, fontFamily: FONT },
         s: { fontSize: 11.5, color: C.muted, fontFamily: FONT },
@@ -1194,15 +1236,21 @@ function renderPulse(chart, el, lanes, ctx) {
     return [];
   }
 
+  // 窄屏：副标题换行，轨道之间要多留出两行字的高度，左右边距收窄
+  const width = el.clientWidth || 0;
+  const narrow = width > 0 && width < 640;
+  const gap = narrow ? LANE_GAP + 34 : LANE_GAP;
+  const chartTop = narrow ? CHART_TOP + 34 : CHART_TOP;
+  const titleLayout = narrow ? { narrow, width: Math.max(160, width - 8), titleOffset: 62 } : {};
   // 轨道高度可调，因此容器高度必须跟着算，不能写死
-  const totalHeight = CHART_TOP + CHART_BOTTOM
-    + lanes.reduce((s, l) => s + l.height, 0) + LANE_GAP * (lanes.length - 1);
+  const totalHeight = chartTop + CHART_BOTTOM
+    + lanes.reduce((s, l) => s + l.height, 0) + gap * (lanes.length - 1);
   el.style.height = totalHeight + 'px';
 
   const grids = [], xAxes = [], yAxes = [], series = [], titles = [];
   const laneData = [];
   const ownAxisLanes = [];   // 不参与十字准线联动的轨道
-  let top = CHART_TOP;
+  let top = chartTop;
 
   lanes.forEach((lane, i) => {
     const adapter = ADAPTERS[lane.adapter];
@@ -1210,7 +1258,8 @@ function renderPulse(chart, el, lanes, ctx) {
                           : { series: [], empty: true, note: '未知 adapter' };
     laneData.push({ lane, built });
 
-    grids.push({ left: 64, right: 96, top, height: lane.height });
+    grids.push(narrow ? { left: 46, right: 44, top, height: lane.height }
+                      : { left: 64, right: 96, top, height: lane.height });
 
     // 自带横轴的轨道（目前只有视频爬坡）必须自己显示刻度，
     // 否则它会借用最底下那条轨道的日期刻度，读起来完全是错的
@@ -1274,7 +1323,7 @@ function renderPulse(chart, el, lanes, ctx) {
       ? { note: built.note || '暂无数据', thin: true }
       : coverageOf(built, ctx);
     built.coverage = cov;
-    titles.push(laneTitle(lane, top, cov.note, cov.thin));
+    titles.push(laneTitle(lane, top, cov.note, cov.thin, titleLayout));
 
     built.series.forEach(def => {
       // 图例点掉的对象只是不画，轨道结构（纵轴、标题、其余对象）保持不变
@@ -1300,12 +1349,16 @@ function renderPulse(chart, el, lanes, ctx) {
       });
     }
 
-    top += lane.height + LANE_GAP;
+    top += lane.height + gap;
   });
 
   chart.setOption({
     animationDuration: 380,
     backgroundColor: 'transparent',
+    // 读屏软件读到的是这段描述，而不是一张没有名字的画布
+    aria: { enabled: true, label: { description:
+      `运营趋势综合图，共 ${lanes.length} 条轨道：${lanes.map(l => l.title).join('、')}。` +
+      `对象：${ctx.subjects.map(s => s.label).join('、')}。等价数据见「数据表」。` } },
     textStyle: { fontFamily: FONT },
     title: titles,
     grid: grids, xAxis: xAxes, yAxis: yAxes,
@@ -1346,7 +1399,7 @@ function buildTooltip(params, laneData, ctx) {
   const row = (c, label, value, extra) =>
     `<div style="display:flex;align-items:center;gap:7px;margin:3px 0">
        <span style="width:8px;height:8px;border-radius:2px;background:${c};flex:none"></span>
-       <span style="color:${C.secondary}">${label}</span>
+       <span style="color:${C.secondary}">${escapeHtml(label)}</span>
        <span style="margin-left:auto;font-weight:600;font-variant-numeric:tabular-nums">${value}</span>
      </div>` + (extra ? `<div style="margin-left:15px;color:${C.muted};font-size:11px">${extra}</div>` : '');
 
@@ -1357,7 +1410,7 @@ function buildTooltip(params, laneData, ctx) {
       ? `正式更新前 ${Math.abs(Number(key))} 天`
       : `起点后第 ${key} 天`) + (ctx.multi ? '' : ` · ${dateForKey(key, ctx.subjects[0])}`)
     : key;
-  let s = `<div style="font-weight:600;margin-bottom:6px">${head}</div>`;
+  let s = `<div style="font-weight:600;margin-bottom:6px">${escapeHtml(head)}</div>`;
   let any = false;
 
   visibleLanes.forEach(({ lane, built }) => {
@@ -1375,9 +1428,9 @@ function buildTooltip(params, laneData, ctx) {
             ? `<br>${fmt(p.raw)} · 本语区中位数 ${fmt(p.median)}` : '';
           const extra = def.kind === 'marks'
             ? ''
-            : `${m.title ? compactVideoLabel(m, m.subject || def.subject) : ''}${scaleNote}`;
+            : `${m.title ? escapeHtml(compactVideoLabel(m, m.subject || def.subject)) : ''}${scaleNote}`;
           s += row(def.color, def.kind === 'marks' ? `${def.name} 版本更新` : def.name,
-                   def.kind === 'marks' ? (m.label || '') : toText(p.value), extra);
+                   def.kind === 'marks' ? escapeHtml(m.label || '') : toText(p.value), extra);
         });
         return;
       }
@@ -1427,11 +1480,11 @@ function buildTooltip(params, laneData, ctx) {
     const ev = ctx.subjects[0].snap.events || [];
     const b = ev.find(x => x.date_local === key && x.is_version_boundary);
     if (b) s += `<div style="margin-top:7px;padding-top:7px;border-top:1px solid ${C.gridline};
-                   color:${C.primary};font-weight:600">★ ${b.version_id} 版本更新</div>`;
+                   color:${C.primary};font-weight:600">★ ${escapeHtml(b.version_id)} 版本更新</div>`;
     const p = ev.find(x => x.date_local === key && x.type === 'version_preview');
-    if (p) s += `<div style="margin-top:6px;color:${C.muted}">${p.version_id} 前瞻节目</div>`;
+    if (p) s += `<div style="margin-top:6px;color:${C.muted}">${escapeHtml(p.version_id)} 前瞻节目</div>`;
     const bu = ev.find(x => x.date_local === key && x.type === 'build_update');
-    if (bu) s += `<div style="margin-top:6px;color:${C.muted}">构建 ${bu.buildid}（third-party 旁证）</div>`;
+    if (bu) s += `<div style="margin-top:6px;color:${C.muted}">构建 ${escapeHtml(bu.buildid)}（第三方来源旁证）</div>`;
   }
   return s;
 }
@@ -1465,9 +1518,40 @@ function roleVideoKind(video) {
   return null;
 }
 
-function cleanVideoName(value) {
+/* 标题里的游戏名前缀（「Wuthering Waves EP3.6 …」「NTE Linko EP…」）不写死：
+   从同一份快照的全部视频标题里找出以拉丁字母开头的标题中，过半都共享的
+   开头词组，再加上目录里的中文名。新增游戏不需要改这里。 */
+const brandCache = new WeakMap();
+function titleBrands(subject) {
+  const snap = subject && subject.snap;
+  if (!snap || typeof snap !== 'object') return [];
+  if (brandCache.has(snap)) return brandCache.get(snap);
+  const videos = ((snap.bilibili || {}).videos || []).concat(
+    Object.values((snap.youtube || {}).locales || {}).flatMap(l => l.videos || []));
+  const latin = videos.map(v => String(v.title || '').trim())
+    .map(t => t.match(/^[A-Za-z][\w'’]*(?:\s+[A-Za-z][\w'’]*){0,3}/))
+    .filter(Boolean).map(m => m[0].split(/\s+/));
+  const counts = new Map();
+  latin.forEach(words => words.forEach((_, i) => {
+    const key = words.slice(0, i + 1).join(' ');
+    counts.set(key, (counts.get(key) || 0) + 1);
+  }));
+  const threshold = Math.max(3, latin.length / 2);
+  const brands = [...counts].filter(([, n]) => n >= threshold).map(([k]) => k)
+    .concat([snap.game && snap.game.display_name, snap.game && snap.game.short_name])
+    .filter(Boolean).sort((a, b) => b.length - a.length);
+  brandCache.set(snap, brands);
+  return brands;
+}
+
+const regexEscape = s => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+function cleanVideoName(value, subject) {
+  const brands = titleBrands(subject);
+  const prefix = brands.length
+    ? new RegExp(`^(?:${brands.map(regexEscape).join('|')})[\\s|｜丨ح]*`, 'i') : null;
   return String(value || '')
-    .replace(/^(?:zenless zone zero|wuthering waves|nte(?: global)?)[\s|｜丨ح]*/i, '')
+    .replace(prefix || /$^/, '')
     .replace(/^《[^》]+》\s*/u, '')
     .split(/[◇◆]/u)[0]
     .replace(/^[\s"'“”‘’「『【(\[{|｜丨ح:：·-]+/u, '')
@@ -1475,7 +1559,7 @@ function cleanVideoName(value) {
     .trim();
 }
 
-function roleNameFromTitle(video, kind) {
+function roleNameFromTitle(video, kind, subject) {
   const title = String(video.title || '').replace(/\s+/g, ' ').trim();
   const cjk = '[\\p{Script=Han}\\p{Script=Hiragana}\\p{Script=Katakana}]{1,12}';
   const cjkPattern = kind === 'demo'
@@ -1486,25 +1570,25 @@ function roleNameFromTitle(video, kind) {
         ? new RegExp(`(?:^|[》】])\\s*(${cjk})\\s*(?:角色)?EP`, 'iu')
         : null;
   const cjkMatch = cjkPattern && title.match(cjkPattern);
-  if (cjkMatch) return cleanVideoName(cjkMatch[1]);
+  if (cjkMatch) return cleanVideoName(cjkMatch[1], subject);
 
   const beforeRole = title.match(/^(.+?)\s+character\s+(?:demo|teaser|pv|trailer|short)\b/i);
-  if (beforeRole) return cleanVideoName(beforeRole[1]);
+  if (beforeRole) return cleanVideoName(beforeRole[1], subject);
 
   const episodeName = title.match(/[—–-]\s*([^—–-]+?)\s+EP\b/i);
-  if (episodeName) return cleanVideoName(episodeName[1]);
+  if (episodeName) return cleanVideoName(episodeName[1], subject);
   const leadingEpisode = title.match(/^(.+?)\s+EP\b/i);
-  if (leadingEpisode) return cleanVideoName(leadingEpisode[1]);
+  if (leadingEpisode) return cleanVideoName(leadingEpisode[1], subject);
   if (kind === 'ep') {
     const episodeSuffix = title.match(/[—–]\s*([^—–]+)$/u);
-    if (episodeSuffix) return cleanVideoName(episodeSuffix[1]);
+    if (episodeSuffix) return cleanVideoName(episodeSuffix[1], subject);
   }
 
   const showcase = title.match(/(?:combat|resonator combat)\s+showcase\s*[|｜丨ح]\s*([^|｜丨ح]+)/i);
-  if (showcase) return cleanVideoName(showcase[1]);
+  if (showcase) return cleanVideoName(showcase[1], subject);
 
   const end = title.split(/[|｜丨ح]/u).pop();
-  return cleanVideoName(end);
+  return cleanVideoName(end, subject);
 }
 
 function registeredChineseCharacterName(video, subject, kind) {
@@ -1532,7 +1616,7 @@ function compactVideoLabel(video, subject) {
 
   if (roleKind) {
     const name = registeredChineseCharacterName(video, subject, roleKind) ||
-      (video.character_name ? String(video.character_name).trim() : roleNameFromTitle(video, roleKind));
+      (video.character_name ? String(video.character_name).trim() : roleNameFromTitle(video, roleKind, subject));
     if ((roleKind === 'short' || roleKind === 'animated_short')) {
       const part = title.match(/(?:ver\.?|part)\s*(\d+)/i);
       const label = roleKind === 'short' ? '角色短片' : '动画短片';
@@ -1547,7 +1631,7 @@ function compactVideoLabel(video, subject) {
   const version = (ver && (ver[1] || ver[2])) || String(video.version_id || '').replace(/^v/i, '');
   if (version && ['version_trailer', 'version_preview', 'season_teaser'].includes(type)) {
     if (/preview\s+recap/i.test(title)) {
-      const topic = cleanVideoName(title.split(/[|｜丨ح]/u).pop())
+      const topic = cleanVideoName(title.split(/[|｜丨ح]/u).pop(), subject)
         .replace(/^(?:new|updated)\s+/i, '')
         .replace(/^(?:water\s+)?(?:vehicle|region|district)\s*[-:：]\s*/i, '')
         .slice(0, 20);
@@ -1572,7 +1656,7 @@ function compactVideoLabel(video, subject) {
     if (/worldview|世界观/i.test(title)) return '世界观 PV';
     if (/world tour/i.test(title)) return '世界巡游 PV';
     if (/xuanfang trailer/i.test(title)) {
-      const name = cleanVideoName(title.split(/[|｜丨ح]/u).pop());
+      const name = cleanVideoName(title.split(/[|｜丨ح]/u).pop(), subject);
       return `${name || '主题'} PV`;
     }
     return '主题 PV';

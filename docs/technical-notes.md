@@ -2,12 +2,8 @@
 
 [返回项目首页](../README.md)
 
-> 2026-09-29：视频现已独立为分面对比区，支持同内容联动；主时间轴新增短周期与自定义天数。最新交互、指标和测试命令见[视频 dashboard 说明](dashboard-video-comparison.md)，下文旧截图保留作历史参考。
-
 用公开数据观察长线运营游戏的版本节奏、玩家结构与传播表现。
 当前跟踪《鸣潮》《绝区零》《异环》三款游戏的 Steam 版本与官方视频。
-
-![综合图](../dashboard/shots/default.png)
 
 ---
 
@@ -56,9 +52,10 @@
 
 ```powershell
 pip install -r requirements.txt
+copy .env.example .env                       # 填写 YouTube Key 与本机代理（可选）
 
 python collect.py                            # 采集 + 生成快照 + 校验/编译看板配置
-python -m http.server 8770                   # 必须在项目根目录启动
+python -m http.server 8770 --bind 127.0.0.1  # 必须在项目根目录启动
 ```
 
 访问 <http://127.0.0.1:8770/dashboard/index.html>
@@ -80,7 +77,7 @@ powershell -ExecutionPolicy Bypass -File scripts\register-tasks.ps1 -Remove
 注册四个任务：每日 13:20 采集并构建看板、每小时第 5 分钟采在线人数、
 每日 17:00 增量补近期评测、每周日 18:00 全量校准评测历史。回填失败一小时后重试一次，旧数据不被覆盖。
 已打开的页面每分钟检查新快照，
-发现后自动重新加载。
+发现新批次时提示点击更新，不打断正在阅读的视图。
 
 小时级在线采样仍保持轻量，只追加 `steam_online.jsonl`，不会每小时重建大快照；
 默认看板也未开启小时峰谷轨道，因此它会在下一次每日快照构建后进入页面。自动刷新
@@ -104,9 +101,14 @@ powershell -ExecutionPolicy Bypass -File scripts\register-tasks.ps1 -Remove
 一律 ReadTimeout，必须走代理；B 站接口直连可用，且**必须**直连 —— 让它跟着
 代理出境，等于把上面那个问题原样搬回本机。分流规则写在
 `collectors/common.py` 的 `PROXY_HOSTS` / `DIRECT_HOSTS`，只有一处定义，
-采集器不需要各自操心。代理是本机进程，计划任务跑的时候它可能没开着，
-所以连接层的暂时性故障会重试两次，重试过仍失败的记 `unavailable`，
-不记 0 —— 采集日志里能区分「网络抖了一下」和「一直连不上」。
+采集器不需要各自操心。连接层的暂时性故障会重试两次，重试过仍失败的记
+`unavailable`，不记 0 —— 采集日志里能区分「网络抖了一下」和「一直连不上」。
+
+**代理配置写在 `.env`**：计划任务不继承终端里临时设置的 `HTTPS_PROXY`。
+2026-09-16 至 09-28 期间，每日任务访问 googleapis.com 全部连接超时，只有在带代理的
+终端里手动运行的两天成功。现在采集器启动时读取仓库根目录的 `.env`（已忽略，不入库；
+模板见 `.env.example`），交互运行和计划任务使用同一份网络配置；缺少代理时 YouTube
+采集会直接提示，失败原因（如 `ConnectTimeout×52;no_proxy_configured`）写入来源健康记录。
 
 ### YouTube（可选，免费）
 
@@ -114,8 +116,8 @@ powershell -ExecutionPolicy Bypass -File scripts\register-tasks.ps1 -Remove
 
 ```powershell
 # https://console.cloud.google.com/ → 新建项目 → 启用 YouTube Data API v3 → 创建 API 密钥
-setx YOUTUBE_API_KEY "你的密钥"      # 计划任务读不到 set 设的临时变量，必须用 setx
-                                     # setx 只改注册表，已开的终端要重开才生效
+# 写入仓库根目录 .env：YOUTUBE_API_KEY=你的密钥
+# 计划任务读不到终端里 set 的临时变量；.env 对两者都生效
 
 python collectors/youtube_discover.py --resolve                  # handle → channel_id
 python collectors/youtube_discover.py --since 2026-06-01         # 列出候选（全部语区）
@@ -123,7 +125,7 @@ python collectors/youtube_discover.py --since 2026-06-01 --locale ja   # 只看�
 python collectors/youtube_discover.py --since 2026-06-01 --append
 ```
 
-密钥只从环境变量读取，不写进任何配置或数据文件。
+密钥只从环境变量或本地 `.env` 读取，不写进任何配置或数据文件。
 
 **语区（locale）**：每款游戏跟踪 4 个官方频道 —— `global` / `ja` / `ko` / `zh-tw`，
 共 12 个频道。同一支 PV 在四个频道各发一遍，是四个不同的 `video_id`，
@@ -153,6 +155,42 @@ python collectors/youtube_discover.py --since 2026-06-01 --append
 三者都返回 200、都打印 `[ok]`。因此解析时对订阅数做量级检查，
 低于 1 万的拒绝写入 `channel_id` 并标 `[warn]` —— 宁可这个语区暂时没数据，
 也不要让看板上出现一整块来自同人频道的曲线。
+
+---
+
+## 版本表
+
+版本对比窗口的唯一依据是 `config/versions.yml`：每个已开放版本一行，写明 Steam 开放时间、
+来源类型（Steam 官方公告 / 官网公告）和可点开核对的链接；国服与 Steam 不同日时分别记录。
+窗口为 **本次开放日 → 下次开放日前一天**，状态为 `scheduled` 的版本不会提前成为分界线。
+
+构建快照时，Steam 官方公告中识别出的版本更新会与版本表核对，两类问题写进数据质量提示：
+
+- 公告里有、版本表里没有的版本（`version_not_in_table`）；
+- 同一大版本内编号跳跃（`version_gap`，如 3.2 之后直接是 3.4）。
+
+这条检查来自一次真实漏识别：鸣潮二周年 3.3 的公告标题是
+「2nd Anniv. V3.3 … Now Live!」，不含 Update / New Content 字样，旧规则把它当成普通公告，
+3.3 因此被并进 3.2，形成一个 81 天的窗口，更新节奏和 3.2 的所有对比都随之失真。
+现在标题规则已补上，版本表单元测试也会检查每款游戏的已开放版本连续、有来源。
+
+---
+
+## 发布与可靠性
+
+| 问题 | 做法 |
+|---|---|
+| 失败重跑覆盖有效数据 | 同一日/小时的失败重跑保留先前有效观测及其真实采集时间，失败尝试单独记录在 `collection_attempts.jsonl` |
+| 手动运行与计划任务并发写同一文件 | 读、合并、排序、替换全程持有线程锁与跨进程文件锁；唯一临时文件 + fsync + 原子替换 |
+| 页面读到一半写完的快照 | 每批快照、配置和 manifest 写入 `data/releases/<build_id>/`，校验通过后原子切换 `data/index.json`；页面检查批次一致性 |
+| 发布批次无限累积 | 只保留当前与上一个批次，上一个批次留给正在加载旧入口的页面 |
+| 单游戏重建清空目录 | `--game` 只替换该游戏，其余游戏沿用已发布快照、颜色与版本目录 |
+| 采集失败被当作成功 | 各采集器区分成功 / 部分成功 / 失败 / 未配置，失败影响退出码；单个游戏异常不阻止其他游戏 |
+| 评测回填中断 | 逐页写入数据与游标，重跑从断点继续；查询条件变化或断点超过 48 小时时从头开始，未完整结束不发布新基底 |
+| 日期口径 | 采集、评测、公告与视频统一用 UTC+8 业务日，不依赖运行机器时区 |
+
+`python tools/verify_release.py` 独立核对当前发布批次：文件批次一致，玩家结构中位数与视频指标
+从原始样本重算后与快照一致。
 
 ---
 
@@ -188,6 +226,40 @@ localStorage，也可以通过「导出 → 复制当前视图链接」把当前
 只有在 `app.js` 的 `ADAPTERS` 里新增一种**取数方式**时才需要改代码；
 新增 adapter 必须同步登记到 `build_dashboard_config.py` 的 `ADAPTER_SHAPES`，
 否则配置校验会拒绝使用它。
+
+---
+
+## 视频对比
+
+### 时间范围
+
+主时间轴提供 3 / 7 / 14 / 30 / 60 / 90 天、全部及自定义 1–3650 天。日历模式取最近 N 天，起点模式取 D0–D(N−1)。版本卡片和窗口对照表跟随同一范围；全局累计好评率仍明确表示商店累计口径。视频区的相对天数另行设置，不会延长主时间轴。
+
+### 视频
+
+- 默认一组角色 PV 分面，按 B 站、YouTube 全球/日语/韩语/繁中排列；来源勾选和内容类型可直接切换。
+- 点击图点或内容按钮，按已登记的 `pair_id` 联动同一内容。未配对视频保持独立，不按标题或相近日期猜测关联。
+- 默认统一纵轴，可切换独立刻度。叠图按来源着色；同内容选择、模式、指标、刻度和比较天数随视图链接保存。
+- 播放、点赞、评论、点赞/播放、平台互动率，以及 B 站的投币、收藏、分享、弹幕均可选择。隐藏或平台不支持的计数留空，不补零。
+- B 站平台互动率为（赞＋币＋藏）/播放，YouTube 为（赞＋评）/观看；跨平台公式不同，选择平台互动率时强制分面。点赞/播放用于提供相同公式，但仍不代表已控制受众和分发差异。
+- 相对标尺仅用于当前累计播放：除以同游戏、同来源、同内容类型的登记视频有效累计播放中位数，筛选日期不改变参照集合。倍数不校正视频年龄。
+
+| 观察方式 | 横轴 | 纵轴与完整性 |
+|---|---|---|
+| 当前累计 | 视频实际发布日期，真实日期间距 | 最近有效采样值；选择内容后显示采样日期及当时视频年龄 |
+| 追踪后增量 | T0＝该视频该指标首次有效采样；可选首 N 天 | 相对首次采样值的净变化；缺采断线，下降保留；比例变化单位为 pp |
+| 发布同龄 | D0＝视频发布日；可选首 N 天 | 仅纳入 D0–D(N−1) 每天都有该指标采样的视频，不重建缺失首周 |
+| 每日净增 | 实际采样日期 | 仅相邻自然日有效观测相减；跨多日增量不记作单日值，下降保留 |
+
+曲线概览默认显示最近三个有数据的内容，可通过选择器访问其余内容；明确选中内容时只绘制该内容。累计概览展示筛选内全部视频。主日期范围筛选视频发布日期，已确认归属版本的预热视频保留；每日净增则按观测日期范围筛选。
+
+同龄模式出现「没有首 N 天完整采样」是有效空态。当前不少视频是事后登记，不具备首周数据，可查看累计值或追踪后增量。
+
+### 导出与加载
+
+视频区 CSV 导出实际绘制内容，包含指标、单位、模式、日期、年龄、配对 ID、快照日期以及追踪基线；相对标尺同时导出原值和参照中位数。PNG 导出当前视频分面/叠图组合。顶部原有导出继续用于主时间轴；原有视频明细 CSV 表示全部重点登记视频，与视频区筛选导出区别命名。
+
+ECharts 5.5.0 随仓库提供，保留上游 LICENSE 与 NOTICE；打开 dashboard 无需访问外部 CDN。加载错误可重试；超过两天的历史快照显示状态，新数据到来时提示点击更新，不自动打断当前阅读。
 
 ---
 
@@ -296,8 +368,12 @@ config/games.yml                  游戏与 Steam App ID
 config/bilibili_videos.yml        按角色/版本登记并核验的 BV 号
 config/youtube_videos.yml         12 个官方频道（3 游戏 × 4 语区）与自动发现的视频
 config/dashboard.yml              轨道目录（看板自定义的来源）
+config/versions.yml               版本开放日与来源（版本窗口的唯一依据）
+config/video_pairs.yml            跨平台、跨语区的同内容视频配对
+.env.example                      本地代理与 YouTube Key 模板
 
-collectors/common.py              配置、HTTP、幂等写入、采集日志
+collectors/common.py              配置、HTTP 分流、加锁原子写入、采集日志
+collectors/review_checkpoint.py   评测回填断点
 collectors/steam.py               在线人数、评测汇总、价格、官方公告
 collectors/steam_online.py        小时级在线采样
 collectors/steam_build.py         SteamCMD 构建号
@@ -312,15 +388,23 @@ pipeline/review_profile.py        玩家结构：时长分布、语种构成、�
 pipeline/quality.py               缺天、过期、字段缺失、倒退、owner 校验
 pipeline/build_snapshot.py        组装 dashboard 快照 + 对比对象目录
 pipeline/build_dashboard_config.py 编译并校验轨道配置
+pipeline/publication.py           批次发布、原子切换入口、旧批次清理
+pipeline/rebuild_derived.py       用归档原始响应重建派生数据
+pipeline/import_steamdb_chart.py  SteamDB Charts CSV 导入
 
-dashboard/index.html              页面骨架
+dashboard/index.html              工作台页面
+dashboard/studio.js               页面导航、总览与数据来源页
+dashboard/studio-details.js       版本对比与视频排行
 dashboard/engine.js               对比对象模型、对齐、取数适配器、绘图
 dashboard/app.js                  控件、指标卡、表格、导出
+dashboard/video-*.js              视频分面、同龄/增量模型
 
 scripts/register-tasks.ps1        注册/注销 Windows 计划任务
 tools/probe_candidates.py         候选游戏 Steam 可用性实测
 tools/shoot.mjs                   看板视觉自检：截图 + 空轨道检测
-tests/                            指标、事件、玩家结构的单元测试
+tools/verify_release.py           发布批次独立核对
+tools/add_game.py                 新增游戏的配置向导
+tests/                            Python 单元测试、Node 公式测试、浏览器端到端测试
 ```
 
 ---
@@ -331,9 +415,17 @@ tests/                            指标、事件、玩家结构的单元测试
 python collect.py                                     # 每日采集（幂等，可补跑）
 python collectors/steam_reviews_backfill.py --game zenless_zone_zero
 python collectors/bilibili_discover.py --game zenless_zone_zero --since 2026-09-01
-python -m unittest discover -s tests -v
+python -m unittest discover -s tests -q               # Python 单元测试
+npm ci && npx playwright install chromium             # 首次运行浏览器测试前
+npm test                                              # 前后端共享公式样例
+npm run test:studio                                   # 工作台端到端
+npm run test:browser                                  # 探索视图端到端
+python tools/verify_release.py                        # 核对当前发布批次
 node tools/shoot.mjs --all                            # 需先启动 http 服务
 ```
+
+浏览器测试自行启动临时本地服务器，断开外部网络验证资源加载、内容联动、导出、分享恢复、
+短周期窗口与手机布局，截图输出到系统临时目录，不改动发布数据。
 
 计划任务每天增量补评测、每周全量校准；手动运行分别用
 `python collect.py --only review_backfill --incremental-review-backfill` 和
@@ -354,7 +446,9 @@ node tools/shoot.mjs --all                            # 需先启动 http 服务
 - 逐日在线序列数据点仍很少，正式趋势复盘应在连续采集 30 天以上再做；
   小时级采样自 2026-09-14 起才开始积累。
 - B 站视频为人工登记，不覆盖全部官方内容，也不含创作者视频。
-- YouTube 未配置 Key 时该平台数据为空。
+- YouTube 未配置 Key 时该平台数据为空。2026-09-16 至 09-28 因计划任务缺少代理，
+  YouTube 仅有 09-17（部分）与 09-22 两天有效观测，这段缺口无法补采；
+  多数视频是事后登记，缺少发布首周的起跑段。
 - 仅跟踪 Steam 单一平台，不代表游戏的全平台表现，也不能外推到国服。
 - Reddit / Discord / X 未接入：X 自 2026-02 起对新开发者只有按量付费、无免费层；
   Reddit 新 OAuth client 需人工审批且官方已宣布收紧公共 API；

@@ -4,7 +4,7 @@ const VIDEO_SOURCE_LABELS = { bilibili: 'B 站', 'youtube:global': 'YouTube · �
   'youtube:ja': 'YouTube · 日语', 'youtube:ko': 'YouTube · 韩语', 'youtube:zh-tw': 'YouTube · 繁中' };
 const VIDEO_SOURCE_COLORS = { bilibili: '#ae4377', 'youtube:global': '#246cc3',
   'youtube:ja': '#ad571f', 'youtube:ko': '#167b60', 'youtube:zh-tw': '#694bb4' };
-const videoEscape = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const videoEscape = escapeHtml;
 const videoNumber = (n, metric) => n == null ? '—' : VideoModel.METRICS[metric].unit === '%'
   ? n.toFixed(2) + '%' : n.toLocaleString('zh-CN', { maximumFractionDigits: 0 });
 function disposeVideoCharts() { videoCharts.splice(0).forEach(c => c.dispose()); }
@@ -41,8 +41,8 @@ function videoExport(view, records) {
   const rows = VideoModel.exportRows(VideoModel.prepare(records, view), view);
   if (!rows.length) { toast('当前条件没有可导出的有效观测'); return; }
   const keys = Object.keys(rows[0]);
-  const safe = v => typeof v === 'string' && /^[=+\-@\t\r]/.test(v) ? "'" + v : v;
-  const text = [keys.join(','), ...rows.map(row => keys.map(k => csvEscape(safe(row[k]))).join(','))].join('\r\n');
+  // csvEscape 已统一处理公式注入（= + - @ 制表符 回车开头）与引号、换行
+  const text = [keys.map(csvEscape).join(','), ...rows.map(row => keys.map(k => csvEscape(row[k])).join(','))].join('\r\n');
   downloadBlob(`gamepulse_video_${view.mode}_${view.metric}.csv`, '\ufeff' + text, 'text/csv;charset=utf-8');
 }
 
@@ -92,8 +92,24 @@ function renderVideoDashboards(ctx) {
   }
 }
 
+const sameTypes = (a, b) => a.length === b.length && a.every(x => b.includes(x));
+const typesLabel = types => types.map(t => VIDEO_CONTENT_LABELS[t] || t).join(' / ');
+
 function renderVideoDashboard(host, view, ctx) {
-  const records = selectedVideoRecords(view, ctx);
+  let records = selectedVideoRecords(view, ctx);
+  // 默认内容类型在所选窗口里一支都没有时（例如某游戏近期没发角色 PV），
+  // 临时放宽到全部重点类型并明说，而不是给面试官一排「0 支」的空面板。
+  // 只影响本次渲染，不改用户保存的视图配置。
+  let shownTypes = view.content_types;
+  let fallbackNote = '';
+  const allTypes = [...(config.important_video_types || [])];
+  if (!records.length && allTypes.length && !sameTypes(view.content_types, allTypes)) {
+    const wider = selectedVideoRecords({ ...view, content_types: allTypes }, ctx);
+    if (wider.length) {
+      fallbackNote = `所选时间范围内没有「${typesLabel(view.content_types)}」，已临时改为显示全部重点类型。`;
+      records = wider; shownTypes = allTypes;
+    }
+  }
   const prepared = VideoModel.prepare(records, view);
   const sources = (view.platforms.includes('bilibili') ? ['bilibili'] : [])
     .concat(view.platforms.includes('youtube') ? view.locales.map(l => 'youtube:' + l) : []);
@@ -119,13 +135,13 @@ function renderVideoDashboard(host, view, ctx) {
   section.className = 'card video-dashboard'; section.dataset.viewId = view.id;
   const control = (key, title, options, selected) => `<label>${title}<select data-video-control="${key}" aria-label="${title}">${options.map(([value, label]) =>
     `<option value="${videoEscape(value)}" ${value === selected ? 'selected' : ''}>${videoEscape(label)}</option>`).join('')}</select></label>`;
-  section.innerHTML = `<div class="video-head"><div><h2>官方视频</h2><span class="video-scope">${videoEscape(view.content_types.map(t => VIDEO_CONTENT_LABELS[t]).join(' / '))} · ${records.length} 支</span></div>
+  section.innerHTML = `<div class="video-head"><div><h2>官方视频</h2><span class="video-scope">${videoEscape(typesLabel(shownTypes))} · ${records.length ? records.length + ' 支' : '所选时间范围内暂无'}</span></div>
     <div class="segmented" role="group" aria-label="视频布局"><button data-layout="facets" aria-pressed="${view.layout !== 'overlay'}">分面</button><button data-layout="overlay" aria-pressed="${view.layout === 'overlay'}" ${mixedRates ? 'disabled title="平台互动率公式不同，请使用点赞 / 播放进行叠图"' : ''}>叠图</button></div></div>
     <div class="video-source-picks" role="group" aria-label="视频来源">${Object.entries(VIDEO_SOURCE_LABELS).map(([key, name]) => `<label><input type="checkbox" data-source-pick="${key}" data-video-control="source:${key}" ${sources.includes(key) ? 'checked' : ''}>${name}</label>`).join('')}</div>
     <div class="video-toolbar">${control('metric', '指标', Object.entries(VideoModel.METRICS).map(([k, v]) => [k, v.label]), view.metric)}
     ${control('mode', '观察方式', [['snapshot', '当前累计'], ['tracking', '追踪后增量'], ['age', '发布同龄'], ['daily', '每日净增']], view.mode)}
     <label class="video-days" ${['snapshot', 'daily'].includes(view.mode) ? 'hidden' : ''}>${view.mode === 'age' ? '发布后首' : '首次采样后首'}<input data-video-control="days" aria-label="视频比较天数" type="number" min="1" max="365" value="${view.compareDays}">天</label>
-    ${control('type', '内容类型', [['all', '全部重点类型'], ...Object.entries(VIDEO_CONTENT_LABELS)], view.content_types.length === 1 ? view.content_types[0] : 'all')}
+    ${control('type', '内容类型', [['all', '全部重点类型'], ...Object.entries(VIDEO_CONTENT_LABELS)], shownTypes.length === 1 ? shownTypes[0] : 'all')}
     ${view.mode === 'snapshot' && view.metric === 'view' ? control('scale', '数值标尺', [['abs', '实际累计值'], ['index', '相对同来源同类中位数']], view.scale) : ''}
     <label class="video-scale"><input data-video-control="shared" type="checkbox" ${view.sharedY ? 'checked' : ''} ${view.layout === 'overlay' ? 'disabled' : ''}>统一纵轴</label>
     <div class="video-export-actions"><button class="linkish" data-export-video aria-label="导出当前视频视图 CSV">CSV</button><button class="linkish" data-export-video-png aria-label="导出当前视频视图 PNG">PNG</button></div></div>
@@ -135,6 +151,7 @@ function renderVideoDashboard(host, view, ctx) {
       ? `D0–D${view.compareDays - 1} · ${valid.length}/${prepared.length} 支完整采样`
       : `T0＝各自首次有效采样 · ${view.focusPair ? '所选内容' : `最近 ${curvePairs.length} 个有数据的内容`} · 缺采断线`}</span></div>
     ${mixedRates ? '<p class="video-status-inline">B 站：（赞＋币＋藏）/播放；YouTube：（赞＋评）/观看。公式不同，分开展示。</p>' : ''}
+    ${fallbackNote ? `<p class="video-fallback" role="status">${videoEscape(fallbackNote)}</p>` : ''}
     <div class="video-content-picks" role="group" aria-label="联动内容快捷选择">${[...pairMap].slice(0, 6).map(([key, info]) => `<button data-focus-key="${videoEscape(key)}" aria-pressed="${view.focusPair === key}"><i style="background:${pairColor(key)}"></i>${videoEscape(info.label)}</button>`).join('')}${pairMap.size > 6 ? '<span>更多内容见上方选择器</span>' : ''}</div>
     <div class="video-facets ${view.layout === 'overlay' ? 'overlay' : ''}"></div>
     <details class="video-details"><summary>视频明细 · 发布时间、年龄与采样</summary><div class="table-wrap"><table><thead><tr><th>内容</th><th>来源</th><th>发布</th><th>最近有效采样</th><th>视频年龄</th><th>${videoEscape(field.label)}</th><th>首采年龄</th><th>状态</th></tr></thead><tbody></tbody></table></div></details>`;
@@ -177,23 +194,22 @@ function renderVideoDashboard(host, view, ctx) {
   const chartSets = view.layout === 'overlay' ? [{ key: 'all', rows: shown, label: '所选来源 · 统一纵轴' }]
     : sources.map(key => ({ key, rows: shown.filter(r => r.source === key), label: VIDEO_SOURCE_LABELS[key] }));
   const viewCharts = [];
+  const emptySets = [];
+  const emptyReason = (key, rows) => field.biliOnly && key.startsWith('youtube') ? '平台不提供该指标'
+    : !rows.length ? '所选时间范围内没有符合条件的视频'
+    : view.mode === 'age' ? `没有首 ${view.compareDays} 天完整采样` : '所选内容或指标暂无观测';
   chartSets.forEach(({ key, rows, label }) => {
-    const card = document.createElement('article'); card.className = 'video-facet';
     const selected = rows.find(r => r.pair === view.focusPair);
     const usable = rows.filter(r => r.points.some(p => p.value != null));
+    // 没有数据的来源不再各占一张空面板，统一收成下方的一行说明
+    if (!usable.length) { emptySets.push({ label, reason: emptyReason(key, rows) }); return; }
+    const card = document.createElement('article'); card.className = 'video-facet';
     const latest = selected?.points.filter(p => p.value != null).at(-1);
     card.innerHTML = `<div class="video-facet-head"><h3>${label}</h3><span>${view.layout === 'overlay' || view.sharedY ? '统一刻度' : '独立刻度'}</span></div>
       <div class="video-selected">${selected && latest ? `<strong>${indexed ? latest.value.toFixed(2) + '×' : ['tracking', 'daily'].includes(view.mode) && percent ? latest.value.toFixed(2) + 'pp' : videoNumber(latest.value, view.metric)}</strong><span>${view.mode === 'tracking' ? '追踪后变化 · ' : ''}采于 ${latest.date} · 当时发布 ${latest.age} 天</span>` : `<span>${usable.length}/${rows.length} 支有数据${field.biliOnly && key.startsWith('youtube') ? ' · 平台无此指标' : ''}</span>`}</div>
       <div class="video-chart" style="height:${Math.max(190, view.height)}px"></div>`;
     section.querySelector('.video-facets').append(card);
     const el = card.querySelector('.video-chart');
-    if (!usable.length) {
-      el.classList.add('video-empty');
-      el.textContent = !records.length ? '当前发布日期范围内没有视频' : view.mode === 'age'
-        ? `没有首 ${view.compareDays} 天完整采样 · 可切换当前累计或追踪后增量`
-        : '所选内容或指标暂无观测';
-      return;
-    }
     const chart = echarts.init(el); videoCharts.push(chart); viewCharts.push(chart);
     const metricUnit = indexed ? '×' : ['tracking', 'daily'].includes(view.mode) && percent ? 'pp' : field.unit;
     const series = usable.map(r => ({
@@ -213,10 +229,12 @@ function renderVideoDashboard(host, view, ctx) {
         : { type: 'value', min: 0, max: view.compareDays > 1 ? view.compareDays - 1 : 1, minInterval: 1,
           axisLabel: { formatter: v => `${view.mode === 'age' ? 'D' : 'T'}${v}`, hideOverlap: true } },
       yAxis: { type: 'value', name: metricUnit, nameTextStyle: { color: '#656d78' }, min: shared ? minValue : (['tracking', 'daily'].includes(view.mode) ? undefined : 0), max: shared ? bound : undefined,
-        axisLabel: { fontSize: 11, formatter: v => percent || indexed ? Number(v.toFixed(1)) : v >= 10000 ? Number((v / 10000).toFixed(1)) + '万' : Number(v.toFixed(0)) }, splitLine: { lineStyle: { color: '#e8ebef' } } },
+        splitNumber: el.clientWidth < 420 ? 3 : 5,
+        axisLabel: { fontSize: 11, hideOverlap: true, formatter: v => percent || indexed ? Number(v.toFixed(1)) : Math.abs(v) >= 10000 ? Number((v / 10000).toFixed(Math.abs(v) >= 1e5 ? 0 : 1)) + '万' : Number(v.toFixed(0)) }, splitLine: { lineStyle: { color: '#e8ebef' } } },
       tooltip: { trigger: 'item', confine: true, formatter: p => {
         const d = p.data, r = d.record, sample = d.point;
-        return `<b>${videoEscape(r.name)}</b><br>${videoEscape(VIDEO_SOURCE_LABELS[r.source])}<br>${videoEscape(field.label)}：${sample.value == null ? '缺采' : (percent || indexed ? sample.value.toFixed(2) : fmt(sample.value))} ${metricUnit}<br>发布 ${r.video.pubdate}<br>采样 ${sample.date || '缺采'} · 视频年龄 ${sample.age ?? '—'} 天${indexed ? `<br>实际 ${fmt(sample.rawValue)} 次 · 参考中位数 ${fmt(r.referenceMedian)}` : ''}${r.baseline ? `<br>基线 ${r.baseline.date} · 当时发布 ${r.baseline.age} 天` : ''}`;
+        const subjectLine = ctx.multi ? `${videoEscape(r.subjectLabel)} · ` : '';
+        return `<b>${videoEscape(r.name)}</b><br>${subjectLine}${videoEscape(VIDEO_SOURCE_LABELS[r.source])}<br>${videoEscape(field.label)}：${sample.value == null ? '缺采' : (percent || indexed ? sample.value.toFixed(2) : fmt(sample.value))} ${videoEscape(metricUnit)}<br>发布 ${videoEscape(r.video.pubdate)}<br>采样 ${videoEscape(sample.date || '缺采')} · 视频年龄 ${videoEscape(sample.age ?? '—')} 天${indexed ? `<br>实际 ${fmt(sample.rawValue)} 次 · 参考中位数 ${fmt(r.referenceMedian)}` : ''}${r.baseline ? `<br>基线 ${videoEscape(r.baseline.date)} · 当时发布 ${videoEscape(r.baseline.age)} 天` : ''}`;
       } }, series,
     });
     chart.on('click', p => { if (p.data?.pair) { view.focusPair = view.focusPair === p.data.pair ? '' : p.data.pair; change(); } });
@@ -231,13 +249,26 @@ function renderVideoDashboard(host, view, ctx) {
     });
     chart.on('globalout', () => viewCharts.forEach(other => other.dispatchAction({ type: 'downplay' })));
   });
+  if (emptySets.length) {
+    const facets = section.querySelector('.video-facets');
+    const allEmpty = emptySets.length === chartSets.length;
+    const reasons = [...new Set(emptySets.map(x => x.reason))];
+    const line = document.createElement('p');
+    line.className = allEmpty ? 'video-empty' : 'video-empty-line';
+    line.setAttribute('role', 'status');
+    line.textContent = allEmpty
+      ? `${emptySets.length} 个来源都没有可画的数据：${reasons.join('；')}` +
+        (view.mode === 'age' ? '。可切换「当前累计」或「追踪后增量」。' : view.mode === 'snapshot' ? '。可放宽时间范围或内容类型。' : '。')
+      : `${emptySets.map(x => x.label).join('、')}：${reasons.join('；')}。`;
+    if (allEmpty) facets.replaceWith(line); else facets.after(line);
+  }
   const tbody = section.querySelector('tbody');
   prepared.filter(r => !view.focusPair || r.pair === view.focusPair).forEach(r => {
     const last = r.samples.at(-1), first = r.samples[0];
     const url = r.platform === 'bilibili' ? 'https://www.bilibili.com/video/' + encodeURIComponent(r.video.bvid)
       : 'https://www.youtube.com/watch?v=' + encodeURIComponent(r.video.video_id);
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td><a href="${url}" target="_blank" rel="noopener noreferrer">${videoEscape(r.name)}</a>${!r.video.pair_id ? '<span class="chip">未配对</span>' : ''}</td><td>${VIDEO_SOURCE_LABELS[r.source]}</td><td>${r.video.pubdate}</td><td>${last?.date || '—'}</td><td>${last ? last.age + ' 天' : '—'}</td><td>${videoNumber(last?.value, view.metric)}</td><td>${first ? first.age + ' 天' : '—'}</td><td>${r.reason || (first?.age > 0 ? '缺起跑段' : '已观测')}</td>`;
+    tr.innerHTML = `<td><a href="${videoEscape(url)}" target="_blank" rel="noopener noreferrer">${videoEscape(r.name)}</a>${!r.video.pair_id ? '<span class="chip">未配对</span>' : ''}</td><td>${videoEscape(VIDEO_SOURCE_LABELS[r.source])}</td><td>${videoEscape(r.video.pubdate)}</td><td>${videoEscape(last?.date || '未采到')}</td><td>${last ? last.age + ' 天' : '未采到'}</td><td>${videoNumber(last?.value, view.metric)}</td><td>${first ? first.age + ' 天' : '未采到'}</td><td>${videoEscape(r.reason || (first?.age > 0 ? '缺起跑段' : '已观测'))}</td>`;
     tbody.append(tr);
   });
 }

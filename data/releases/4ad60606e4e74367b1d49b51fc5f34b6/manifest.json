@@ -1,0 +1,238 @@
+{
+  "schema_version": 2,
+  "games": [
+    {
+      "game_id": "wuthering_waves",
+      "display_name": "鸣潮",
+      "short_name": "鸣潮",
+      "developer": "库洛游戏",
+      "color": "#2a78d6",
+      "valid_days": 14,
+      "review_start": "2025-04-29",
+      "review_days": 518,
+      "snapshot_date": "2026-09-29",
+      "versions": [
+        {
+          "key": "2025-06-12",
+          "version_id": "2.4",
+          "date_local": "2025-06-12",
+          "end_local": "2025-07-23",
+          "days": 42,
+          "next_version": "2.5",
+          "open_ended": false,
+          "source_url": "https://store.steampowered.com/news/app/3513350/view/1802261838724137",
+          "evidence": "manual"
+        },
+        {
+          "key": "2025-07-24",
+          "version_id": "2.5",
+          "date_local": "2025-07-24",
+          "end_local": "2025-08-27",
+          "days": 35,
+          "next_version": "2.6",
+          "open_ended": false,
+          "source_url": "https://store.steampowered.com/news/app/3513350/view/1806064758586643",
+          "evidence": "manual"
+        },
+        {
+          "key": "2025-08-28",
+          "version_id": "2.6",
+          "date_local": "2025-08-28",
+          "end_local": "2025-10-08",
+          "days": 42,
+          "next_version": "2.7",
+          "open_ended": false,
+          "source_url": "https://store.steampowered.com/news/app/3513350/view/1809235871563521",
+          "evidence": "manual"
+        },
+        {
+          "key": "2025-10-09",
+          "version_id": "2.7",
+          "date_local": "2025-10-09",
+          "end_local": "2025-11-19",
+          "days": 42,
+          "next_version": "2.8",
+          "open_ended": false,
+          "source_url": "https://store.steampowered.com/news/app/3513350/view/1813041031184228",
+          "evidence": "manual"
+        },
+        {
+          "key": "2025-11-20",
+          "version_id": "2.8",
+          "date_local": "2025-11-20",
+          "end_local": "2025-12-24",
+          "days": 35,
+          "next_version": "3.0",
+          "open_ended": false,
+          "source_url": "https://store.steampowered.com/news/app/3513350/view/1816849002008951",
+          "evidence": "manual"
+        },
+        {
+          "key": "2025-12-25",
+          "version_id": "3.0",
+          "date_local": "2025-12-25",
+          "end_local": "2026-02-04",
+          "days": 42,
+          "next_version": "3.1",
+          "open_ended": false,
+          "source_url": "https://store.steampowered.com/news/app/3513350/view/1819386365107164",
+          "evidence": "manual"
+        },
+        {
+          "key": "2026-02-05",
+          "version_id": "3.1",
+          "date_local": "2026-02-05",
+          "end_local": "2026-03-18",
+          "days": 42,
+          "next_version": "3.2",
+          "open_ended": false,
+          "source_url": "https://store.steampowered.com/news/app/3513350/view/1823825466494991",
+          "evidence": "manual"
+        },
+        {
+          "key": "2026-03-19",
+          "version_id": "3.2",
+          "date_local": "2026-03-19",
+          "end_local": "2026-04-29",
+          "days": 42,
+          "next_version": "3.3",
+          "open_ended": false,
+          "source_url": "https://store.steampowered.com/news/app/3513350/view/1827626365751305",
+          "evidence": "manual"
+        },
+        {
+          "key": "2026-04-30",
+          "version_id": "3.3",
+          "date_local": "2026-04-30",
+          "end_local": "2026-06-07",
+          "days": 39,
+          "next_version": "3.4",
+          "open_ended": false,
+          "source_url": "https://store.steampowered.com/news/app/3513350/view/1831432155566176",
+          "evidence": "manual"
+        },
+        {
+          "key": "2026-06-08",
+          "version_id": "3.4",
+          "date_local": "2026-06-08",
+          "end_local": "2026-07-09",
+          "days": 32,
+          "next_version": "3.5",
+          "open_ended": false,
+          "source_url": "https://store.steampowered.com/news/app/3513350/view/1834602721196870",
+          "evidence": "manual"
+        },
+        {
+          "key": "2026-07-10",
+          "version_id": "3.5",
+          "date_local": "2026-07-10",
+          "end_local": "2026-08-19",
+          "days": 41,
+          "next_version": "3.6",
+          "open_ended": false,
+          "source_url": "https://store.steampowered.com/news/app/3513350/view/1836506165584478",
+          "evidence": "manual"
+        },
+        {
+          "key": "2026-08-20",
+          "version_id": "3.6",
+          "date_local": "2026-08-20",
+          "end_local": "2026-09-29",
+          "days": 41,
+          "next_version": null,
+          "open_ended": true,
+          "source_url": "https://store.steampowered.com/news/app/3513350/view/1841579228663631",
+          "evidence": "manual"
+        }
+      ],
+      "file": "releases/4ad60606e4e74367b1d49b51fc5f34b6/snapshot_wuthering_waves.json"
+    },
+    {
+      "game_id": "zenless_zone_zero",
+      "display_name": "绝区零",
+      "short_name": "绝区零",
+      "developer": "米哈游",
+      "color": "#eb6834",
+      "valid_days": 14,
+      "review_start": "2026-06-17",
+      "review_days": 104,
+      "snapshot_date": "2026-09-29",
+      "versions": [
+        {
+          "key": "2026-06-17",
+          "version_id": "3.0",
+          "date_local": "2026-06-17",
+          "end_local": "2026-07-28",
+          "days": 42,
+          "next_version": "3.1",
+          "open_ended": false,
+          "source_url": "https://store.steampowered.com/news/app/4162040/view/1835871199299000",
+          "evidence": "manual"
+        },
+        {
+          "key": "2026-07-29",
+          "version_id": "3.1",
+          "date_local": "2026-07-29",
+          "end_local": "2026-09-08",
+          "days": 42,
+          "next_version": "3.2",
+          "open_ended": false,
+          "source_url": "https://store.steampowered.com/news/app/4162040/view/1839041357038306",
+          "evidence": "manual"
+        },
+        {
+          "key": "2026-09-09",
+          "version_id": "3.2",
+          "date_local": "2026-09-09",
+          "end_local": "2026-09-29",
+          "days": 21,
+          "next_version": null,
+          "open_ended": true,
+          "source_url": "https://zenless.hoyoverse.com/en-us/news/166000",
+          "evidence": "manual"
+        }
+      ],
+      "file": "releases/4ad60606e4e74367b1d49b51fc5f34b6/snapshot_zenless_zone_zero.json"
+    },
+    {
+      "game_id": "neverness_to_everness",
+      "display_name": "异环",
+      "short_name": "异环",
+      "developer": "完美世界",
+      "color": "#1baf7a",
+      "valid_days": 14,
+      "review_start": "2026-07-08",
+      "review_days": 83,
+      "snapshot_date": "2026-09-29",
+      "versions": [
+        {
+          "key": "2026-07-08",
+          "version_id": "1.2",
+          "date_local": "2026-07-08",
+          "end_local": "2026-08-18",
+          "days": 42,
+          "next_version": "1.3",
+          "open_ended": false,
+          "source_url": "https://store.steampowered.com/news/app/4508340/view/1836506165577421",
+          "evidence": "manual"
+        },
+        {
+          "key": "2026-08-19",
+          "version_id": "1.3",
+          "date_local": "2026-08-19",
+          "end_local": "2026-09-29",
+          "days": 42,
+          "next_version": null,
+          "open_ended": true,
+          "source_url": "https://nte.perfectworld.com/de/article/news/gamenews/20260817/263609.html",
+          "evidence": "manual"
+        }
+      ],
+      "file": "releases/4ad60606e4e74367b1d49b51fc5f34b6/snapshot_neverness_to_everness.json"
+    }
+  ],
+  "build_id": "4ad60606e4e74367b1d49b51fc5f34b6",
+  "generated_at": "2026-09-29",
+  "published_at": "2026-09-29T06:35:27+00:00",
+  "config_file": "releases/4ad60606e4e74367b1d49b51fc5f34b6/dashboard_config.json"
+}

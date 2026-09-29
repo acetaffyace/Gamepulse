@@ -137,3 +137,4 @@
 {"date_local": "2026-09-29", "hour_local": 12, "sampled_at": "2026-09-29T04:05:06+00:00", "game_id": "zenless_zone_zero", "steam_app_id": 4162040, "players": 4624, "status": "observed", "note": ""}
 {"sampled_at": "2026-09-29T05:05:06+00:00", "date_local": "2026-09-29", "hour_local": 13, "game_id": "zenless_zone_zero", "steam_app_id": 4162040, "players": 4221, "status": "observed", "note": ""}
 {"sampled_at": "2026-09-29T06:05:09+00:00", "date_local": "2026-09-29", "hour_local": 14, "game_id": "zenless_zone_zero", "steam_app_id": 4162040, "players": 4089, "status": "observed", "note": ""}
+{"sampled_at": "2026-09-29T07:05:09+00:00", "date_local": "2026-09-29", "hour_local": 15, "game_id": "zenless_zone_zero", "steam_app_id": 4162040, "players": 3837, "status": "observed", "note": ""}

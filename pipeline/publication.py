@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import uuid
 from pathlib import Path
 
@@ -60,6 +61,7 @@ def publish(data_dir: Path, entries: list[dict], snapshots: dict, config: dict) 
                 "config_file": f"releases/{batch_id}/dashboard_config.json"}
     write_json(folder / "manifest.json", manifest)
     pointer = data_dir / "index.json"
+    previous = None
     if pointer.exists():
         previous = json.loads(pointer.read_text(encoding="utf-8"))
         if not previous.get("config_file"):
@@ -80,8 +82,23 @@ def publish(data_dir: Path, entries: list[dict], snapshots: dict, config: dict) 
                 previous.update(build_id=old_id, config_file=f"releases/{old_id}/dashboard_config.json")
         write_json(data_dir / "index.previous.json", previous)
     write_json(pointer, manifest)
+    prune_releases(data_dir, keep={batch_id, (previous or {}).get("build_id")})
     # Compatibility files support existing analysis scripts; browsers use the batch.
     for gid, snapshot in snapshots.items():
         write_json(data_dir / f"snapshot_{gid}.json", {**snapshot, "build_id": batch_id})
     write_json(data_dir / "dashboard_config.json", {**config, "build_id": batch_id})
     return manifest
+
+
+def prune_releases(data_dir: Path, keep: set) -> list[str]:
+    """只保留当前与上一个批次。
+
+    上一个批次留给正在打开旧 index 的页面完成加载；更早的批次没有任何
+    入口引用，不删会让每次发布都多出一整份快照（约 4 MB）。
+    """
+    removed = []
+    for folder in sorted((data_dir / "releases").glob("*")):
+        if folder.is_dir() and folder.name not in keep:
+            shutil.rmtree(folder)
+            removed.append(folder.name)
+    return removed

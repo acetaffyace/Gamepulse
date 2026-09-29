@@ -193,6 +193,36 @@ for i in range(15):
         self.assertEqual(loaded['a']['value'],1)
         self.assertEqual(loaded['b']['build_id'],index['build_id'])
 
+    def test_publish_keeps_only_current_and_previous_batches(self):
+        entries = [{"game_id": "a"}]
+        ids = [publication.publish(self.root, entries, {"a": {"value": n}}, {"lanes": []})["build_id"]
+               for n in range(3)]
+        kept = sorted(p.name for p in (self.root / "releases").iterdir())
+        self.assertEqual(kept, sorted(ids[1:]))
+        index, loaded = publication.load_published(self.root)
+        self.assertEqual(loaded["a"]["value"], 2)
+
+    def test_local_env_fills_only_missing_variables(self):
+        env_file = self.root / ".env"
+        env_file.write_text("# comment\nHTTPS_PROXY=http://127.0.0.1:7890\nEXISTING='from-file'\n",
+                            encoding="utf-8")
+        with patch.dict("os.environ", {"EXISTING": "from-shell"}, clear=True):
+            common.load_local_env(env_file)
+            import os
+            self.assertEqual(os.environ["HTTPS_PROXY"], "http://127.0.0.1:7890")
+            self.assertEqual(os.environ["EXISTING"], "from-shell")
+            self.assertFalse(common.proxy_missing_for("https://www.googleapis.com/youtube/v3/videos"))
+        with patch.dict("os.environ", {}, clear=True):
+            self.assertTrue(common.proxy_missing_for("https://www.googleapis.com/youtube/v3/videos"))
+            self.assertFalse(common.proxy_missing_for("https://api.bilibili.com/x/web-interface/view"))
+
+    def test_youtube_failure_records_dominant_reason(self):
+        videos = [{"status": "unavailable", "note": "request_error:ConnectTimeout:retried2"}] * 3
+        with patch.dict("os.environ", {}, clear=True):
+            detail = youtube.failure_detail(videos, 0)
+        self.assertEqual(detail, "request_error:ConnectTimeout:retried2×3;no_proxy_configured")
+        self.assertEqual(youtube.failure_detail([{"status": "observed"}], 1), "")
+
     def test_single_game_build_keeps_catalog_and_colors(self):
         entries=[{'game_id':g,'color':g} for g in ['a','b','c']]
         publication.publish(self.root,entries,{g:{'value':g} for g in ['a','b','c']},{'lanes':[]})

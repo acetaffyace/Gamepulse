@@ -30,6 +30,24 @@ const root = path.resolve(__dirname, '..');
     assert.equal(await page.evaluate(() => !versionedBatch || (config.build_id === snapshotBuildId && subjects.every(s => s.snap.build_id === snapshotBuildId))), true, 'manifest, config and snapshots must share a batch');
     assert.equal(await page.locator('.compare-metric').count(), 4);
     assert.equal(await page.evaluate(() => align), 'day0');
+    // Comparison badges state their direction instead of a bare percentage.
+    for (const badge of await page.locator('.compare-change').allTextContents()) assert.match(badge, /^B 较 A [+−±]/);
+
+    /* One fixed colour per (game, version): identical on chips, comparison legend, comparison chart,
+       players tiles/legend/table, and unchanged when the selected subset changes. */
+    const rgb = hex => { const n = parseInt(hex.slice(1), 16); return `rgb(${n >> 16 & 255}, ${n >> 8 & 255}, ${n & 255})`; };
+    const pairKeys = await page.evaluate(() => subjects.map(s => s.key));
+    const expectedColors = await page.evaluate(() => Object.fromEntries(subjects.map(s => [s.key, versionColor(catalog, s.gameId, s.versionKey)])));
+    assert.notEqual(expectedColors[pairKeys[0]], expectedColors[pairKeys[1]], 'adjacent versions must be distinguishable');
+    const surfaceColors = async () => page.evaluate(() => ({
+      chips: [...document.querySelectorAll('#subjectChips .subject-chip')].map(c => [c.dataset.key, getComputedStyle(c.querySelector('.mark')).backgroundColor]),
+      legend: [...document.querySelectorAll('#compareLegend i')].map(i => getComputedStyle(i).backgroundColor),
+      chart: echarts.getInstanceByDom(document.getElementById('compareChart')).getOption().series.map(s => s.itemStyle.color),
+    }));
+    const seen = await surfaceColors();
+    assert.deepEqual(seen.chips, pairKeys.map(k => [k, rgb(expectedColors[k])]));
+    assert.deepEqual(seen.legend, pairKeys.map(k => rgb(expectedColors[k])));
+    assert.deepEqual(seen.chart, pairKeys.map(k => expectedColors[k]));
 
     for (const days of [3, 7, 14]) {
       await page.click(`#rangeSeg [data-days="${days}"]`);
@@ -52,6 +70,31 @@ const root = path.resolve(__dirname, '..');
     assert.equal(fs.readFileSync(await (await comparisonExport).path()).subarray(1, 4).toString(), 'PNG');
     await page.click('#studioFullTimeline>summary');
     assert.equal(await page.locator('#timelineCard').isVisible(), true);
+
+    await page.click('.studio-nav [data-page-nav="players"]');
+    await page.waitForTimeout(200);
+    const players = await page.evaluate(() => ({
+      tiles: [...document.querySelectorAll('#tiles .tile .swatch')].map(s => getComputedStyle(s).backgroundColor),
+      legend: [...document.querySelectorAll('#legend [data-subject] .mark')].map(m => getComputedStyle(m).backgroundColor),
+      table: [...document.querySelectorAll('#langTable thead .swatch')].map(m => getComputedStyle(m).backgroundColor),
+      keys: subjects.map(s => s.key),
+    }));
+    const inOrder = players.keys.map(k => rgb(expectedColors[k]));
+    assert.deepEqual(players.tiles, inOrder); assert.deepEqual(players.legend, inOrder); assert.deepEqual(players.table, inOrder);
+    // Players page names the version-window rate the same way as the comparison page.
+    assert.match(await page.locator('#tiles').innerText(), /版本窗口好评率/);
+    // Adding a third version or removing one never repaints the survivors.
+    const extra = await page.evaluate(() => { const g = catalog.find(g => g.game_id === subjects[0].gameId); return g.versions.map(v => g.game_id + '@' + v.key).find(k => !subjects.some(s => s.key === k)); });
+    if (extra) {
+      await page.selectOption('#subjectAdd', extra);
+      await page.waitForFunction(k => subjects.some(s => s.key === k && s.snap), extra);
+      const after = await page.evaluate(() => Object.fromEntries(subjects.map(s => [s.key, s.color])));
+      for (const k of players.keys) assert.equal(after[k], expectedColors[k], `${k} keeps its colour after adding ${extra}`);
+      await page.click(`#subjectChips [data-remove="${players.keys[0]}"]`);
+      await page.waitForFunction(k => !subjects.some(s => s.key === k), players.keys[0]);
+      const remaining = await page.evaluate(() => Object.fromEntries(subjects.map(s => [s.key, s.color])));
+      assert.equal(remaining[players.keys[1]], expectedColors[players.keys[1]]);
+    }
 
     await page.click('[data-game="wuthering_waves"]');
     await page.waitForFunction(() => subjects.length === 1 && subjects[0].kind === 'game' && subjects[0].snap);
@@ -92,7 +135,7 @@ const root = path.resolve(__dirname, '..');
     assert.equal(await page.locator('.video-facet').count(), 5);
     assert.equal(await page.locator('[data-layout="overlay"]').isDisabled(), true);
     await page.selectOption('[data-video-control="mode"]', 'age');
-    assert.equal(await page.locator('.video-empty').count(), 5);
+    assert.equal(await page.locator('.video-empty').count(), 1, 'sources without data collapse into one line');
     assert.equal(await page.locator('[data-video-presentation]').count(), 0);
     await page.selectOption('[data-video-control="metric"]', 'view');
     await page.selectOption('[data-video-control="mode"]', 'snapshot');
@@ -104,11 +147,41 @@ const root = path.resolve(__dirname, '..');
     assert.equal(await restored.locator('[data-video-presentation="timeline"]').getAttribute('aria-pressed'), 'true');
     await restored.close();
     await page.click('[data-video-presentation="rank"]');
-    for (const section of ['versions', 'videos', 'overview']) {
+
+    /* Default path for every game: no blank KPI, dangling unit, empty ranking or 「0 支」 video scope. */
+    const gameIds = await page.evaluate(() => catalog.map(g => g.game_id));
+    for (const id of gameIds) {
+      await page.click('.studio-nav [data-page-nav="overview"]');
+      await page.click(`[data-game="${id}"]`);
+      await page.waitForFunction(g => subjects.length === 1 && subjects[0].key === g && subjects[0].snap, id);
+      for (const days of [90, 3]) {
+        await page.click(`#rangeSeg [data-days="${days}"]`);
+        const kpis = await page.evaluate(() => [...document.querySelectorAll('#tiles .tile')].filter(t => t.offsetParent !== null).map(t => t.innerText));
+        assert.equal(kpis.length, 4, `${id} overview shows four KPI cards`);
+        for (const text of kpis) {
+          assert.doesNotMatch(text, /—/, `${id} ${days}d KPI must not be blank: ${text}`);
+          assert.doesNotMatch(text, /\n\s*(h|%|条\/日)\s*(\n|$)/, `${id} ${days}d KPI has a dangling unit: ${text}`);
+        }
+        assert.ok(await page.locator('#studioRanking .rank-row').count() > 0, `${id} ${days}d content ranking is not empty`);
+        assert.ok(await page.locator('#studioEvents .event-row').count() > 0, `${id} ${days}d events card is not empty`);
+      }
+      await page.click('#rangeSeg [data-days="90"]');
+      await page.click('.studio-nav [data-page-nav="videos"]');
+      await page.waitForSelector('.video-dashboard');
+      assert.doesNotMatch(await page.locator('.video-scope').innerText(), /(^|\D)0 支|暂无/, `${id} videos page is not empty`);
+      assert.ok(await page.locator('.video-facet').count() > 0, `${id} videos page shows at least one chart`);
+    }
+    await page.click(`[data-game="${gameIds[0]}"]`);
+    await page.waitForFunction(g => subjects[0].key === g && subjects[0].snap, gameIds[0]);
+
+    for (const section of ['versions', 'videos', 'overview', 'players', 'sources', 'trends']) {
       await page.click(`.studio-nav [data-page-nav="${section}"]`);
       await page.setViewportSize({ width: 390, height: 844 });
       await page.waitForTimeout(150);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), 390, `${section} must fit a phone`);
+      // Every page and every game is reachable on a phone without hidden horizontal scrolling.
+      const reach = await page.evaluate(() => [...document.querySelectorAll('.studio-nav button, .game-nav button')].map(b => { const r = b.getBoundingClientRect(); return r.width > 0 && r.left >= 0 && r.right <= innerWidth; }));
+      assert.ok(reach.length >= 7 && reach.every(Boolean), `${section}: nav and game switcher fully visible on a phone`);
       await page.screenshot({ path: path.join(os.tmpdir(), `gamepulse-studio-${section}-mobile.png`), fullPage: true });
       await page.setViewportSize({ width: 1440, height: 1050 });
     }
@@ -131,7 +204,7 @@ const root = path.resolve(__dirname, '..');
     assert.equal(await invalid.locator('#retryLoad').isVisible(), true);
     await invalid.close();
     assert.deepEqual(errors, []);
-    console.log('Studio checks passed: raw-data comparison, 3/7/14-day windows, swap, metric switch, ranking, cross-source bar clicks, timeline, missing-data states, platform formulas, CSV/PNG, share restoration, mobile.');
+    console.log('Studio checks passed: raw-data comparison, 3/7/14-day windows, swap, metric switch, ranking, cross-source bar clicks, timeline, missing-data states, platform formulas, CSV/PNG, share restoration, fixed version colours across pages, no blank default KPIs per game, mobile reachability.');
   } finally {
     if (browser) await browser.close();
     await new Promise(resolve => server.close(resolve));

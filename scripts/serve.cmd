@@ -25,5 +25,5 @@ echo.
 REM Give the server a moment to bind before the browser hits it.
 start "" /b cmd /c "timeout /t 2 /nobreak >nul && start http://127.0.0.1:%PORT%/dashboard/index.html"
 
-python -m http.server %PORT%
+python -m http.server %PORT% --bind 127.0.0.1
 endlocal

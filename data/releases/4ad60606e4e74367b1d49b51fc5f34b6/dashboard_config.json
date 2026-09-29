@@ -1,0 +1,705 @@
+{
+  "palette": {
+    "slot1": "#2a78d6",
+    "slot2": "#eb6834",
+    "slot3": "#1baf7a",
+    "slot5": "#e87ba4",
+    "slot7": "#4a3aa7",
+    "neutral": "#898781"
+  },
+  "share_ramp": [
+    "#16365f",
+    "#1d4c86",
+    "#2a78d6",
+    "#4d97e2",
+    "#7ab5ea",
+    "#a3cdf2",
+    "#c6e0f8",
+    "#e0edfb"
+  ],
+  "share_other": "#c3c2b7",
+  "important_video_types": [
+    "version_trailer",
+    "character_trailer",
+    "character_demo",
+    "character_ep"
+  ],
+  "lanes": [
+    {
+      "id": "new_reviews",
+      "title": "每日评测变化",
+      "subtitle": "历史回填接续 Steam 总量净变化 · 统一柱色",
+      "adapter": "series",
+      "path": "review_chart_series",
+      "chart": "bar",
+      "color": "slot1",
+      "height": 140,
+      "unit": "count",
+      "enabled": true,
+      "series": [
+        {
+          "field": "chart_review_count",
+          "name": "评测数变化",
+          "color": "slot1"
+        }
+      ],
+      "caveat": "历史回填按创建日统计上次全量时仍存续的评测并每日补近期评测，今天的值只截至运行时；旧评测删改每周全量校准。实时段只画相邻两日 Steam 总评测数净变化；跨日净变化不冒充单日柱"
+    },
+    {
+      "id": "review_rate",
+      "title": "好评率",
+      "subtitle": "历史回填接续 Steam 全局累计好评率 · 悬停查看口径",
+      "adapter": "series",
+      "path": "review_chart_series",
+      "chart": "line",
+      "height": 110,
+      "unit": "percent",
+      "enabled": true,
+      "compare_field": "display_cumulative_review_rate",
+      "series": [
+        {
+          "field": "backfill_daily_review_rate",
+          "name": "回填当日好评率",
+          "color": "slot2",
+          "width": 1.5,
+          "opacity": 0.75
+        },
+        {
+          "field": "display_cumulative_review_rate",
+          "name": "累计好评率（回填 → Steam）",
+          "color": "slot3",
+          "width": 2.6,
+          "smooth": true,
+          "connect_nulls": false,
+          "end_label": true
+        }
+      ],
+      "caveat": "对比版本时实线是游戏全局累计好评率、虚线是各版本从更新日起的滚动累计好评率。回填段以上次全量样本加每日增量重建，旧评测删改每周校准；后续段接 Steam 全局采样率，接续点有口径切换"
+    },
+    {
+      "id": "online",
+      "title": "Steam 同时在线人数",
+      "subtitle": "Steam 日点 / SteamDB / 小时采样兜底 · 平台同时在线，非 DAU",
+      "adapter": "series",
+      "path": "online_series",
+      "field": "value",
+      "chart": "line",
+      "color": "slot7",
+      "height": 110,
+      "unit": "count",
+      "enabled": true,
+      "symbol": true,
+      "caveat": "同日优先用有效的 Steam 官方日采样，其次用 SteamDB 图表点位，最后用当天最新的有效小时采样。来源与采样时刻可能不同；都是平台同时在线观测，不是 DAU"
+    },
+    {
+      "id": "online_band",
+      "title": "在线日峰谷",
+      "subtitle": "小时级采样 · 峰值与谷值",
+      "adapter": "series",
+      "path": "online_daily",
+      "chart": "line",
+      "height": 110,
+      "unit": "count",
+      "enabled": false,
+      "series": [
+        {
+          "field": "peak",
+          "name": "日峰值",
+          "color": "slot7",
+          "width": 2
+        },
+        {
+          "field": "trough",
+          "name": "日谷值",
+          "color": "slot7",
+          "width": 1,
+          "opacity": 0.45,
+          "dashed": true
+        }
+      ],
+      "caveat": "采样点少于 6 个的日期标 partial，半天的样本算不出真实日峰值"
+    },
+    {
+      "id": "version_marks",
+      "title": "版本节奏",
+      "subtitle": "每个对比对象一行 · 取自各自 Steam 官方公告",
+      "adapter": "version_marks",
+      "path": "events",
+      "chart": "marks",
+      "height": 74,
+      "enabled": false,
+      "caveat": "多对象对照时版本线画在本轨道内，不贯穿全图 —— 各自的版本不是同一个事件"
+    },
+    {
+      "id": "playtime_median",
+      "title": "评测者中位游戏时长",
+      "subtitle": "写评测时已玩多久 · 小时",
+      "adapter": "series",
+      "path": "review_profile.daily",
+      "field": "playtime_at_review_median",
+      "chart": "line",
+      "color": "slot2",
+      "height": 110,
+      "unit": "minutes_as_hours",
+      "enabled": true,
+      "caveat": "评测者不是玩家的随机样本，只代表写评测的人"
+    },
+    {
+      "id": "short_play_share",
+      "title": "2 小时内评测占比",
+      "subtitle": "Steam 退款时长线以内就来评测的比例",
+      "adapter": "series",
+      "path": "review_profile.daily",
+      "field": "short_play_share",
+      "chart": "line",
+      "color": "slot1",
+      "height": 100,
+      "unit": "percent",
+      "enabled": false
+    },
+    {
+      "id": "heavy_play_share",
+      "title": "100 小时以上评测占比",
+      "subtitle": "重度玩家在评测者中的比例",
+      "adapter": "series",
+      "path": "review_profile.daily",
+      "field": "heavy_play_share",
+      "chart": "line",
+      "color": "slot3",
+      "height": 100,
+      "unit": "percent",
+      "enabled": false
+    },
+    {
+      "id": "language_delta",
+      "title": "评测语种结构变化",
+      "subtitle": "相对首个周的百分点差 · 0 为基线",
+      "adapter": "share_delta",
+      "path": "review_profile.language_share",
+      "chart": "line",
+      "height": 130,
+      "unit": "pp",
+      "top_n": 5,
+      "enabled": false,
+      "single_only": true,
+      "caveat": "只画变化幅度最大的几个语种，尾部语种的占比本来就在噪声量级"
+    },
+    {
+      "id": "language_share",
+      "title": "评测语种构成",
+      "subtitle": "7 天分桶（版本对象从更新日计周） · 绝对占比",
+      "adapter": "stacked_share",
+      "path": "review_profile.language_share",
+      "chart": "stacked_area",
+      "height": 130,
+      "unit": "percent",
+      "enabled": false,
+      "single_only": true,
+      "caveat": "100% 堆叠的中间层没有稳定基线，看结构变化请用「语种结构变化」轨道"
+    },
+    {
+      "id": "bili_videos",
+      "title": "B 站重点官方视频",
+      "subtitle": "横轴为发布日 · 纵轴为当前累计播放量",
+      "adapter": "video_scatter",
+      "path": "bilibili.videos",
+      "field": "view",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
+      "chart": "scatter",
+      "color": "slot5",
+      "height": 130,
+      "unit": "count",
+      "enabled": true,
+      "caveat": "仅登记视频集合，不是全站播放量，也不是独立观众数"
+    },
+    {
+      "id": "bili_version_pv",
+      "title": "B 站版本 PV",
+      "subtitle": "只含版本 PV · 发布日 × 当前累计播放",
+      "adapter": "video_scatter",
+      "path": "bilibili.videos",
+      "field": "view",
+      "content_types": [
+        "version_trailer"
+      ],
+      "chart": "scatter",
+      "color": "slot7",
+      "height": 110,
+      "unit": "count",
+      "enabled": false,
+      "caveat": "版本 PV 与角色 PV 的发布节奏和推荐位待遇不同，混在一起比没有意义"
+    },
+    {
+      "id": "bili_character_pv",
+      "title": "B 站角色 PV / 演示",
+      "subtitle": "只含角色 PV 与战斗演示 · 发布日 × 当前累计播放",
+      "adapter": "video_scatter",
+      "path": "bilibili.videos",
+      "field": "view",
+      "content_types": [
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
+      "chart": "scatter",
+      "color": "slot5",
+      "height": 110,
+      "unit": "count",
+      "enabled": false,
+      "caveat": "角色 PV 通常早于版本更新日 5-12 天发布，位置不等于版本归属"
+    },
+    {
+      "id": "bili_ramp",
+      "title": "B 站重点内容发布后播放曲线",
+      "subtitle": "一支视频一条线 · 横轴为发布后第 N 天",
+      "adapter": "video_ramp",
+      "path": "bilibili.videos",
+      "field": "view",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
+      "chart": "line",
+      "color": "slot5",
+      "height": 150,
+      "unit": "count",
+      "enabled": false,
+      "caveat": "接口只返回当前累计值，曲线只能从开始采集那天往后长；虚线表示缺起跑段"
+    },
+    {
+      "id": "bili_version_ramp",
+      "title": "B 站版本 PV 播放曲线",
+      "subtitle": "只含版本 PV · 横轴为发布后第 N 天",
+      "adapter": "video_ramp",
+      "path": "bilibili.videos",
+      "field": "view",
+      "content_types": [
+        "version_trailer"
+      ],
+      "chart": "line",
+      "color": "slot7",
+      "height": 130,
+      "unit": "count",
+      "enabled": false,
+      "caveat": "同类内容按发布后天数对齐，这是唯一跨视频公平的播放量比较方式"
+    },
+    {
+      "id": "bili_view_delta",
+      "title": "B 站重点内容日增播放",
+      "subtitle": "全部登记视频的播放量日增量合计",
+      "adapter": "video_delta",
+      "path": "bilibili.videos",
+      "field": "view",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
+      "chart": "bar",
+      "color": "slot5",
+      "height": 110,
+      "enabled": false
+    },
+    {
+      "id": "bili_engagement",
+      "title": "B 站重点内容互动率",
+      "subtitle": "（点赞+投币+收藏）/ 播放 · 按视频发布日定位",
+      "adapter": "video_scatter",
+      "path": "bilibili.videos",
+      "field": "engagement",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
+      "from_rates": true,
+      "chart": "scatter",
+      "color": "slot3",
+      "height": 110,
+      "unit": "percent",
+      "enabled": false,
+      "caveat": "互动率跨视频可比，播放量不可比 —— 后者受推荐位影响极大"
+    },
+    {
+      "id": "yt_view_global",
+      "title": "YouTube 重点内容播放 · 全球",
+      "subtitle": "横轴为发布日 · 纵轴为当前累计观看数",
+      "adapter": "video_scatter",
+      "path": "youtube.locales.global.videos",
+      "field": "view",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
+      "chart": "scatter",
+      "color": "slot1",
+      "height": 110,
+      "unit": "count",
+      "enabled": false,
+      "caveat": "累计值随时间自然增长，跨视频比大小不公平；跨语区更不可比"
+    },
+    {
+      "id": "yt_view_ja",
+      "title": "YouTube 重点内容播放 · 日语",
+      "subtitle": "横轴为发布日 · 纵轴为当前累计观看数",
+      "adapter": "video_scatter",
+      "path": "youtube.locales.ja.videos",
+      "field": "view",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
+      "chart": "scatter",
+      "color": "slot2",
+      "height": 110,
+      "unit": "count",
+      "enabled": false,
+      "caveat": "累计值随时间自然增长，跨视频比大小不公平；跨语区更不可比"
+    },
+    {
+      "id": "yt_view_ko",
+      "title": "YouTube 重点内容播放 · 韩语",
+      "subtitle": "横轴为发布日 · 纵轴为当前累计观看数",
+      "adapter": "video_scatter",
+      "path": "youtube.locales.ko.videos",
+      "field": "view",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
+      "chart": "scatter",
+      "color": "slot3",
+      "height": 110,
+      "unit": "count",
+      "enabled": false,
+      "caveat": "累计值随时间自然增长，跨视频比大小不公平；跨语区更不可比"
+    },
+    {
+      "id": "yt_view_zhtw",
+      "title": "YouTube 重点内容播放 · 繁中",
+      "subtitle": "横轴为发布日 · 纵轴为当前累计观看数",
+      "adapter": "video_scatter",
+      "path": "youtube.locales.zh-tw.videos",
+      "field": "view",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
+      "chart": "scatter",
+      "color": "slot5",
+      "height": 110,
+      "unit": "count",
+      "enabled": false,
+      "caveat": "累计值随时间自然增长，跨视频比大小不公平；跨语区更不可比"
+    },
+    {
+      "id": "yt_engagement_global",
+      "title": "YouTube 重点内容互动率 · 全球",
+      "subtitle": "（点赞+评论）/ 播放",
+      "adapter": "video_scatter",
+      "path": "youtube.locales.global.videos",
+      "field": "engagement",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
+      "from_rates": true,
+      "chart": "scatter",
+      "color": "slot1",
+      "height": 100,
+      "unit": "percent",
+      "enabled": false,
+      "caveat": "点赞与评论可被创作者隐藏，隐藏时记 null 不记 0"
+    },
+    {
+      "id": "yt_engagement_ja",
+      "title": "YouTube 重点内容互动率 · 日语",
+      "subtitle": "（点赞+评论）/ 播放",
+      "adapter": "video_scatter",
+      "path": "youtube.locales.ja.videos",
+      "field": "engagement",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
+      "from_rates": true,
+      "chart": "scatter",
+      "color": "slot2",
+      "height": 100,
+      "unit": "percent",
+      "enabled": false,
+      "caveat": "点赞与评论可被创作者隐藏，隐藏时记 null 不记 0"
+    },
+    {
+      "id": "yt_engagement_ko",
+      "title": "YouTube 重点内容互动率 · 韩语",
+      "subtitle": "（点赞+评论）/ 播放",
+      "adapter": "video_scatter",
+      "path": "youtube.locales.ko.videos",
+      "field": "engagement",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
+      "from_rates": true,
+      "chart": "scatter",
+      "color": "slot3",
+      "height": 100,
+      "unit": "percent",
+      "enabled": false,
+      "caveat": "点赞与评论可被创作者隐藏，隐藏时记 null 不记 0"
+    },
+    {
+      "id": "yt_engagement_zhtw",
+      "title": "YouTube 重点内容互动率 · 繁中",
+      "subtitle": "（点赞+评论）/ 播放",
+      "adapter": "video_scatter",
+      "path": "youtube.locales.zh-tw.videos",
+      "field": "engagement",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
+      "from_rates": true,
+      "chart": "scatter",
+      "color": "slot5",
+      "height": 100,
+      "unit": "percent",
+      "enabled": false,
+      "caveat": "点赞与评论可被创作者隐藏，隐藏时记 null 不记 0"
+    },
+    {
+      "id": "yt_view_locales",
+      "title": "YouTube 重点内容语区播放对照",
+      "subtitle": "横轴为发布日 · 一个语区一种形状",
+      "adapter": "locale_scatter",
+      "path": "youtube.locales",
+      "order_path": "youtube.locale_order",
+      "locales": [
+        "global",
+        "ja",
+        "ko",
+        "zh-tw"
+      ],
+      "field": "view",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
+      "chart": "scatter",
+      "height": 150,
+      "unit": "count",
+      "log": true,
+      "enabled": true,
+      "scales": [
+        {
+          "id": "abs",
+          "label": "播放量",
+          "hint": "对数纵轴。语区之间的垂直落差＝频道体量差，不是内容表现差。"
+        },
+        {
+          "id": "index",
+          "label": "相对本语区",
+          "hint": "每个点除以本语区播放量中位数，体量被除掉，跨语区可比。"
+        }
+      ],
+      "caveat": "累计播放随时间自然增长，发布越久越高；跨语区比大小请切到「相对本语区」"
+    },
+    {
+      "id": "yt_engagement_locales",
+      "title": "YouTube 重点内容语区互动率对照",
+      "subtitle": "（点赞+评论）/ 播放 · 一个语区一种形状",
+      "adapter": "locale_scatter",
+      "path": "youtube.locales",
+      "order_path": "youtube.locale_order",
+      "locales": [
+        "global",
+        "ja",
+        "ko",
+        "zh-tw"
+      ],
+      "field": "engagement",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
+      "from_rates": true,
+      "chart": "scatter",
+      "height": 140,
+      "unit": "percent",
+      "enabled": true,
+      "scales": [
+        {
+          "id": "abs",
+          "label": "互动率",
+          "hint": "互动率本身就是截面比值，不受体量影响，四个语区可以直接比大小。"
+        },
+        {
+          "id": "index",
+          "label": "相对本语区",
+          "hint": "除以本语区互动率中位数，看的是「这支比同区常态高多少」。"
+        }
+      ],
+      "caveat": "点赞与评论可被创作者隐藏，隐藏时记 null 不记 0"
+    },
+    {
+      "id": "yt_ramp_global",
+      "title": "YouTube 重点内容发布后播放曲线 · 全球",
+      "subtitle": "横轴为发布后第 N 天",
+      "adapter": "video_ramp",
+      "path": "youtube.locales.global.videos",
+      "field": "view",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
+      "chart": "line",
+      "color": "slot1",
+      "height": 120,
+      "unit": "count",
+      "enabled": false,
+      "caveat": "补登记的视频缺起跑段，曲线画虚线并标出缺口"
+    },
+    {
+      "id": "yt_ramp_ja",
+      "title": "YouTube 重点内容发布后播放曲线 · 日语",
+      "subtitle": "横轴为发布后第 N 天",
+      "adapter": "video_ramp",
+      "path": "youtube.locales.ja.videos",
+      "field": "view",
+      "content_types": [
+        "version_trailer",
+        "character_trailer",
+        "character_demo",
+        "character_ep"
+      ],
+      "chart": "line",
+      "color": "slot2",
+      "height": 120,
+      "unit": "count",
+      "enabled": false,
+      "caveat": "补登记的视频缺起跑段，曲线画虚线并标出缺口"
+    }
+  ],
+  "presets": {
+    "default": {
+      "label": "默认",
+      "lanes": [
+        "new_reviews",
+        "review_rate",
+        "online",
+        "playtime_median",
+        "bili_videos",
+        "yt_view_locales",
+        "yt_engagement_locales"
+      ]
+    },
+    "compare": {
+      "label": "多对象对照",
+      "lanes": [
+        "new_reviews",
+        "review_rate",
+        "version_marks",
+        "bili_engagement"
+      ]
+    },
+    "versions": {
+      "label": "版本对照",
+      "lanes": [
+        "new_reviews",
+        "review_rate",
+        "playtime_median",
+        "bili_version_ramp"
+      ]
+    },
+    "player_profile": {
+      "label": "玩家结构",
+      "lanes": [
+        "new_reviews",
+        "playtime_median",
+        "short_play_share",
+        "heavy_play_share",
+        "language_delta"
+      ]
+    },
+    "propagation": {
+      "label": "传播端",
+      "lanes": [
+        "bili_version_pv",
+        "bili_character_pv",
+        "bili_engagement",
+        "bili_ramp",
+        "yt_view_locales",
+        "yt_engagement_locales"
+      ]
+    },
+    "online_focus": {
+      "label": "在线盘",
+      "lanes": [
+        "online",
+        "online_band",
+        "new_reviews",
+        "review_rate"
+      ]
+    },
+    "yt_locales": {
+      "label": "语区对照",
+      "lanes": [
+        "yt_view_locales",
+        "yt_engagement_locales",
+        "new_reviews"
+      ]
+    },
+    "jp_market": {
+      "label": "日本市场",
+      "lanes": [
+        "yt_view_ja",
+        "yt_engagement_ja",
+        "yt_ramp_ja",
+        "new_reviews"
+      ]
+    }
+  },
+  "adapters": [
+    "locale_scatter",
+    "series",
+    "share_delta",
+    "stacked_share",
+    "version_marks",
+    "video_delta",
+    "video_ramp",
+    "video_scatter"
+  ],
+  "build_id": "4ad60606e4e74367b1d49b51fc5f34b6"
+}

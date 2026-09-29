@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from collectors.common import (  # noqa: E402
     DATA_DIR,
+    business_date,
     get_game,
     load_games,
     load_curated_video_pairs,
@@ -63,6 +64,8 @@ UPDATE_PATTERNS = [
     re.compile(r"Patch\s+Notes", re.I),
     re.compile(r"版本更新"),
     re.compile(r"版本现已|正式上线"),
+    # 鸣潮二周年 3.3 的公告标题是「… V3.3 "…" Now Live!」
+    re.compile(r"Now\s+Live", re.I),
 ]
 
 # 只有 Steam 官方社区公告可以生成版本事件。新闻源同时包含第三方媒体
@@ -111,6 +114,16 @@ def extract_version(title: str) -> str | None:
     return None
 
 
+def steam_release(update: dict) -> tuple[str | None, str | None]:
+    """版本表条目 → (Steam 开放时刻, Steam 开放日)。未在 Steam 开放的版本返回空。"""
+    if update.get("status") == "scheduled":
+        return None, None
+    release_at = update.get("steam_start_at")
+    if release_at:
+        return release_at, business_date(release_at)
+    return None, update.get("steam_start_date")
+
+
 def build_events(news_records: list[dict], price_points: list[dict],
                  videos: dict[str, dict],
                  yt_videos: dict[str, dict] | None = None,
@@ -151,13 +164,12 @@ def build_events(news_records: list[dict], price_points: list[dict],
                 # 公告发布时间常以 UTC 存储，可能比客户端正式开放日早一天。
                 # 对清单中人工核验过的版本，使用该游戏 Steam 区实际更新时间。
                 update = version_updates.get(version) or {}
-                release_at = update.get("steam_start_at")
-                release_date = (release_at[:10] if release_at else
-                                update.get("steam_start_date"))
+                release_at, release_date = steam_release(update)
                 if release_date:
                     event["announcement_date_local"] = event["date_local"]
                     event["date_local"] = release_date
-                    event["source_url"] = (update.get("steam_source_url")
+                    event["source_url"] = (update.get("source_url")
+                                           or update.get("steam_source_url")
                                            or event["source_url"])
                     event["evidence"] = "manual"
                     if release_at:
@@ -175,9 +187,7 @@ def build_events(news_records: list[dict], price_points: list[dict],
     # 建立边界，避免版本对比窗口因新闻缺项而错位。计划中的未来版本没有
     # Steam 开放日，不会提前成为分界线。
     for version, update in version_updates.items():
-        release_at = update.get("steam_start_at")
-        release_date = (release_at[:10] if release_at else
-                        update.get("steam_start_date"))
+        release_at, release_date = steam_release(update)
         if not release_date or version in version_boundaries:
             continue
         version_boundaries[version] = {
@@ -188,7 +198,7 @@ def build_events(news_records: list[dict], price_points: list[dict],
             "version_id": version,
             "is_version_boundary": True,
             "source": "official_version_schedule",
-            "source_url": update.get("steam_source_url"),
+            "source_url": update.get("source_url") or update.get("steam_source_url"),
             "evidence": "manual",
             **({"update_at": release_at} if release_at else {}),
         }
@@ -330,10 +340,10 @@ def _build(game_id: str) -> dict:
 
     issues = quality.check(steam, bili)
 
-    version_updates = ((load_yaml("video_pairs.yml").get("version_updates")
-                        or {}).get(game_id) or {})
+    version_updates = load_yaml("versions.yml").get(game_id) or {}
     events = build_events(news, price_points, videos, yt_videos, builds,
                           version_updates=version_updates)
+    issues.extend(quality.version_table_issues(events, version_updates))
 
     # 版本前后对比用官方公告确认的版本更新日做基准。构建号事件不做基准：
     # 一次版本更新会伴随多次热更构建，用它切窗口会把同一个版本切成好几段。
@@ -487,6 +497,8 @@ def version_catalog(snapshot: dict) -> list[dict]:
             "days": _days_between(start, end) + 1,
             "next_version": next_version,
             "open_ended": nxt is None,
+            "source_url": ev.get("source_url"),
+            "evidence": ev.get("evidence"),
         })
     return out
 

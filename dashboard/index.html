@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>GamePulse · 游戏运营工作台</title>
 <script src="vendor/echarts-5.5.0.min.js"></script>
-<link rel="stylesheet" href="video-dashboard.css">
+<link rel="stylesheet" href="video-dashboard.css?v=20260929b">
 <style>
   /* 调色板取自 dataviz 参考实例，5 个数据实体已通过 validate_palette.js（light）:
      lightness band / chroma floor / CVD 分离 / normal-vision floor 全部 PASS。
@@ -178,9 +178,10 @@
   .pos { color: #006300; }
   .neg { color: var(--status-critical); }
   .muted { color: var(--text-muted); }
-  .chip { display: inline-block; padding: 1px 7px; border-radius: 5px;
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 1px 7px; border-radius: 5px;
           font-size: 11px; background: rgba(11,11,11,0.05);
           color: var(--text-secondary); }
+  .chip-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
 
   .bar-cell { display: flex; align-items: center; gap: 8px; }
   .bar-track { flex: 1; height: 6px; background: var(--gridline);
@@ -432,7 +433,7 @@
     .legend { gap: 8px 12px; }
   }
 </style>
-<link rel="stylesheet" href="studio.css">
+<link rel="stylesheet" href="studio.css?v=20260929b">
 </head>
 <body class="viz-root" data-page="overview" data-view-storage="gamepulse.studio.v1">
 <div class="shell">
@@ -486,13 +487,13 @@
       <button class="linkish" id="openPanel" aria-haspopup="dialog"
               aria-expanded="false" aria-controls="lanePanel">轨道配置</button>
       <div class="menu-wrap">
-        <button class="linkish" id="openExport" aria-haspopup="menu"
+        <button class="linkish" id="openExport" aria-controls="exportMenu"
                 aria-expanded="false">导出</button>
-        <div class="menu hidden" id="exportMenu" role="menu">
-          <button role="menuitem" data-export="csv">当前范围 CSV（按日期）</button>
-          <button role="menuitem" data-export="videos">全部重点登记视频 CSV</button>
-          <button role="menuitem" data-export="png">综合图 PNG</button>
-          <button role="menuitem" data-export="link">复制当前视图链接</button>
+        <div class="menu hidden" id="exportMenu" aria-label="导出选项">
+          <button data-export="csv">当前范围 CSV（按日期）</button>
+          <button data-export="videos">全部重点登记视频 CSV</button>
+          <button data-export="png">综合图 PNG</button>
+          <button data-export="link">复制当前视图链接</button>
           <div class="menu-note">导出内容仅含公开数据，不含密钥、Cookie 或本机路径。</div>
         </div>
       </div>
@@ -570,7 +571,7 @@
         </div>
       </div>
       <div class="legend" id="legend"></div>
-      <div id="pulse"></div>
+      <div id="pulse" role="img" aria-label="运营趋势综合图：评测、好评率、在线等轨道共用时间轴，等价数据见数据表"></div>
       <details class="fine-print" id="pulseFine">
         <summary>坐标轴与轨道口径</summary>
         <p id="pulseFineText"></p>
@@ -585,9 +586,9 @@
         <p class="card-note" id="cmpWindowNote" style="margin-bottom:12px"></p>
         <div class="table-wrap"><table id="cmpTable"><thead><tr>
           <th>对比对象</th>
-          <th class="num">Steam净变化 / 回填存活评测</th>
-          <th class="num">日均评测变化</th>
-          <th class="num">Steam 累计 / 版本回填好评率</th>
+          <th class="num" title="按评测发布日回填，只统计今天仍存在的评测，已删除的评测不计入">Steam 净变化 / 评测数（按发布日回填）</th>
+          <th class="num">窗口日均评测数</th>
+          <th class="num" title="游戏对象为 Steam 全局累计好评率；版本对象为窗口内新增评测的好评占比">好评率（游戏：全局累计 / 版本：窗口）</th>
           <th class="num">当前在线</th>
           <th class="num">版本</th>
         </tr></thead><tbody></tbody></table></div>
@@ -656,12 +657,12 @@
   <div class="loading" id="loading">正在加载快照…</div>
 </div>
 
-<!-- 版本参数避免本地静态服务继续复用旧的引擎脚本缓存。 -->
-<script src="video-model.js?v=20260929"></script>
-<script src="engine.js?v=20260929"></script>
-<script src="video-dashboard.js?v=20260929"></script>
-<script src="app.js?v=20260929"></script>
-<script src="studio.js"></script>
-<script src="studio-details.js"></script>
+<!-- 版本参数避免本地静态服务继续复用旧脚本与样式缓存；改动任一文件时统一递增。 -->
+<script src="video-model.js?v=20260929b"></script>
+<script src="engine.js?v=20260929b"></script>
+<script src="video-dashboard.js?v=20260929b"></script>
+<script src="app.js?v=20260929b"></script>
+<script src="studio.js?v=20260929b"></script>
+<script src="studio-details.js?v=20260929b"></script>
 </body>
 </html>

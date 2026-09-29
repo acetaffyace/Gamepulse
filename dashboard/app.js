@@ -134,6 +134,33 @@ function defaultVideoViews() {
 }
 
 const pct = n => (n === null || n === undefined) ? '—' : n.toFixed(2) + '%';
+const esc = escapeHtml;
+
+/* 「回填存活评测」是内部说法。对外统一叫「评测数（按发布日回填）」，
+   并在悬停里说清楚：只统计今天仍存在的评测，已删除的评测不计入。 */
+const BACKFILL_LABEL = '评测数（按发布日回填）';
+const BACKFILL_TIP = '按评测发布日期回填；只统计今天仍存在的评测，已删除的评测不计入';
+const NET_LABEL = 'Steam 总评测数净变化';
+const basisLabel = basis => basis === 'surviving_review_backfill' ? BACKFILL_LABEL : NET_LABEL;
+
+/* 版本窗口好评率：窗口内新增评测（按发布日回填）的好评占比。
+   它和「游戏整体累计好评率」（上线至今全部评测）是两个数，名字必须分开。 */
+const VERSION_RATE_LABEL = '版本窗口好评率';
+
+/* 一个对象当前的分析窗口，写成人能读的样子：版本对象按 D0–Dn 标注，
+   让「首 14 天」和图例、卡片里的天数永远是同一个数。 */
+function windowCaption(subject) {
+  const w = analysisWindow(subject);
+  if (w.start > w.end) return '所选范围内无数据';
+  const days = daysBetween(w.start, w.end) + 1;
+  const span = `${w.start.slice(5)} → ${w.end.slice(5)}`;
+  if (subject.kind === 'version') {
+    const from = daysBetween(subject.day0, w.start), to = daysBetween(subject.day0, w.end);
+    return `D${from}–D${to} · ${span} · ${days} 天` +
+      (days < subject.days ? `（版本共 ${subject.days} 天${subject.openEnded ? '，仍在进行' : ''}）` : '');
+  }
+  return `${span} · ${days} 天`;
+}
 
 function color(slot) {
   return (config.palette && config.palette[slot]) || C.muted;
@@ -145,17 +172,17 @@ const METRIC_INFO = {
   online: { t: 'Steam 同时在线',
     d: '平台同时在线测值，不是 DAU，也不是总玩家数。同日优先使用有效的 Steam 官方观测，其次是 SteamDB Players 点位，最后用当天最新的有效小时采样兜底；这些都不是全天均值。' },
   cum_rate: { t: 'Steam 全局累计好评率',
-    d: 'Steam appreviews 每日返回的全局好评数 ÷ 总评测数，统计当前仍存在的评测。每日采集后会更新；版本滚动好评率另由评测明细回填重建。' },
-  avg7: { t: '近 7 日日均评测变化',
-    d: '有历史明细时使用当前仍存活的评测回填数；否则按 Steam 总评测数相邻采集值计算净变化。百分比比较最近与前一组连续 7 个自然日的日均变化，缺采时不显示变化率；两种口径不可混比。' },
-  playtime: { t: '日中位时长的中位数',
-    d: '所选窗口末 14 个有效日点：先计算每日写评测时游玩时长的中位数，再取这些日中位数的中位数。它不等于全部评测者的总体中位时长。' },
+    d: 'Steam appreviews 每日返回的全局好评数 ÷ 总评测数，统计当前仍存在的评测。每日采集后会更新；版本窗口好评率另由评测明细按发布日回填重建，两者不是同一个数。' },
+  avg7: { t: '近 7 日日均评测数',
+    d: '有评测明细时按评测发布日回填（只含今天仍存在的评测，已删除的评测不计入）；否则按 Steam 总评测数相邻采集值计算净变化。取窗口内最后一个有数据的日期往前连续 7 个自然日；百分比比较这 7 天与再往前 7 天的日均值，缺采时不显示变化率。两种口径不可混比。' },
+  playtime: { t: '评测时游戏时长（日中位数的中位值）',
+    d: '取所选窗口末最多 14 个有评测的日点：先得到每天写评测时已玩时长的中位数，再取这些日中位数的中位值。它不等于把全部评测合并后的中位数；「版本更新前后 7 天对比」表里的评测时中位时长是合并中位数，两者口径不同。评测画像每周更新，窗口内没有画像时改用最近一次画像，并在卡片上注明日期。' },
   bili_engagement: { t: 'B 站互动率',
     d: '（点赞+投币+收藏）/ 播放。截面比值，仍受视频年龄、分发和受众影响，不能直接代表内容质量。' },
   version: { t: '当前版本',
     d: '版本更新日取自 Steam 官方公告，构建号来自 SteamCMD 第三方镜像（仅作旁证）。事件只表示时间节点，不表示因果。' },
-  daily_avg: { t: '窗口内日均评测变化',
-    d: '优先显示该对象窗口内历史回填评测数 ÷ 覆盖天数；没有回填时显示 Steam 总评测数净变化 ÷ 观测跨度。两种口径不可直接混比，卡片和表格会标出来源。' },
+  daily_avg: { t: '窗口内日均评测数',
+    d: '优先显示该对象窗口内的评测数（按发布日回填，只含今天仍存在的评测）÷ 覆盖天数；没有回填时显示 Steam 总评测数净变化 ÷ 观测跨度。两种口径不可直接混比，卡片和表格会标出来源。版本对象的好评率是窗口内新增评测的好评占比，不是游戏整体累计好评率。' },
   window_table: { t: '窗口对照',
     d: '卡片与表格使用主图当前日期范围；视频相对天数在各自视图中设置。' },
   version_table: { t: '版本更新前后 7 天对比',
@@ -166,8 +193,8 @@ const METRIC_INFO = {
     d: '最近 6 个版本的更新间隔均值，取自各自 Steam 官方公告。间隔变化本身不说明好坏，只用来判断某次更新是提前还是延后。' },
 };
 
-const infoBtn = key => `<button class="info" data-info="${key}"
-  aria-label="${(METRIC_INFO[key] || {}).t || ''} 的口径说明">ⓘ</button>`;
+const infoBtn = key => `<button class="info" data-info="${esc(key)}"
+  aria-label="${esc((METRIC_INFO[key] || {}).t || '')} 的口径说明">ⓘ</button>`;
 
 const LANG_LABEL = {
   english: 'English', russian: 'Русский', schinese: '简体中文', tchinese: '繁體中文',
@@ -248,9 +275,18 @@ async function snapshotOf(gameId) {
       throw new LoadError(`${url} 返回 HTTP ${res.status}`,
         `快照文件不存在或不可读。先运行 <code>python pipeline/build_snapshot.py</code> 生成它。`);
     }
+    let snapshot;
     try {
-      const snapshot = await res.json();
-      if (versionedBatch && snapshot.build_id !== snapshotBuildId) throw new Error("快照批次不一致");
+      snapshot = await res.json();
+    } catch (e) {
+      throw new LoadError(`${url} 不是合法 JSON`,
+        '快照可能写到一半被中断了，等发布完成后刷新；仍然失败时重新生成快照。');
+    }
+    if (versionedBatch && snapshot.build_id !== snapshotBuildId) {
+      throw new LoadError('数据批次不一致：快照与目录不属于同一次发布',
+        '可能正在发布新数据。请稍等片刻后点「重新加载」。');
+    }
+    {
       const onlineByDate = new Map(
         (versionedBatch ? [] : await steamDbOnlineOf(gameId)).map(row => [row.date_local, row]));
       (snapshot.online_series || []).forEach(row => {
@@ -266,9 +302,6 @@ async function snapshotOf(gameId) {
         snapshot.snapshot_date = latestOnlineDate;
       }
       snapCache.set(gameId, snapshot);
-    } catch (e) {
-      throw new LoadError(`${url} 不是合法 JSON`,
-        '快照可能写到一半被中断了，重新运行 <code>python pipeline/build_snapshot.py</code>。');
     }
   }
   return snapCache.get(gameId);
@@ -295,7 +328,7 @@ function fail(title, hint) {
       <div style="font-size:15px;font-weight:600;color:var(--text-primary);
                   margin-bottom:8px">看板没能加载</div>
       <div style="color:var(--text-secondary);font-size:13px;line-height:1.7">
-        <div style="margin-bottom:6px">${title}</div>
+        <div style="margin-bottom:6px">${esc(title)}</div>
         ${hint ? `<div style="color:var(--text-muted)">${hint}</div>` : ''}
       </div>
       <button class="linkish" id="retryLoad" style="margin-top:14px">重新加载</button>
@@ -526,9 +559,16 @@ function clearDashboardState(message) {
   document.getElementById('pulseFine').open = false;
   document.getElementById('versionFine').open = false;
   document.getElementById('tableCard').classList.add('hidden');
-  const toggleTable = document.getElementById('toggleTable');
-  toggleTable.textContent = '显示数据表';
-  toggleTable.setAttribute('aria-expanded', 'false');
+  setToggleTableLabel(false);
+  document.getElementById('toggleTable').setAttribute('aria-expanded', 'false');
+}
+
+/* 只改按钮里的文字节点：工作台给这个按钮加了图标，直接写 textContent
+   会把图标一起抹掉。 */
+function setToggleTableLabel(shown) {
+  const button = document.getElementById('toggleTable');
+  const label = button.querySelector('.btn-label') || button;
+  label.textContent = shown ? '隐藏数据表' : '显示数据表';
 }
 
 function renderAll() {
@@ -595,7 +635,7 @@ function renderPulseNote(ctx) {
       其实只是它有更多天的数据。`);
   }
   if (hasVersion && hasVideoLanes) {
-    fine.push('版本对象的负天数由已确认归属该版本的视频确定；评测、在线等普通指标按已有历史数据延伸，版本滚动累计好评率从更新日起算。');
+    fine.push('版本对象的负天数由已确认归属该版本的视频确定；评测、在线等普通指标按已有历史数据延伸，版本窗口好评率从更新日起累计。');
   }
   fine.push('各轨道单位不同，分别独立计量，不共用纵轴。');
   fine.push(ctx.multi
@@ -628,45 +668,55 @@ function syncRangeLabel() {
 function renderSubjectBar() {
   const chips = document.getElementById('subjectChips');
   chips.innerHTML = subjects.map(s => `
-    <span class="subject-chip" data-key="${s.key}" title="${s.sublabel}">
-      <span class="mark" style="background:${s.color}"></span>
-      <span class="sc-label">${s.label}</span>
-      <button class="sc-x" data-remove="${s.key}" title="移除">×</button>
+    <span class="subject-chip" data-key="${esc(s.key)}" title="${esc(windowCaption(s))}">
+      <span class="mark" style="background:${esc(s.color)}"></span>
+      <span class="sc-label">${esc(s.label)}</span>
+      <button class="sc-x" data-remove="${esc(s.key)}" title="移除" aria-label="移除 ${esc(s.label)}">×</button>
     </span>`).join('') ||
     '<span class="muted" style="font-size:12px">未选择对象</span>';
 
   chips.querySelectorAll('[data-remove]').forEach(btn => {
-    btn.onclick = async () => {
-      subjects = subjects.filter(s => s.key !== btn.dataset.remove);
-      paintSubjects(subjects.map(s => rebase(s)));
+    btn.onclick = () => guarded(async () => {
+      subjects = paintSubjects(subjects.filter(s => s.key !== btn.dataset.remove));
       await refresh();
-    };
+    }, '移除对象后刷新失败');
   });
 
   const chosen = new Set(subjects.map(s => s.key));
   const sel = document.getElementById('subjectAdd');
   const groups = catalog.map(g => {
-    const opts = [`<option value="${g.game_id}" ${chosen.has(g.game_id) ? 'disabled' : ''}>整段 · ${g.short_name}</option>`];
+    const opts = [`<option value="${esc(g.game_id)}" ${chosen.has(g.game_id) ? 'disabled' : ''}>整段 · ${esc(g.short_name)}</option>`];
     (g.versions || []).slice().reverse().forEach(v => {
       const key = `${g.game_id}@${v.key}`;
       const tail = v.open_ended ? '进行中' : `${v.days} 天`;
-      opts.push(`<option value="${key}" ${chosen.has(key) ? 'disabled' : ''}>${g.short_name} ${v.version_id} · ${v.date_local} · ${tail}</option>`);
+      opts.push(`<option value="${esc(key)}" ${chosen.has(key) ? 'disabled' : ''}>${esc(g.short_name)} ${esc(v.version_id)} · ${esc(v.date_local)} · ${tail}</option>`);
     });
-    return `<optgroup label="${g.short_name}">${opts.join('')}</optgroup>`;
+    return `<optgroup label="${esc(g.short_name)}">${opts.join('')}</optgroup>`;
   }).join('');
   sel.innerHTML = `<option value="">＋ 添加对象</option>${groups}`;
 }
 
-/* 移除对象后其余对象要换回自己的基色，否则上一次的明度偏移会留在身上。 */
+/* 颜色按 (游戏, 版本) 固定，移除或加入对象都不会让其余对象换色。 */
 function rebase(s) {
-  const entry = catalog.find(g => g.game_id === s.gameId);
-  return entry ? { ...s, color: entry.color } : s;
+  return { ...s, color: subjectColor(catalog, s) };
 }
 
 async function refresh() {
   await hydrate(subjects);
   renderSubjectBar();
   renderAll();
+}
+
+/* 所有由用户操作触发的异步刷新都走这里：失败时给一条 toast，
+   而不是留下一个未处理的 Promise 拒绝和一张停在半路的页面。 */
+async function guarded(task, message = '操作失败') {
+  try {
+    return await task();
+  } catch (error) {
+    console.error(error);
+    toast(`${message}：${(error && error.message) || error}，请重试`);
+    return undefined;
+  }
 }
 
 /* ---------- 图例 ----------
@@ -696,11 +746,11 @@ function laneLegends() {
       const marks = built.series.slice(0, 8).map(def => {
         const glyph = def.symbol && SYMBOL_GLYPH[def.symbol];
         const mark = glyph
-          ? `<span style="color:${def.color};font-size:10px;line-height:1">${glyph}</span>`
+          ? `<span style="color:${esc(def.color)};font-size:10px;line-height:1">${glyph}</span>`
           : `<span class="${def.kind === 'scatter' ? 'mark dot'
               : def.kind === 'bar' ? 'mark bar' : 'mark'}"
-                   style="background:${def.color}"></span>`;
-        return `${mark}<span>${def.name}</span>`;
+                   style="background:${esc(def.color)}"></span>`;
+        return `${mark}<span>${esc(def.name)}</span>`;
       }).join('<span style="width:10px"></span>');
       const entry = rows.get(marks) || { titles: [], marks };
       entry.titles.push(lane.title);
@@ -710,7 +760,7 @@ function laneLegends() {
   // 两条语区轨道的图例完全一样（都是那四个语区），合成一行而不是印两遍
   return [...rows.values()].map(({ titles, marks }) =>
     `<div class="legend-item" style="cursor:default">
-       <span style="color:${C.muted}">${titles.join(' / ')}：</span>${marks}
+       <span style="color:${C.muted}">${esc(titles.join(' / '))}：</span>${marks}
      </div>`).join('');
 }
 
@@ -728,7 +778,7 @@ function videoCategoryLegend(ctx) {
     const glyph = SYMBOL_GLYPH[def.symbol] || '●';
     const colorStyle = ctx.multi ? C.muted : def.color;
     return `<span style="font-size:10px;line-height:1;color:${colorStyle}">${glyph}</span>` +
-      `<span>${def.categoryLabel}</span>`;
+      `<span>${esc(def.categoryLabel)}</span>`;
   }).join('<span style="width:10px"></span>');
   const tail = rows.length > 12
     ? `<span style="color:${C.muted}">另 ${rows.length - 12} 类请悬停查看</span>` : '';
@@ -747,7 +797,7 @@ function shapeLegend() {
   if (!seen.size) return '';
   const items = [...seen].map(([code, sym]) =>
     `<span style="font-size:10px;line-height:1;color:${C.secondary}">${
-      SYMBOL_GLYPH[sym] || '●'}</span><span>${localeLabel(code)}</span>`)
+      SYMBOL_GLYPH[sym] || '●'}</span><span>${esc(localeLabel(code))}</span>`)
     .join('<span style="width:10px"></span>');
   return `<div class="legend-item" style="cursor:default">
             <span style="color:${C.muted}">形状＝语区：</span>${items}
@@ -761,12 +811,12 @@ function renderLegend(ctx) {
   el.innerHTML = subjects.map(s => {
     const off = hiddenSubjects.has(s.key);
     return `
-      <button class="legend-item" data-subject="${s.key}" data-off="${off}"
+      <button class="legend-item" data-subject="${esc(s.key)}" data-off="${off}"
               aria-pressed="${!off}"
               title="${off ? '点击显示' : '点击从图上隐藏'}（仅影响图，下方表格不变）">
-        <span class="mark" style="background:${s.color}"></span>
-        <span style="font-weight:500">${s.label}</span>
-        <span style="color:${C.muted}">· ${s.sublabel}</span>
+        <span class="mark" style="background:${esc(s.color)}"></span>
+        <span style="font-weight:500">${esc(s.label)}</span>
+        <span style="color:${C.muted}">· ${esc(windowCaption(s))}</span>
       </button>`;
   }).join('');
 
@@ -812,9 +862,10 @@ function windowStats(subject) {
   const reviews = observedRows.length
     ? observedRows.reduce((s, r) => s + r.value, 0) : null;
   const days = observedRows.reduce((s, r) => s + (r.span_days || 0), 0);
-  const storeRows = (subject.snap.review_series || [])
-    .filter(r => r.date_local >= w.start && r.date_local <= w.end);
-  const latestStore = storeRows.at(-1);
+  // 累计好评率是存量：取窗口末之前最后一个有值的日点，而不是窗口最后一天
+  // （最后一天可能采集失败记为空），并把日期带出去标在卡片上。
+  const latestStore = (subject.snap.review_series || [])
+    .filter(r => r.date_local <= w.end && r.value != null).at(-1) || null;
   const online = (subject.snap.online_series || []).filter(o =>
     o.value != null && o.date_local >= w.start && o.date_local <= w.end);
   const versions = (subject.snap.events || []).filter(
@@ -827,8 +878,11 @@ function windowStats(subject) {
   const displayDays = useHistory ? historicalRows.length : days;
   const displayReviews = useHistory ? historicalReviews : reviews;
   const dailyAvgBasis = useHistory ? 'surviving_review_backfill' : 'steam_net_change';
-  const last7 = displayRows.filter(r => r.date_local >= addDays(w.end, -6));
-  const prev7 = displayRows.filter(r => r.date_local >= addDays(w.end, -13) && r.date_local < addDays(w.end, -6));
+  // 7 日窗口锚定在最后一个有数据的日期：回填总比日历晚一天，
+  // 锚在日历最后一天会让「近 7 日」永远凑不满 7 天。
+  const anchor = displayRows.length ? displayRows.at(-1).date_local : w.end;
+  const last7 = displayRows.filter(r => r.date_local > addDays(anchor, -7) && r.date_local <= anchor);
+  const prev7 = displayRows.filter(r => r.date_local > addDays(anchor, -14) && r.date_local <= addDays(anchor, -7));
   const avg = a => {
     const span = a.reduce((s, r) => s + (r.span_days || 0), 0);
     return span ? a.reduce((s, r) => s + r.value, 0) / span : null;
@@ -852,7 +906,10 @@ function windowStats(subject) {
       ? versionRate
       : latestStore?.value ?? null,
     cumRate: latestStore?.value ?? null,
+    cumRateDate: latestStore?.date_local ?? null,
     totalReviews: latestStore?.total_reviews ?? null,
+    avg7End: anchor,
+    windowDays: w.start <= w.end ? daysBetween(w.start, w.end) + 1 : 0,
     online: online.length ? online[online.length - 1].value : null,
     onlineDate: online.length ? online[online.length - 1].date_local : null,
     onlinePoints: online.length,
@@ -866,7 +923,7 @@ function windowStats(subject) {
 function reviewWindowSummary(stats) {
   const parts = [];
   if (stats.historicalDays) {
-    parts.push(`历史回填存活评测 ${fmt(stats.historicalReviews)} 条 / ${stats.historicalDays} 天`);
+    parts.push(`${BACKFILL_LABEL} ${fmt(stats.historicalReviews)} 条 / ${stats.historicalDays} 天`);
   }
   if (stats.days) {
     parts.push(`Steam 净变化 ${fmt(stats.reviews)} 条 / ${stats.days} 天`);
@@ -893,21 +950,30 @@ function renderTiles(ctx) {
 
   box.innerHTML = subjects.map(s => {
     const w = windowStats(s);
-    const avgBasis = w.dailyAvgBasis === 'surviving_review_backfill'
-      ? '回填存活评测' : 'Steam 净变化';
-    const rateLabel = s.kind === 'version' ? '版本回填累计好评率' : 'Steam 全局累计好评率';
+    const rateLabel = s.kind === 'version' ? VERSION_RATE_LABEL : 'Steam 全局累计好评率';
     const onlineNote = w.onlinePoints
       ? `${fmt(w.online)} 窗口末在线 · ${w.onlineDate} · ${w.onlinePoints} 个日点`
       : '窗口内暂无在线日点';
+    const value = w.dailyAvg != null
+      ? `<div class="v">${w.dailyAvg.toFixed(1)}<span class="unit">条/日</span></div>`
+      : `<div class="v na">窗口内暂无评测数据</div>`;
     return `<div class="tile">
-      <div class="k"><span class="swatch" style="background:${s.color}"></span>${s.label}${infoBtn('daily_avg')}</div>
-      <div class="v">${w.dailyAvg != null ? w.dailyAvg.toFixed(1) : '—'}<span class="unit">条/日</span></div>
-      <div class="n">${deltaHtml(w.delta7)} ${w.delta7 != null ? '近 7 日对比前 7 日' : `窗口内${avgBasis}日均 · ${w.dailyAvgDays} 天`}</div>
+      <div class="k"><span class="swatch" style="background:${esc(s.color)}"></span>${esc(s.label)}${infoBtn('daily_avg')}</div>
+      ${value}
+      <div class="n">${deltaHtml(w.delta7)} ${w.delta7 != null ? '近 7 日对比前 7 日' : `窗口日均 · ${basisLabel(w.dailyAvgBasis)} · ${w.dailyAvgDays} 天`}</div>
+      <div class="n" style="margin-top:2px">${esc(windowCaption(s))}</div>
       <div class="n" style="margin-top:2px">${rateLabel} ${pct(w.rate)}</div>
-      <div class="n" style="margin-top:2px">${reviewWindowSummary(w)}</div>
+      <div class="n" style="margin-top:2px" title="${esc(BACKFILL_TIP)}">${reviewWindowSummary(w)}</div>
       <div class="n" style="margin-top:2px">${onlineNote}</div>
     </div>`;
   }).join('');
+}
+
+/* 中位数的中位值。样本量为 0 时返回 null，由调用方给出原因，而不是显示「—h」。 */
+function medianOf(values) {
+  const sorted = values.filter(v => v != null).sort((a, b) => a - b);
+  if (!sorted.length) return null;
+  return (sorted[Math.floor((sorted.length - 1) / 2)] + sorted[Math.floor(sorted.length / 2)]) / 2;
 }
 
 function singleGameTiles(subject) {
@@ -919,41 +985,65 @@ function singleGameTiles(subject) {
   const profile = (snap.review_profile || {}).daily || [];
   const daysSince = current ? daysBetween(current.date_local, snap.snapshot_date) : null;
 
-  // 中位时长取最近 14 天里有值的那些天，单日样本量太小
+  // 时长取窗口末最多 14 个有评测的日点；评测画像每周更新，窗口里没有画像
+  // （例如只看最近 3 天）时改用窗口末之前最近一次画像，并把日期写明。
   const aw = analysisWindow(subject);
-  const recent = profile.filter(r => r.date_local >= aw.start && r.date_local <= aw.end).slice(-14)
-    .map(r => r.playtime_at_review_median).filter(v => v != null).sort((a, b) => a - b);
-  const medianPlaytime = recent.length
-    ? (recent[Math.floor((recent.length - 1) / 2)] + recent[Math.floor(recent.length / 2)]) / 2 : null;
+  const valid = r => r.playtime_at_review_median != null;
+  let recent = profile.filter(r => valid(r) && r.date_local >= aw.start && r.date_local <= aw.end).slice(-14);
+  let playtimeNote = recent.length ? `所选窗口末 ${recent.length} 个评测日 · 日中位数取中位` : '';
+  if (!recent.length) {
+    recent = profile.filter(r => valid(r) && r.date_local <= aw.end).slice(-14);
+    if (recent.length) {
+      playtimeNote = `窗口内无画像数据 · 改用截至 ${recent.at(-1).date_local} 的 ${recent.length} 个评测日`;
+    }
+  }
+  const medianPlaytime = medianOf(recent.map(r => r.playtime_at_review_median));
+
+  // 窗口不足 7 天时「近 7 日均值」算不出来 —— 直接换成窗口日均，而不是给一个空卡
+  const shortWindow = w.windowDays > 0 && w.windowDays < 7;
+  const reviewTile = shortWindow
+    ? { k: `窗口日均评测数（${w.windowDays} 天）`, swatch: color('slot1'), info: 'daily_avg',
+        v: w.dailyAvg != null ? w.dailyAvg.toFixed(1) : null, unit: '条/日',
+        n: `${basisLabel(w.dailyAvgBasis)} · ${w.dailyAvgDays} 天`,
+        na: `窗口内暂无评测数据` }
+    : { k: '近 7 日均评测数', swatch: color('slot1'), info: 'avg7',
+        v: w.avg7 != null ? w.avg7.toFixed(1) : null, unit: '条/日',
+        n: `${w.delta7 != null ? deltaHtml(w.delta7) + ' 对比前 7 日' : '前 7 日数据不足，暂不比较'} · 截至 ${w.avg7End}`,
+        na: '样本不足：近 7 个自然日有缺采' };
 
   const tiles = [
     { k: 'Steam 同时在线', swatch: color('slot7'), info: 'online',
-      v: w.onlinePoints ? fmt(w.online) : '—',
-      n: w.onlinePoints ? `${w.onlinePoints} 个日点 · 更新至 ${w.onlineDate}` : '暂无在线日点' },
-    { k: '累计好评率', swatch: color('slot3'), info: 'cum_rate',
-      v: w.cumRate != null ? w.cumRate.toFixed(2) : '—', unit: '%',
-      n: w.totalReviews != null ? `${fmt(w.totalReviews)} 条评测` : '—' },
-    { k: w.dailyAvgBasis === 'surviving_review_backfill' ? '近 7 日均回填存活评测' : '近 7 日日均评测净变化',
-      swatch: color('slot1'), info: 'avg7',
-      v: w.avg7 != null ? w.avg7.toFixed(1) : '—',
-      n: w.delta7 != null ? `${deltaHtml(w.delta7)} 对比前 7 日` : w.avg7 == null ? '近 7 自然日数据不完整，暂不计算' : '前一周期数据不足，暂不比较' },
-    { k: '日中位时长的中位数', swatch: color('slot2'), info: 'playtime',
-      v: medianPlaytime != null ? (medianPlaytime / 60).toFixed(1) : '—', unit: 'h',
-      n: '所选窗口末 14 个日点 · 非全样本中位数' },
+      v: w.onlinePoints ? fmt(w.online) : null,
+      n: `${w.onlinePoints} 个日点 · 更新至 ${w.onlineDate}`,
+      na: '窗口内暂无在线日点' },
+    { k: 'Steam 全局累计好评率', swatch: color('slot3'), info: 'cum_rate',
+      v: w.cumRate != null ? w.cumRate.toFixed(2) : null, unit: '%',
+      n: `${fmt(w.totalReviews)} 条评测 · 截至 ${w.cumRateDate}`,
+      na: '暂无 Steam 评测汇总' },
+    reviewTile,
+    { k: '评测时游戏时长（中位）', swatch: color('slot2'), info: 'playtime',
+      v: medianPlaytime != null ? (medianPlaytime / 60).toFixed(1) : null, unit: 'h',
+      n: playtimeNote, na: '样本不足：暂无评测画像' },
     { k: 'B 站互动率', swatch: color('slot5'), info: 'bili_engagement',
-      v: bili.rates && bili.rates.engagement != null
-        ? bili.rates.engagement.toFixed(2) : '—', unit: '%',
-      n: bili.videos ? `${bili.videos} 支重点官方视频 · 点赞+投币+收藏` : '—' },
+      v: bili.rates && bili.rates.engagement != null ? bili.rates.engagement.toFixed(2) : null, unit: '%',
+      n: `${bili.videos} 支重点官方视频 · 点赞+投币+收藏`,
+      na: bili.videos ? '播放量缺失，暂不计算' : '暂无登记的 B 站重点视频' },
     { k: '当前版本', info: 'version',
-      v: current ? current.version_id : '—',
-      n: daysSince != null ? `上线 ${daysSince} 天 · ${current.date_local}` : '—' },
+      v: current ? esc(current.version_id) : null,
+      n: daysSince != null ? `上线 ${daysSince} 天 · ${current.date_local}` : '',
+      na: '暂无版本记录' },
   ];
 
-  return tiles.map(t => `
-    <div class="tile">
-      <div class="k">${t.swatch ? `<span class="swatch" style="background:${t.swatch}"></span>` : ''}${t.k}${t.info ? infoBtn(t.info) : ''}</div>
-      <div class="v">${t.v}${t.unit ? `<span class="unit">${t.unit}</span>` : ''}</div>
-      <div class="n">${t.n}</div>
+  // 算不出来的卡片排到最后并写明原因：总览只显示前 4 张，
+  // 面试官点开任何一个游戏都不会先看到一排「—」。
+  const ordered = tiles.filter(t => t.v != null).concat(tiles.filter(t => t.v == null));
+  return ordered.map(t => `
+    <div class="tile${t.v == null ? ' tile-na' : ''}">
+      <div class="k">${t.swatch ? `<span class="swatch" style="background:${t.swatch}"></span>` : ''}${esc(t.k)}${t.info ? infoBtn(t.info) : ''}</div>
+      ${t.v != null
+        ? `<div class="v">${t.v}${t.unit ? `<span class="unit">${t.unit}</span>` : ''}</div>
+      <div class="n">${t.n}</div>`
+        : `<div class="v na">${esc(t.na)}</div>`}
     </div>`).join('');
 }
 
@@ -999,12 +1089,12 @@ function singleReadout(ctx) {
   const trend = w.delta7 != null
     ? `，较前 7 日 ${delta(w.delta7, '%')}`
     : '';
-  const avg7Label = w.dailyAvgBasis === 'surviving_review_backfill'
-    ? '近 7 日均回填存活评测' : '近 7 日日均评测净变化';
-  out.push(`<b>${s.label}</b> ${avg7Label} <b>${
-    w.avg7 != null ? w.avg7.toFixed(1) : '—'}</b> 条${trend}。` +
+  const avg7Label = `近 7 日日均${basisLabel(w.dailyAvgBasis)}`;
+  out.push(`<b>${esc(s.label)}</b> ` + (w.avg7 != null
+    ? `${avg7Label} <b>${w.avg7.toFixed(1)}</b> 条${trend}（截至 ${w.avg7End}）。`
+    : w.dailyAvg != null ? `窗口日均${basisLabel(w.dailyAvgBasis)} <b>${w.dailyAvg.toFixed(1)}</b> 条。` : '窗口内暂无评测数据。') +
     (w.cumRate != null
-      ? ` 累计好评率 <b>${w.cumRate.toFixed(2)}%</b>（${fmt(w.totalReviews)} 条评测）。`
+      ? ` Steam 全局累计好评率 <b>${w.cumRate.toFixed(2)}%</b>（${fmt(w.totalReviews)} 条评测，截至 ${w.cumRateDate}）。`
       : ''));
 
   if (s.kind === 'game') {
@@ -1016,12 +1106,11 @@ function singleReadout(ctx) {
       const vs = avgGap
         ? `，该游戏近 ${Math.min(bounds.length, 6)} 个版本的平均间隔是 ${avgGap} 天`
         : '';
-      out.push(`<span class="rank">当前版本 <b>${cur.version_id}</b> 已上线 ${since} 天${vs}。所选窗口：${reviewWindowSummary(w)}。</span>`);
+      out.push(`<span class="rank">当前版本 <b>${esc(cur.version_id)}</b> 已上线 ${since} 天${vs}。所选窗口：${reviewWindowSummary(w)}。</span>`);
     }
   } else {
-    out.push(`<span class="rank">窗口 ${s.window.start} → ${
-      s.openEnded ? '至今' : s.window.end}，共 ${s.days} 天，` +
-      `${reviewWindowSummary(w)}、版本回填累计好评率 ${pct(w.rate)}。</span>`);
+    out.push(`<span class="rank">分析窗口 ${esc(windowCaption(s))}，` +
+      `${reviewWindowSummary(w)}、${VERSION_RATE_LABEL} ${pct(w.rate)}。</span>`);
   }
   return out;
 }
@@ -1040,23 +1129,22 @@ function multiReadout(ctx) {
     if (older.w.dailyAvg && newer.w.dailyAvg != null &&
         older.w.dailyAvgBasis === newer.w.dailyAvgBasis) {
       const d = (newer.w.dailyAvg - older.w.dailyAvg) / older.w.dailyAvg * 100;
-      const label = newer.w.dailyAvgBasis === 'surviving_review_backfill'
-        ? '日均回填存活评测' : '日均 Steam 评测净变化';
+      const label = `日均${basisLabel(newer.w.dailyAvgBasis)}`;
       parts.push(`${label} <b>${newer.w.dailyAvg.toFixed(1)}</b> 条，` +
                  `较 ${older.w.dailyAvg.toFixed(1)} 条 ${delta(d, '%')}`);
     }
     if (older.w.rate != null && newer.w.rate != null) {
-      parts.push(`版本滚动累计好评率 <b>${newer.w.rate.toFixed(2)}%</b>，` +
+      parts.push(`${VERSION_RATE_LABEL} <b>${newer.w.rate.toFixed(2)}%</b>，` +
                  `较 ${older.w.rate.toFixed(2)}% ${delta(newer.w.rate - older.w.rate, 'pp')}`);
     }
     const basisNote = older.w.dailyAvgBasis === newer.w.dailyAvgBasis
       ? (newer.w.dailyAvgBasis === 'surviving_review_backfill'
-          ? '回填数统计当前仍存活的评测。'
+          ? '评测数按发布日回填，只含今天仍存在的评测。'
           : 'Steam 评测净变化包含新增评测与删除评测。')
       : '两个窗口的评测数口径不同，日均值不作直接比较。';
     return [
-      `<b>${newer.s.label}</b> 相对 <b>${older.s.label}</b>：${parts.length ? parts.join('，') : '暂无同口径可比数据'}。`,
-      `<span class="rank">当前窗口分别覆盖 ${older.w.historicalDays} 天与 ${newer.w.historicalDays} 天；${basisNote}</span>`,
+      `<b>${esc(newer.s.label)}</b> 相对 <b>${esc(older.s.label)}</b>：${parts.length ? parts.join('，') : '暂无同口径可比数据'}。`,
+      `<span class="rank">分析窗口：${esc(windowCaption(older.s))}；${esc(windowCaption(newer.s))}。${basisNote}</span>`,
     ];
   }
 
@@ -1065,15 +1153,14 @@ function multiReadout(ctx) {
       .sort((a, b) => b.w[key] - a.w[key]);
     if (rows.length < 2) return null;
     return `${label}：` + rows.map((x, i) =>
-      `<b>${x.s.label}</b> ${fmtv(x.w[key])}`).join(' <span class="rank">></span> ') + '。';
+      `<b>${esc(x.s.label)}</b> ${fmtv(x.w[key])}`).join(' <span class="rank">></span> ') + '。';
   };
   const oneDailyBasis = new Set(stats.filter(x => x.w.dailyAvg != null)
     .map(x => x.w.dailyAvgBasis)).size === 1;
-  const dailyLabel = stats[0].w.dailyAvgBasis === 'surviving_review_backfill'
-    ? '窗口内日均回填存活评测' : '窗口内日均 Steam 评测净变化';
+  const dailyLabel = `窗口内日均${basisLabel(stats[0].w.dailyAvgBasis)}`;
   const oneRateBasis = new Set(stats.map(x => x.s.kind)).size === 1;
   const rateLabel = stats[0].s.kind === 'version'
-    ? '版本回填累计好评率' : 'Steam 全局累计好评率';
+    ? VERSION_RATE_LABEL : 'Steam 全局累计好评率';
 
   return [
     oneDailyBasis ? rank('dailyAvg', v => v.toFixed(1) + ' 条/日', dailyLabel) : null,
@@ -1094,12 +1181,12 @@ function renderWindowTable(ctx) {
     const w = windowStats(s);
     return `<tr>
       <td><span class="swatch" style="display:inline-block;width:8px;height:8px;
-           border-radius:2px;background:${s.color};margin-right:6px"></span>${s.label}
-          <div class="muted" style="font-size:11px">${w.window.start} → ${w.window.end}</div></td>
-      <td class="num">${w.days ? `Steam ${fmt(w.reviews)} / ${w.days}天` : 'Steam —'}
-        <div class="muted" style="font-size:11px">回填存活评测 ${w.historicalDays ? fmt(w.historicalReviews) : '—'} / ${w.historicalDays}天</div></td>
+           border-radius:2px;background:${esc(s.color)};margin-right:6px"></span>${esc(s.label)}
+          <div class="muted" style="font-size:11px">${esc(windowCaption(s))}</div></td>
+      <td class="num">${w.days ? `Steam ${fmt(w.reviews)} / ${w.days}天` : '<span class="muted">Steam 净变化暂无</span>'}
+        <div class="muted" style="font-size:11px" title="${esc(BACKFILL_TIP)}">${w.historicalDays ? `回填 ${fmt(w.historicalReviews)} 条 / ${w.historicalDays}天` : '暂无回填'}</div></td>
       <td class="num"><b>${w.dailyAvg != null ? w.dailyAvg.toFixed(1) : '—'}</b>
-        <div class="muted" style="font-size:11px">${w.dailyAvgBasis === 'surviving_review_backfill' ? '回填存活评测' : 'Steam 净变化'} / ${w.dailyAvgDays}天</div></td>
+        <div class="muted" style="font-size:11px">${basisLabel(w.dailyAvgBasis)} / ${w.dailyAvgDays}天</div></td>
       <td class="num">${pct(w.rate)}</td>
       <td class="num">${w.onlinePoints ? fmt(w.online)
         : `<span class="muted" title="窗口内暂无在线日点">—</span>`}</td>
@@ -1117,15 +1204,25 @@ function renderCadenceTable(ctx) {
     const { recent, avgGap } = cadenceOf(gid);
     const gap = avgGap == null ? '—' : avgGap + ' 天';
     const list = recent.length
-      ? recent.map(b => `<span class="chip">${b.version_id}</span>`).join(' ')
+      ? recent.map(b => versionChip(gid, b.version_id, b.date_local)).join(' ')
       : '<span class="muted">无版本记录</span>';
     return `<tr>
       <td><span class="swatch" style="display:inline-block;width:8px;height:8px;
-           border-radius:2px;background:${entry.color};margin-right:6px"></span>${entry.short_name}</td>
+           border-radius:2px;background:${esc(entry.color)};margin-right:6px"></span>${esc(entry.short_name)}</td>
       <td>${list}</td>
       <td class="num">${gap}</td>
     </tr>`;
   }).join('');
+}
+
+/* 版本 chip：色点与该版本在所有图上的颜色一致。按更新日匹配目录，
+   匹配不到（目录缺这一版）时不画色点，而不是借别的版本的颜色。 */
+function versionChip(gameId, versionId, dateLocal) {
+  const entry = catalog.find(g => g.game_id === gameId);
+  const version = ((entry || {}).versions || []).find(v => v.date_local === dateLocal || v.key === dateLocal);
+  const dot = version
+    ? `<span class="chip-dot" style="background:${esc(versionColor(catalog, gameId, version.key))}"></span>` : '';
+  return `<span class="chip">${dot}${esc(versionId)}</span>`;
 }
 
 /* ---------- 版本前后 7 天对比表（pipeline 算好的结果） ---------- */
@@ -1144,12 +1241,12 @@ function versionLead(rows) {
     const unit = c.change_kind === 'pp' ? '%' : '';
     const tail = c.change == null ? '<span class="rank">（不可比）</span>'
       : `（${delta(c.change, c.change_kind === 'pp' ? 'pp' : '%')}）`;
-    return `${c.label} <span class="rank">${c.before}${unit} →</span> <b>${c.after}${unit}</b>${tail}`;
+    return `${esc(c.label)} <span class="rank">${esc(c.before)}${unit} →</span> <b>${esc(c.after)}${unit}</b>${tail}`;
   };
   const parts = [say(pick('reviews')), say(pick('review_rate'))].filter(Boolean);
   if (!parts.length) return '';
   const who = rows.length > 1 && latest.multi ? `${latest.entry.short_name} ` : '';
-  return `最近一次更新是 <b>${who}${latest.w.version_id}</b>（${latest.w.date_local}）。` +
+  return `最近一次更新是 <b>${esc(who)}${esc(latest.w.version_id)}</b>（${esc(latest.w.date_local)}）。` +
          `更新后 7 天相对更新前 7 天：${parts.join('，')}。`;
 }
 
@@ -1188,14 +1285,16 @@ function renderVersionTable(ctx) {
   lead.innerHTML = versionLead(rows);
 
   head.innerHTML = `<th>版本</th><th>更新日</th>` +
-    fields.map(c => `<th class="num">${c.label}</th>`).join('');
+    fields.map(c => `<th class="num">${esc(c.label)}</th>`).join('');
 
   const cell = c => {
     if (c.before == null || c.after == null) return `<td class="num muted">—</td>`;
-    const unit = c.field === 'playtime_at_review_median' ? ' 分钟' : c.change_kind === 'pp' ? '%' : '';
-    const arrow = `<span class="muted">${c.before}${unit} →</span> <b>${c.after}${unit}</b>`;
+    // 时长统一换成小时，与顶部卡片同一单位
+    const hours = c.field === 'playtime_at_review_median';
+    const show = v => hours ? (Number(v) / 60).toFixed(1) + 'h' : esc(v) + (c.change_kind === 'pp' ? '%' : '');
+    const arrow = `<span class="muted">${show(c.before)} →</span> <b>${show(c.after)}</b>`;
     if (c.change == null) {
-      const why = c.confounded ? ` title="${c.note}"` : '';
+      const why = c.confounded ? ` title="${esc(c.note)}"` : '';
       return `<td class="num"${why}>${arrow}<br><span class="muted" style="font-size:11px">不可比</span></td>`;
     }
     const cls = c.field === 'review_rate' ? (c.change >= 0 ? 'pos' : 'neg') : 'muted';
@@ -1208,9 +1307,9 @@ function renderVersionTable(ctx) {
   tb.innerHTML = rows.map(({ entry, w, multi }) => `
     <tr>
       <td>${multi ? `<span class="swatch" style="display:inline-block;width:8px;height:8px;
-             border-radius:2px;background:${entry.color};margin-right:6px"></span>` : ''}
-          <span class="chip">${w.version_id}</span></td>
-      <td class="muted">${w.date_local}</td>
+             border-radius:2px;background:${esc(entry.color)};margin-right:6px"></span>` : ''}
+          ${versionChip(entry.game_id, w.version_id, w.date_local)}</td>
+      <td class="muted">${esc(w.date_local)}</td>
       ${w.comparisons.map(cell).join('')}
     </tr>`).join('');
 
@@ -1236,9 +1335,9 @@ function renderLangSection(ctx) {
       .filter(l => l !== 'other').slice(0, 10);
     head.innerHTML = `<th>语言</th>` + shares.map(x =>
       `<th class="num"><span class="swatch" style="display:inline-block;width:8px;height:8px;
-        border-radius:2px;background:${x.s.color};margin-right:5px"></span>${x.s.label}</th>`).join('');
+        border-radius:2px;background:${esc(x.s.color)};margin-right:5px"></span>${esc(x.s.label)}</th>`).join('');
     body.innerHTML = langs.map(lang => `<tr>
-      <td>${LANG_LABEL[lang] || lang}</td>
+      <td>${esc(LANG_LABEL[lang] || lang)}</td>
       ${shares.map(x => {
         const total = x.share.overall_total || 0;
         const v = (x.share.overall || {})[lang];
@@ -1280,7 +1379,7 @@ function renderLangSection(ctx) {
       `<span class="${Math.abs(t) < 0.5 ? 'muted' : (t > 0 ? 'pos' : 'neg')}"
              style="font-size:11px">${t > 0 ? '+' : ''}${t.toFixed(1)}pp</span>`;
     return `<tr>
-      <td>${LANG_LABEL[k] || k}</td>
+      <td>${esc(LANG_LABEL[k] || k)}</td>
       <td class="num">${fmt(v)}</td>
       <td>
         <div class="bar-cell">
@@ -1363,8 +1462,8 @@ function renderVideoConfig(panel) {
   const list = document.getElementById('videoViewList');
   list.innerHTML = videoViews.length ? videoViews.map((view, i) => `
     <div class="video-view-row">
-      <div class="video-view-name">${VIDEO_METRICS[view.metric].title}
-        <span title="${videoViewSummary(view)}">${videoViewSummary(view)}</span>
+      <div class="video-view-name">${esc(VIDEO_METRICS[view.metric].title)}
+        <span title="${esc(videoViewSummary(view))}">${esc(videoViewSummary(view))}</span>
       </div>
       <div class="video-view-actions">
         <button class="icon-btn" data-video-move="up" data-id="${view.id}"
@@ -1473,14 +1572,14 @@ function renderPanel() {
   const rowHtml = (state, idx, list, isOn) => {
     const lane = byId.get(state.id);
     if (!lane) return '';
-    const swatch = `<span class="swatch" style="background:${lane.color ? color(lane.color) : C.muted}"></span>`;
+    const swatch = `<span class="swatch" style="background:${esc(lane.color ? color(lane.color) : C.muted)}"></span>`;
     const solo = lane.single_only
       ? `<span class="chip" style="font-size:10px">仅单对象</span>` : '';
     return `
       <div class="lane-row" data-off="${isOn ? 'false' : 'true'}">
         <input type="checkbox" data-toggle="${state.id}" ${isOn ? 'checked' : ''}>
         ${swatch}
-        <div class="lane-name">${lane.title} ${solo}<span>${lane.subtitle || ''}</span></div>
+        <div class="lane-name">${esc(lane.title)} ${solo}<span>${esc(lane.subtitle || '')}</span></div>
         ${isOn ? `
           <button class="icon-btn" data-move="up" data-id="${state.id}"
                   ${idx === 0 ? 'disabled' : ''} title="上移">↑</button>
@@ -1500,9 +1599,9 @@ function renderPanel() {
         <div class="segmented">
           ${lane.scales.map(sc => `
             <button data-scale="${state.id}" data-scale-id="${sc.id}"
-                    title="${sc.hint || ''}"
+                    title="${esc(sc.hint || '')}"
                     aria-pressed="${(state.scale || defaultScale(lane)) === sc.id}"
-              >${sc.label}</button>`).join('')}
+              >${esc(sc.label)}</button>`).join('')}
         </div>
       </div>` : ''}`;
   };
@@ -1609,7 +1708,7 @@ function renderDataTable(ctx) {
 
   const label = ctx.axis.align === 'day0' ? '起点后天数' : '日期';
   document.querySelector('#dataTable thead tr').innerHTML =
-    `<th>${label}</th>` + cols.map(c => `<th class="num">${c.name}</th>`).join('')
+    `<th>${label}</th>` + cols.map(c => `<th class="num">${esc(c.name)}</th>`).join('')
     + `<th>事件</th>`;
 
   const rows = [];
@@ -1619,8 +1718,8 @@ function renderDataTable(ctx) {
       const v = c.values[i];
       return `<td class="num">${v == null ? '—' : tipFmt(c.unit)(v)}</td>`;
     }).join('');
-    rows.push(`<tr><td>${ctx.axis.align === 'day0' ? k + ' 天' : k}</td>${cells}
-               <td class="muted">${(evByKey.get(k) || []).join('、')}</td></tr>`);
+    rows.push(`<tr><td>${ctx.axis.align === 'day0' ? 'D' + esc(k) : esc(k)}</td>${cells}
+               <td class="muted">${esc((evByKey.get(k) || []).join('、'))}</td></tr>`);
   }
   document.querySelector('#dataTable tbody').innerHTML = rows.join('');
 }
@@ -1632,14 +1731,21 @@ function downloadBlob(name, content, type) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = name;
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+  a.remove();
+  // 立刻 revoke 会让部分浏览器在真正开始下载前就丢掉这个 URL
+  setTimeout(() => URL.revokeObjectURL(url), 30_000);
 }
 
+/* CSV 单元格。字符串以 = + - @ 或制表符、回车开头时，Excel / WPS 会把它
+   当公式执行（CSV 注入）—— 视频标题来自第三方平台，必须前置单引号。
+   数值本身（包括负数）不受影响。 */
 function csvEscape(v) {
   if (v == null) return '';
-  const s = String(v);
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  let s = String(v);
+  if (typeof v === 'string' && /^[=+\-@\t\r]/.test(s)) s = "'" + s;
+  return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
 const exportSlug = () => subjects.map(s => s.key.replace('@', '_')).join('+') || 'empty';
@@ -1653,7 +1759,7 @@ function exportCsv() {
     lines.push([k, ...cols.map(c => c.values[i] ?? '')].map(csvEscape).join(','));
   });
   // BOM 让 Excel 正确识别 UTF-8，否则中文列名会乱码
-  downloadBlob(`gamepulse_${exportSlug()}.csv`, '﻿' + lines.join('\n'),
+  downloadBlob(`gamepulse_${exportSlug()}.csv`, '﻿' + lines.join('\r\n'),
                'text/csv;charset=utf-8');
 }
 
@@ -1688,11 +1794,11 @@ function exportVideosCsv() {
       push('youtube', code, (locales[code] || {}).videos, 'video_id'));
   });
 
-  if (!rows.length) { alert('所选对象没有登记视频。'); return; }
+  if (!rows.length) { toast('所选对象没有登记视频，没有可导出的内容。'); return; }
   const header = Object.keys(rows[0]);
-  const lines = [header.join(',')].concat(
+  const lines = [header.map(csvEscape).join(',')].concat(
     rows.map(r => header.map(h => csvEscape(r[h])).join(',')));
-  downloadBlob(`gamepulse_${exportSlug()}_videos.csv`, '﻿' + lines.join('\n'),
+  downloadBlob(`gamepulse_${exportSlug()}_videos.csv`, '﻿' + lines.join('\r\n'),
                'text/csv;charset=utf-8');
 }
 
@@ -1708,18 +1814,11 @@ async function copyLink() {
   const url = location.origin + location.pathname + '#' + serializeView();
   try {
     await navigator.clipboard.writeText(url);
-    flash('已复制当前视图链接');
+    toast('已复制当前视图链接');
   } catch (e) {
     // 非 HTTPS 下 clipboard API 不可用，退回让用户手动复制
     prompt('复制下面的链接：', url);
   }
-}
-
-function flash(msg) {
-  const btn = document.getElementById('openExport');
-  const old = btn.textContent;
-  btn.textContent = msg;
-  setTimeout(() => { btn.textContent = old; }, 1600);
 }
 
 /* ---------- 来源与口径 ---------- */
@@ -1733,9 +1832,9 @@ function renderSources(ctx) {
   document.getElementById('sources').innerHTML =
     [...seen.values()].map(s => `
       <div class="source">
-        <span class="tag">${s.label}</span>
-        <div class="t">${s.name}</div>
-        <div class="d">${s.note}</div>
+        <span class="tag" title="${esc(s.label)}">${esc(sourceKindLabel(s.label))}</span>
+        <div class="t">${esc(s.name)}</div>
+        <div class="d">${esc(s.note)}</div>
       </div>`).join('');
 
   const onlinePts = subjects.map(s =>
@@ -1749,20 +1848,20 @@ function renderSources(ctx) {
   const covLines = subjects.map(s => {
     if (s.kind === 'version') {
       const end = s.snap.review_history_coverage?.end || '暂无';
-      return `${s.label} ${s.days} 天（${s.window.start} 起，明细至 ${end}）`;
+      return `${esc(s.label)} ${s.days} 天（${s.window.start} 起，明细至 ${esc(end)}）`;
     }
     const cov = s.snap.review_history_coverage;
-    return `${s.label} ${cov ? cov.days + ' 天（' + cov.start + ' 起）' : '—'}`;
+    return `${esc(s.label)} ${cov ? cov.days + ' 天（' + esc(cov.start) + ' 起）' : '暂无评测明细'}`;
   }).join('、');
 
   /* 原来这里是连续 400 字、12.5px 灰字的一整段。内容本身是这个项目最有
      价值的部分（把口径讲清楚的看板不多），但那种形式的必然结果是没人读。
-     改成：三条最要紧的常驻 + 其余折叠，每条独立成行。 */
+     改成：最要紧的几条常驻 + 其余折叠，每条独立成行。 */
   const items = [
     `<b>Steam 累计评测数与全局好评率来自每日汇总。</b>每日采集 appreviews 的总评测数、好评数；评测柱优先用明细回填，尚未回填的实时段只画相邻两日总数净变化，跨日合计不放在单日柱。`,
     `<b>逐日评测明细历史是回填重建的，不是原始记录。</b>由 Steam appreviews 游标翻页回填
      （${covLines}）；上次全量样本每日补入近期评测，旧评测的删除或编辑每周全量校准。
-     版本滚动累计好评率只画到明细覆盖日。`,
+     版本窗口好评率只画到明细覆盖日。`,
     `<b>Steam 同时在线日点来自官方采样、SteamDB 和小时采样。</b>同日先取有效的
      官方观测，再取 SteamDB Players 点位，最后用当天最新的有效小时采样兜底；
      它不代表全天均值、DAU 或总玩家数。目前各对象分别有 ${onlinePts.join(' / ')} 个日点。`,
@@ -1786,7 +1885,7 @@ function renderSources(ctx) {
 
   const li = xs => `<ul>${xs.map(x => `<li>${x}</li>`).join('')}</ul>`;
   document.getElementById('caveat').innerHTML =
-    `<b>读这张看板前，有三件事必须知道</b>${li(items)}` +
+    `<b>读这张看板前，有 ${items.length} 件事必须知道</b>${li(items)}` +
     `<details class="fine-print"><summary>其余 ${more.length} 条口径限制</summary>` +
     `${li(more)}</details>`;
 }
@@ -1807,20 +1906,31 @@ async function boot() {
   window.addEventListener('resize', () => chart.resize());
 
   const loading = document.getElementById('loading');
-  const idx = await fetch(`../data/index.json?build=${Date.now()}`, { cache: 'no-store' })
-    .then(r => r.ok ? r.json() : null).catch(() => null);
-  snapshotBuildId = idx?.build_id || null;
-  versionedBatch = Boolean(idx?.config_file);
-  config = await fetch(`../data/${idx?.config_file || 'dashboard_config.json'}`, { cache: 'no-store' })
-    .then(r => r.ok ? r.json() : null).catch(() => null);
-  if (!config || (versionedBatch && config.build_id !== snapshotBuildId)) {
-    fail('看板数据暂时无法加载', '请点击重试。页面需要完整且一致的数据快照。');
+  const serveHint = '请在<b>项目根目录</b>启动静态服务（例如 <code>python -m http.server 8000</code>），' +
+    '再打开 <code>/dashboard/index.html</code>；在 dashboard/ 子目录里启动会让 ../data/ 全部 404。';
+  const idxResult = await fetch(`../data/index.json?build=${Date.now()}`, { cache: 'no-store' })
+    .then(async r => r.ok ? { idx: await r.json() } : { error: `../data/index.json 返回 HTTP ${r.status}` })
+    .catch(e => ({ error: e instanceof SyntaxError ? '../data/index.json 不是合法 JSON' : '读不到 ../data/index.json' }));
+  if (idxResult.error) {
+    fail(`看板数据目录无法加载：${idxResult.error}`, serveHint);
     return;
   }
-  catalog = (idx && idx.games) || [];
+  const idx = idxResult.idx;
+  snapshotBuildId = idx.build_id || null;
+  versionedBatch = Boolean(idx.config_file);
+  config = await fetch(`../data/${idx.config_file || 'dashboard_config.json'}`, { cache: 'no-store' })
+    .then(r => r.ok ? r.json() : null).catch(() => null);
+  if (!config) {
+    fail('看板配置无法加载', '数据目录指向的看板配置不存在或不完整。可能正在发布新数据，请稍后点「重新加载」。');
+    return;
+  }
+  if (versionedBatch && config.build_id !== snapshotBuildId) {
+    fail('看板数据暂时无法加载：配置与数据目录不属于同一批次', '可能正在发布新数据，请稍后点「重新加载」。');
+    return;
+  }
+  catalog = idx.games || [];
   if (!catalog.length) {
-    fail('没有可用快照',
-      '先运行 <code>python collect.py</code> 完成采集、快照和看板配置生成。');
+    fail('数据目录里没有可用的游戏快照', serveHint);
     return;
   }
 
@@ -1834,20 +1944,19 @@ async function boot() {
 
   document.getElementById('metaDate').textContent = displayDate;
   document.getElementById('metaBadges').innerHTML =
-    `<span class="badge live"><span class="dot"></span>逐日采集 observed</span>
-     <span class="badge recon" style="margin-left:6px"><span class="dot"></span>SteamDB 在线历史日点</span>
-     <span class="badge recon" style="margin-left:6px"><span class="dot"></span>评测历史 reconstructed</span>
-     <span class="badge" style="margin-left:6px">新快照提醒</span>`;
+    `<span class="badge live"><span class="dot"></span>逐日直接采集</span>
+     <span class="badge recon" style="margin-left:6px"><span class="dot"></span>第三方在线历史（SteamDB）</span>
+     <span class="badge recon" style="margin-left:6px"><span class="dot"></span>评测历史 · 按发布日回填重建</span>`;
 
   // 添加对比对象
   const addSel = document.getElementById('subjectAdd');
-  addSel.onchange = async () => {
+  addSel.onchange = () => guarded(async () => {
     const key = addSel.value;
     addSel.value = '';
     if (!key || subjects.some(s => s.key === key)) return;
     const s = subjectFromKey(catalog, key);
     if (!s) return;
-    subjects = paintSubjects(subjects.map(rebase).concat(s));
+    subjects = paintSubjects(subjects.concat(s));
     // 加入版本对象时自动切到起点对齐 —— 按日历排开的两个版本窗口不重叠，
     // 并排画出来只会各占横轴的一段，没有可比性。
     // 这是替用户改了他自己设过的控件，必须说一声，否则只会看到对齐莫名其妙变了。
@@ -1859,12 +1968,12 @@ async function boot() {
             '并排画只会各占横轴的一段。');
     }
     await refresh();
-  };
+  }, '添加对象失败');
 
   const presetSel = document.getElementById('presetSelect');
   presetSel.innerHTML = `<option value="">自定义</option>` +
     Object.entries(config.presets || {}).map(([k, p]) =>
-      `<option value="${k}">${p.label}</option>`).join('');
+      `<option value="${esc(k)}">${esc(p.label)}</option>`).join('');
   presetSel.onchange = () => {
     if (!presetSel.value) return;
     applyPreset(presetSel.value);
@@ -1906,15 +2015,21 @@ async function boot() {
   const scrim = document.getElementById('panelScrim');
   const openBtn = document.getElementById('openPanel');
   const panelOpen = () => panel.classList.contains('open');
+  // 焦点还给真正打开面板的那个控件：窄屏上 #openPanel 本身是隐藏的，
+  // 由「指标与视频配置」按钮代为触发，焦点不能还给一个看不见的按钮。
+  let panelReturnFocus = null;
 
   const closePanel = () => {
     if (!panelOpen()) return;
     panel.classList.remove('open'); scrim.classList.remove('open');
     openBtn.setAttribute('aria-expanded', 'false');
-    openBtn.focus();
+    const target = panelReturnFocus && panelReturnFocus.offsetParent !== null ? panelReturnFocus : openBtn;
+    target.focus();
     chart.resize();
   };
   openBtn.onclick = () => {
+    panelReturnFocus = document.activeElement && document.activeElement !== document.body
+      ? document.activeElement : openBtn;
     panel.classList.add('open'); scrim.classList.add('open');
     openBtn.setAttribute('aria-expanded', 'true');
     // 面板关闭时是 visibility:hidden，而 visibility:hidden 的元素不可聚焦。
@@ -1975,7 +2090,7 @@ async function boot() {
     const card = document.getElementById('tableCard');
     const show = card.classList.contains('hidden');
     card.classList.toggle('hidden', !show);
-    tbtn.textContent = show ? '隐藏数据表' : '显示数据表';
+    setToggleTableLabel(show);
     tbtn.setAttribute('aria-expanded', String(show));
     if (show) { card.setAttribute('tabindex', '-1'); card.scrollIntoView({ behavior: 'smooth', block: 'start' }); card.focus({ preventScroll: true }); }
   };
@@ -2020,10 +2135,7 @@ async function boot() {
     subjects = paintSubjects((keys || []).map(k => subjectFromKey(catalog, k)).filter(Boolean));
     document.querySelectorAll('#alignSeg button').forEach(button =>
       button.setAttribute('aria-pressed', String(button.dataset.align === align)));
-    try {
-      await refresh();
-      renderPanel();
-    } catch (error) { toast('视图加载失败，请重试：' + error.message); }
+    await guarded(async () => { await refresh(); renderPanel(); }, '视图加载失败');
   });
 }
 
@@ -2064,7 +2176,7 @@ function openInfo(btn) {
   popover = document.createElement('div');
   popover.className = 'popover';
   popover.setAttribute('role', 'tooltip');
-  popover.innerHTML = `<b>${info.t}</b>${info.d}`;
+  popover.innerHTML = `<b>${esc(info.t)}</b>${info.d}`;
   document.body.appendChild(popover);
 
   // 贴在按钮下方，右侧越界时向左收，永远不出视口

@@ -46,17 +46,20 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from collectors.common import business_date, BUSINESS_TZ, collection_result, atomic_write_text, file_lock
+from collections import Counter
 
 from collectors.common import (  # noqa: E402
     OBSERVED,
     UNAVAILABLE,
+    business_date,
+    collection_result,
     curated_youtube_entries,
     get_json,
     load_games,
     load_youtube_videos,
     log_collection,
     polite_sleep,
+    proxy_missing_for,
     save_raw,
     session,
     today_local,
@@ -239,6 +242,19 @@ def collect_game(game_id: str, api_key: str, date_local: str,
     return record
 
 
+def failure_detail(videos: list[dict], ok: int) -> str:
+    """失败或部分成功时记录最常见的原因，来源健康面板据此说明为什么失败。"""
+    if ok == len(videos):
+        return ""
+    notes = Counter((v.get("note") or v.get("status") or "unknown")
+                    for v in videos if v.get("status") != OBSERVED)
+    if not notes:
+        return ""
+    note, count = notes.most_common(1)[0]
+    hint = ";no_proxy_configured" if proxy_missing_for(VIDEOS_URL) else ""
+    return f"{note}×{count}{hint}"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="采集 YouTube 登记视频的公开统计")
     parser.add_argument("--game", help="game_id；省略则采集所有 active 游戏")
@@ -256,6 +272,9 @@ def main() -> int:
 
     game_ids = [args.game] if args.game else [
         g["game_id"] for g in load_games() if g.get("active")]
+    if proxy_missing_for(VIDEOS_URL):
+        print("⚠ 未配置 HTTPS_PROXY：境内直连 googleapis.com 会超时。"
+              "请在仓库根目录 .env 中设置代理（参考 .env.example）。")
 
     failed = False
     for game_id in game_ids:
@@ -263,7 +282,8 @@ def main() -> int:
             record = collect_game(game_id, api_key, args.date, curated_only=not args.all_registered)
             videos = record.get("videos", [])
             ok = sum(v.get("status") == OBSERVED and v.get("view") is not None and v.get("identity_verified") is not False for v in videos)
-            result = collection_result("youtube", game_id, args.date, len(videos), ok)
+            result = collection_result("youtube", game_id, args.date, len(videos), ok,
+                                       failure_detail(videos, ok))
             failed = failed or result["status"] in ("partial", "failed")
         except Exception as exc:
             collection_result("youtube", game_id, args.date, 1, 0, type(exc).__name__)

@@ -16,12 +16,17 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+import yaml  # noqa: E402
+
+from collectors.common import CONFIG_DIR  # noqa: E402
 from pipeline.build_snapshot import (  # noqa: E402
     build_events,
     classify_news,
     extract_version,
     is_official_news,
+    steam_release,
 )
+from pipeline.quality import version_table_issues  # noqa: E402
 
 
 class TestExtractVersion(unittest.TestCase):
@@ -140,6 +145,50 @@ class TestBuildEvents(unittest.TestCase):
         self.assertEqual(len(boundaries), 1)
         self.assertEqual(boundaries[0]["version_id"], "2.7")
         self.assertEqual(boundaries[0]["date_local"], "2025-10-09")
+
+
+class TestVersionTable(unittest.TestCase):
+    """鸣潮 3.3 曾因公告标题是「Now Live!」而漏识别，被并入 3.2 的 81 天窗口。"""
+
+    def test_anniversary_now_live_title_is_update(self):
+        title = 'Wuthering Waves-2nd Anniv. V3.3 "Reverbs From the End of Galaxies" Now Live!'
+        self.assertEqual(extract_version(title), "3.3")
+        self.assertEqual(classify_news(title)[0], "version_update")
+
+    def test_gap_and_unlisted_versions_are_reported(self):
+        events = [
+            {"date_local": "2026-03-19", "version_id": "3.2", "is_version_boundary": True},
+            {"date_local": "2026-06-08", "version_id": "3.4", "is_version_boundary": True},
+        ]
+        codes = {i["code"] for i in version_table_issues(events, {"3.2": {}})}
+        self.assertEqual(codes, {"version_gap", "version_not_in_table"})
+
+    def test_major_version_bump_is_not_a_gap(self):
+        events = [
+            {"date_local": "2025-11-20", "version_id": "2.8", "is_version_boundary": True},
+            {"date_local": "2025-12-25", "version_id": "3.0", "is_version_boundary": True},
+        ]
+        self.assertEqual(version_table_issues(events, {"2.8": {}, "3.0": {}}), [])
+
+    def test_scheduled_version_is_not_a_boundary(self):
+        self.assertEqual(steam_release({"status": "scheduled", "steam_start_date": "2026-10-01"}),
+                         (None, None))
+        self.assertEqual(steam_release({"steam_start_at": "2026-07-29T06:00:00+08:00"}),
+                         ("2026-07-29T06:00:00+08:00", "2026-07-29"))
+
+    def test_config_table_is_sourced_and_consecutive(self):
+        table = yaml.safe_load((CONFIG_DIR / "versions.yml").read_text(encoding="utf-8"))
+        for game_id, versions in table.items():
+            released = []
+            for version, row in versions.items():
+                self.assertIn(row.get("status"), ("released", "scheduled"), (game_id, version))
+                self.assertTrue(row.get("source_url"), (game_id, version))
+                if row["status"] == "released":
+                    _, day = steam_release(row)
+                    self.assertTrue(day, (game_id, version))
+                    released.append({"date_local": day, "version_id": version,
+                                     "is_version_boundary": True})
+            self.assertEqual(version_table_issues(released, versions), [], game_id)
 
 
 if __name__ == "__main__":

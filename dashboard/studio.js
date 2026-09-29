@@ -2,7 +2,7 @@
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
-  const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const esc = escapeHtml;
   const sourceTime=value=>!value?'—':!value.includes('T')?value:new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(value));
   const paths = {
     pulse:'M3 12h4l3-8 4 16 3-8h4',
@@ -43,20 +43,17 @@
   };
   document.body.dataset.page = page;
   document.body.insertAdjacentHTML('afterbegin', `
-    <aside class="studio-sidebar" aria-label="工作台导航">
-      <div class="studio-brand"><span class="brand-icon">${icon('pulse')}</span><div>GamePulse<small>GAME INTELLIGENCE</small></div></div>
-      <div class="eyebrow">WORKSPACE</div>
-      <nav class="studio-nav">${Object.entries(pages).map(([key,[title,,symbol]]) => `<button data-page-nav="${key}" ${key===page?'aria-current="page"':''}>${icon(symbol)}<span>${title}</span>${key==='videos'?'<span class="nav-number">05</span>':''}</button>`).join('')}</nav>
-      <div class="game-nav"><div class="eyebrow">关注的游戏</div>
-        <button data-game="wuthering_waves" aria-pressed="true"><span class="game-monogram">鸣</span>鸣潮</button>
-        <button data-game="zenless_zone_zero" aria-pressed="false"><span class="game-monogram">绝</span>绝区零</button>
-        <button data-game="neverness_to_everness" aria-pressed="false"><span class="game-monogram">异</span>异环</button>
-      </div>
-      <div class="sidebar-foot"><a href="legacy.html">${icon('link')}经典完整视图 ↗</a><div class="workspace-person"><span>GP</span><div>我的研究工作台<small>PUBLIC DATA WORKSPACE</small></div></div></div>
-    </aside>
+    <aside class="studio-sidebar" aria-label="工作台导航"><div class="studio-sidebar-inner">
+      <div class="studio-brand"><span class="brand-icon">${icon('pulse')}</span><div>GamePulse<small>游戏长线运营观测</small></div></div>
+      <div class="eyebrow">分析页面</div>
+      <nav class="studio-nav" aria-label="分析页面">${Object.entries(pages).map(([key,[title,,symbol]]) => `<button data-page-nav="${key}" ${key===page?'aria-current="page"':''}>${icon(symbol)}<span>${title}</span></button>`).join('')}</nav>
+      <div class="game-nav" id="studioGameNav" role="group" aria-labelledby="studioGameNavTitle"><div class="eyebrow" id="studioGameNavTitle">关注的游戏</div></div>
+      <div class="sidebar-foot"><div class="workspace-person"><span>GP</span><div>公开数据工作台<small>Steam · B 站 · YouTube</small></div></div></div>
+    </div></aside>
     <div class="studio-topbar"><div class="studio-breadcrumb">${icon('home')}<span>工作台</span><span>/</span><b id="studioCrumb">${pages[page][0]}</b></div><div class="topbar-right"><span class="topbar-status" id="studioSnapshot">读取数据快照</span><span class="demo-pill">公开数据工作台</span></div></div>`);
   const originalHeader = document.querySelector('.shell>header');
-  document.querySelector('.topbar-right').prepend($('reloadSnapshot'));
+  // 「快照已 N 天未更新」和「有新数据」都要在工作台顶栏可见，不能跟着原页眉一起被隐藏
+  document.querySelector('.topbar-right').prepend($('dataStatus'),$('reloadSnapshot'));
   const meta = originalHeader.querySelector('.meta');
   meta.hidden = true;
   originalHeader.querySelector('h1').id = 'studioTitle';
@@ -64,8 +61,9 @@
   const actions = document.createElement('div');
   actions.className = 'studio-header-actions';
   originalHeader.append(actions);
-  for (const [id,symbol,label] of [['toggleTable','table','数据表'],['openPanel','settings','自定义视图']]) {
-    $(id).innerHTML = icon(symbol)+label;
+  // 文字放进 .btn-label：app.js 切换数据表时只改这段文字，不会抹掉图标
+  for (const [id,symbol,label] of [['toggleTable','table','显示数据表'],['openPanel','settings','自定义视图']]) {
+    $(id).innerHTML = icon(symbol)+`<span class="btn-label">${label}</span>`;
     actions.append($(id));
   }
   const share = document.createElement('button');
@@ -80,7 +78,7 @@
   const filterToggle=document.createElement('button');filterToggle.className='studio-button';filterToggle.id='demoFilters';filterToggle.setAttribute('aria-expanded','false');filterToggle.setAttribute('aria-controls','studioAdvanced');filterToggle.innerHTML=icon('settings')+'更多筛选';
   filterToggle.onclick=()=>{advanced.hidden=!advanced.hidden;filterToggle.setAttribute('aria-expanded',String(!advanced.hidden));};
   filters.append(filterToggle);
-  const configure=document.createElement('button');configure.className='studio-button';configure.textContent='指标与视频配置';configure.onclick=()=>$('openPanel').click();advanced.append(configure);
+  const configure=document.createElement('button');configure.className='studio-button';configure.id='studioConfigure';configure.textContent='指标与视频配置';configure.onclick=()=>$('openPanel').click();advanced.append(configure);
   const tableShortcut=document.createElement('button');tableShortcut.className='studio-button';tableShortcut.textContent='数据表视图';tableShortcut.onclick=()=>$('toggleTable').click();advanced.append(tableShortcut);
   document.querySelector('.filter-actions').hidden=true;
   const details=[...document.querySelectorAll('#app>.dashboard-details')];
@@ -126,6 +124,8 @@
         if(recent.length===2) {
           subjects=paintSubjects(recent.map(v=>subjectFromKey(catalog,`${game.game_id}@${v.key}`)));
           align='day0';rangeDays=14;await refresh();
+          // 替用户换了对比对象和时间窗口，必须说一声
+          toast(`已切换为 ${subjects.map(s=>s.label).join(' 与 ')} 的首 14 天对比，按各自更新日对齐。可在上方改选版本或天数。`);
         }
       }
       applyPreset('versions');
@@ -136,16 +136,28 @@
     if(page==='videos'&&!videoViews.length)videoViews=defaultVideoViews();
     updatePage();renderPanel();renderAll();window.scrollTo({top:0,behavior:'instant'});
   }
-  document.querySelectorAll('[data-page-nav]').forEach(b=>b.onclick=()=>navigate(b.dataset.pageNav));
-  document.querySelectorAll('[data-game]').forEach(b=>b.onclick=async()=>{
+  document.querySelectorAll('[data-page-nav]').forEach(b=>b.onclick=()=>guarded(()=>navigate(b.dataset.pageNav),'切换页面失败'));
+  async function selectGame(gameId) {
     if(!config||busy)return;
     busy=true;
     try {
-      subjects=paintSubjects([subjectFromKey(catalog,b.dataset.game)]);align='calendar';
+      subjects=paintSubjects([subjectFromKey(catalog,gameId)]);align='calendar';
       if(page==='versions') {page='overview';updatePage();}
       await refresh();
     }catch(e){toast('读取游戏快照失败：'+e.message);}finally{busy=false;}
-  });
+  }
+  /* 游戏切换按钮从目录生成：新增游戏不需要改这里。字标取简称首字，
+     颜色取 index.json 的游戏色，与图上的颜色一致。 */
+  function renderGameNav() {
+    const nav=$('studioGameNav');
+    if(!nav||nav.dataset.ready||!catalog.length)return;
+    nav.dataset.ready='1';
+    nav.insertAdjacentHTML('beforeend',catalog.map(g=>{
+      const name=g.short_name||g.display_name||g.game_id;
+      return `<button data-game="${esc(g.game_id)}" aria-pressed="false" style="--game:${esc(g.color||'#6a4fc4')}"><span class="game-monogram">${esc(Array.from(name)[0]||'?')}</span><span class="game-name">${esc(name)}</span></button>`;
+    }).join(''));
+    nav.querySelectorAll('[data-game]').forEach(b=>b.onclick=()=>selectGame(b.dataset.game));
+  }
   document.querySelectorAll('[data-rank-source]').forEach(b=>b.onclick=()=>{
     rankSource=b.dataset.rankSource;
     document.querySelectorAll('[data-rank-source]').forEach(t=>t.setAttribute('aria-pressed',String(t===b)));
@@ -162,39 +174,61 @@
     if(metric==='review_rate')lane.series=lane.series.filter(s=>s.field==='display_cumulative_review_rate');
     const result=ADAPTERS.series(lane,ctx);
     const visible=result.series.filter(s=>!hiddenSubjects.has(s.subject.key));
-    const colors=visible.map(s=>ctx.multi?s.subject.color:'#8b70d5');
-    $('overviewLegend').innerHTML=visible.map((s,i)=>`<span style="--mark:${colors[i%colors.length]}">${esc(s.name)}</span>`).join('');
-    $('overviewNote').textContent=metric==='online'?'Steam 同时在线日点 · 包含第三方历史点位 · 非 DAU':metric==='new_reviews'?'历史存活评测回填 / Steam 净变化 · 缺采保留为空':'游戏全局累计好评率 · 回填接续 Steam 观测';
+    // 颜色跟随对象：游戏用 index.json 的游戏色，版本用固定的版本色
+    const colors=visible.map(s=>s.subject.color);
+    $('overviewLegend').innerHTML=visible.map((s,i)=>`<span style="--mark:${esc(colors[i])}">${esc(s.name)}</span>`).join('');
+    $('overviewNote').textContent=metric==='online'?'Steam 同时在线日点 · 包含第三方历史点位 · 非 DAU':metric==='new_reviews'?'评测数（按发布日回填）/ Steam 净变化 · 缺采保留为空':'游戏全局累计好评率 · 回填接续 Steam 观测';
     const versionMarks=ctx.multi?[]:(subjects[0].snap.events||[]).filter(e=>e.is_version_boundary).map(e=>({name:`${e.version_id} 更新`,xAxis:axisKeyOf(e.date_local,subjects[0],align)})).filter(e=>ctx.axis.keys.includes(e.xAxis));
-    overviewChart.setOption({animation:false,textStyle:{fontFamily:FONT},tooltip:{trigger:'axis',confine:true,backgroundColor:'#fff',borderColor:'#e9e6f0',textStyle:{color:'#515b70',fontSize:11}},grid:{left:8,right:14,top:29,bottom:9,containLabel:true},
-      xAxis:{type:'category',data:ctx.axis.keys,boundaryGap:metric==='new_reviews',axisLine:{show:false},axisTick:{show:false},axisLabel:{color:'#a1a7b6',fontSize:10,formatter:k=>axisLabelOf(k,align),hideOverlap:true}},
-      yAxis:{type:'value',scale:metric==='review_rate',splitNumber:4,axisLabel:{color:'#a1a7b6',fontSize:10,formatter:v=>metric==='review_rate'?v+'%':Math.abs(v)>=10000?(v/10000).toFixed(1)+'万':v},splitLine:{lineStyle:{color:'#f0f1f7',type:'dashed'}}},
-      series:visible.map((s,i)=>({name:s.name,type:metric==='new_reviews'?'bar':'line',data:s.values,symbol:'circle',symbolSize:4,showSymbol:s.values.filter(v=>v!=null).length<18,connectNulls:false,smooth:false,barMaxWidth:13,itemStyle:{color:colors[i%colors.length],borderRadius:[3,3,0,0]},lineStyle:{width:2.3,type:s.dashed?'dashed':'solid'},areaStyle:metric==='online'&&visible.length===1?{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'#a88add38'},{offset:1,color:'#a88add03'}])}:undefined,
-      markLine:i===0&&versionMarks.length?{symbol:'none',silent:true,lineStyle:{color:'#dcd6eb',type:'dashed'},label:{formatter:'{b}',position:'insideEndTop',fontSize:9,color:'#ac9dc7'},data:versionMarks}:undefined}))},true);
+    overviewChart.setOption({animation:false,textStyle:{fontFamily:FONT},aria:{enabled:true,label:{description:`${$('demoMetric').selectedOptions[0].textContent}趋势：${visible.map(s=>s.name).join('、')}`}},tooltip:{trigger:'axis',confine:true,backgroundColor:'#fff',borderColor:'#e9e6f0',textStyle:{color:'#515b70',fontSize:11}},grid:{left:8,right:14,top:29,bottom:9,containLabel:true},
+      xAxis:{type:'category',data:ctx.axis.keys,boundaryGap:metric==='new_reviews',axisLine:{show:false},axisTick:{show:false},axisLabel:{color:'#5f6779',fontSize:10,formatter:k=>axisLabelOf(k,align),hideOverlap:true}},
+      yAxis:{type:'value',scale:metric==='review_rate',splitNumber:4,axisLabel:{color:'#5f6779',fontSize:10,formatter:v=>metric==='review_rate'?v+'%':Math.abs(v)>=10000?(v/10000).toFixed(1)+'万':v},splitLine:{lineStyle:{color:'#f0f1f7',type:'dashed'}}},
+      series:visible.map((s,i)=>({name:s.name,type:metric==='new_reviews'?'bar':'line',data:s.values,symbol:'circle',symbolSize:4,showSymbol:s.values.filter(v=>v!=null).length<18,connectNulls:false,smooth:false,barMaxWidth:13,itemStyle:{color:colors[i%colors.length],borderRadius:[3,3,0,0]},lineStyle:{width:2.3,type:s.dashed?'dashed':'solid'},areaStyle:metric==='online'&&visible.length===1?{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:colors[i]+'38'},{offset:1,color:colors[i]+'03'}])}:undefined,
+      markLine:i===0&&versionMarks.length?{symbol:'none',silent:true,lineStyle:{color:'#dcd6eb',type:'dashed'},label:{formatter:'{b}',position:'insideEndTop',fontSize:9,color:'#5f6779'},data:versionMarks}:undefined}))},true);
     overviewChart.resize();
+  }
+  /* 官方内容排行。默认看所选窗口内发布的角色 PV；窗口里没有时依次放宽
+     到「全部重点类型」「全部登记期」，并在副标题里写明放宽了什么 ——
+     面试官切到任何一个游戏、任何一个窗口都不会看到空白卡片。 */
+  function rankingRows(s,types,whole){
+    const view={mode:'snapshot',metric:'view',scale:'abs',platforms:[rankSource==='bilibili'?'bilibili':'youtube'],locales:rankSource==='bilibili'?[]:[rankSource],content_types:types};
+    const base={...buildCtx(),subjects:[s],multi:false};
+    const ctx=whole?{...base,axis:{keys:dateRange(s.window.start,s.window.end||s.snap.snapshot_date),align:'calendar'}}:base;
+    return VideoModel.prepare(selectedVideoRecords(view,ctx),view).map(r=>{
+      const point=r.points.at(-1);
+      return {name:r.name,value:point?.value,date:point?.date,pubdate:r.video.pubdate};
+    }).filter(v=>v.value!=null).sort((a,b)=>b.value-a.value).slice(0,4);
   }
   function renderRanking() {
     const s=subjects[0];
     if(!s){$('studioRanking').innerHTML='<div class="demo-empty">请选择一个游戏</div>';return;}
     const aw=analysisWindow(s);
-    const view={mode:'snapshot',metric:'view',scale:'abs',platforms:[rankSource==='bilibili'?'bilibili':'youtube'],locales:rankSource==='bilibili'?[]:[rankSource],content_types:['character_trailer']};
-    const records=selectedVideoRecords(view,{...buildCtx(),subjects:[s]});
-    const rows=VideoModel.prepare(records,view).map(r=>{
-      const point=r.points.at(-1);
-      return {name:r.name,value:point?.value,date:point?.date,pubdate:r.video.pubdate};
-    }).filter(v=>v.value!=null).sort((a,b)=>b.value-a.value).slice(0,4);
-    $('rankScope').textContent=`${s.label} · 角色 PV · 当前累计播放 · ${aw.start.slice(5)}—${aw.end.slice(5)} 发布`;
-    $('studioRanking').innerHTML=rows.length?rows.map((r,i)=>`<div class="rank-row" title="${esc(r.name)} · 发布 ${r.pubdate} · 采样 ${r.date} · ${r.value.toLocaleString('zh-CN')} 次"><span class="rank-number">0${i+1}</span><span class="rank-name">${esc(r.name)}</span><div class="rank-track"><div class="rank-fill" style="width:${rows[0].value>0?r.value/rows[0].value*100:0}%;opacity:${1-i*.12}"></div></div><span class="rank-value">${r.value>=10000?(r.value/10000).toFixed(1)+' 万':r.value.toLocaleString('zh-CN')}</span></div>`).join(''):'<div class="demo-empty">当前窗口暂无角色 PV，试试更长的时间范围</div>';
+    const all=[...(config.important_video_types||['character_trailer'])];
+    const attempts=[
+      [['character_trailer'],false,`角色 PV · ${aw.start.slice(5)}—${aw.end.slice(5)} 发布`],
+      [all,false,`所选窗口内无角色 PV · 改看全部重点类型 · ${aw.start.slice(5)}—${aw.end.slice(5)} 发布`],
+      [['character_trailer'],true,'所选窗口内无新发布 · 改看全部登记的角色 PV'],
+      [all,true,'所选窗口内无新发布 · 改看全部登记的重点视频'],
+    ];
+    let rows=[],scope=attempts[0][2];
+    for(const [types,whole,label] of attempts){rows=rankingRows(s,types,whole);scope=label;if(rows.length)break;}
+    $('rankScope').textContent=`${s.label} · 当前累计播放 · ${scope}`;
+    const source=document.querySelector(`[data-rank-source="${rankSource}"]`)?.textContent||'';
+    $('studioRanking').innerHTML=rows.length?rows.map((r,i)=>`<div class="rank-row" title="${esc(r.name)} · 发布 ${esc(r.pubdate)} · 采样 ${esc(r.date)} · ${r.value.toLocaleString('zh-CN')} 次"><span class="rank-number">0${i+1}</span><span class="rank-name">${esc(r.name)}</span><div class="rank-track"><div class="rank-fill" style="width:${rows[0].value>0?r.value/rows[0].value*100:0}%;opacity:${1-i*.12}"></div></div><span class="rank-value">${r.value>=10000?(r.value/10000).toFixed(1)+' 万':r.value.toLocaleString('zh-CN')}</span></div>`).join(''):`<div class="demo-empty">${esc(source)}暂无登记的官方视频，可切换其他来源</div>`;
   }
   function renderContext() {
     const s=subjects[0];
+    renderGameNav();
     document.querySelectorAll('[data-game]').forEach(b=>b.setAttribute('aria-pressed',String(subjects.some(s=>s.gameId===b.dataset.game))));
     document.querySelectorAll('#alignSeg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.align===align)));
     if(!s){$('studioEvents').innerHTML='<div class="demo-empty">请选择游戏或版本</div>';$('studioQuality').innerHTML='';$('studioHealthPanel')?.remove();$('studioSnapshot').textContent='请选择游戏或版本';return;}
     const aw=analysisWindow(s);
     const events=(s.snap.events||[]).filter(e=>e.is_version_boundary&&e.date_local>=aw.start&&e.date_local<=aw.end).slice(-3).reverse();
-    $('eventScope').textContent=`${s.label} · 所选窗口内的版本更新`;
-    $('studioEvents').innerHTML=events.length?events.map((e,i)=>`<div class="event-row"><span class="event-dot"></span><div><strong>${esc(s.snap.game.short_name)} ${esc(e.version_id)} 版本更新</strong><small>${e.date_local} · Steam 官方公告</small><span class="event-tag">${i===0?'窗口内最近更新':'历史版本'}</span></div></div>`).join(''):'<div class="demo-empty">所选窗口没有版本更新节点</div>';
+    // 窗口里没有版本更新时（例如只看最近 3 天）改列最近的版本节点，并在标题里写明
+    const inWindow=events.length>0;
+    const shown=inWindow?events:(s.snap.events||[]).filter(e=>e.is_version_boundary&&e.date_local<=aw.end).slice(-3).reverse();
+    $('eventScope').textContent=inWindow?`${s.label} · 所选窗口内的版本更新`:`${s.label} · 所选窗口内无版本更新，列出此前最近的节点`;
+    const dot=e=>{const v=(catalog.find(g=>g.game_id===s.gameId)?.versions||[]).find(v=>v.date_local===e.date_local);return v?`style="background:${esc(versionColor(catalog,s.gameId,v.key))}"`:'';};
+    $('studioEvents').innerHTML=shown.length?shown.map((e,i)=>`<div class="event-row"><span class="event-dot" ${dot(e)}></span><div><strong>${esc(s.snap.game.short_name)} ${esc(e.version_id)} 版本更新</strong><small>${esc(e.date_local)} · Steam 官方公告</small><span class="event-tag">${i===0?(inWindow?'窗口内最近更新':'最近一次更新'):'历史版本'}</span></div></div>`).join(''):'<div class="demo-empty">暂无版本更新记录</div>';
     const snap=s.snap,coverage=snap.coverage||{};
     const missing=new Set((snap.quality?.issues||[]).filter(q=>q.code==='missing_days').flatMap(q=>q.missing_days||[]));
     const dates=coverage.start&&coverage.end?dateRange(coverage.start,coverage.end).slice(-20):[];
@@ -203,6 +237,7 @@
     $('studioSnapshot').textContent=`数据快照 · ${snap.snapshot_date}`;
     const sourceLabels={steam:'Steam 日采',bilibili:'B 站视频',youtube:'YouTube 视频',steam_online:'小时在线',steam_build:'构建记录',review_profile:'评测画像基底'};
     const statusLabels={healthy:'有有效观测',partial:'部分失败',failed:'最近采集失败',stale:'数据待更新',skipped:'未采集 / 已跳过',disabled:'未启用'};
+    const sourceName=k=>sourceLabels[k]||esc(k);const statusName=v=>statusLabels[v]||'状态未知';
     const now=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
     const health=Object.entries(snap.source_health||{}).map(([key,v])=>{
       const stale=v.data_through&&daysBetween(v.data_through.slice(0,10),now)>=(v.schedule==='weekly'?8:2);
@@ -212,10 +247,10 @@
     $('studioSnapshot').dataset.health=concerns.length?'degraded':'healthy';
     $('studioSnapshot').textContent=`快照 ${snap.snapshot_date}${concerns.length?' · '+concerns.length+' 项来源需关注':''}`;
     if(health.length){
-      $('studioQuality').innerHTML=health.filter(([k])=>['steam','bilibili','youtube','review_profile'].includes(k)).map(([k,v])=>`<div class="quality-source"><span>${sourceLabels[k]}</span><b class="${v.status==='healthy'?'ok':'warn'}">${statusLabels[v.status]||v.status}</b></div>`).join('')+`<div class="quality-note">有效数据与最近采集状态分别记录。<br>失败时仍可查看保留的历史观测。</div>`;
+      $('studioQuality').innerHTML=health.filter(([k])=>['steam','bilibili','youtube','review_profile'].includes(k)).map(([k,v])=>`<div class="quality-source"><span>${sourceName(k)}</span><b class="${v.status==='healthy'?'ok':'warn'}">${statusName(v.status)}${v.status!=='healthy'&&v.data_through?` · 有效数据至 ${esc(v.data_through.slice(5,10))}`:''}</b></div>`).join('')+`<div class="quality-note">有效数据与最近采集状态分别记录。<br>失败时仍可查看保留的历史观测。</div>`;
       let panel=$('studioHealthPanel');
       if(!panel){panel=document.createElement('section');panel.id='studioHealthPanel';panel.className='card';$('sourceDetails').querySelector('summary').after(panel);}
-      panel.innerHTML=`<div class="card-head"><h2 class="card-title">数据源运行状态</h2><span class="card-note">${esc(s.label)} · UTC+8</span></div><div class="table-wrap"><table><thead><tr><th>来源</th><th>最近尝试</th><th>有效数据截至</th><th>最近成功 / 期望数</th><th>状态</th></tr></thead><tbody>${health.map(([k,v])=>`<tr><td>${sourceLabels[k]||esc(k)}</td><td>${esc(sourceTime(v.last_attempt_at))}</td><td>${esc(v.data_through||'暂无')}</td><td>${v.expected!=null?`${v.succeeded} / ${v.expected}`:v.succeeded!=null?`${v.succeeded} 条评测`:'—'}</td><td><span class="health-status ${v.status==='healthy'?'healthy':'attention'}">${statusLabels[v.status]||esc(v.status)}</span></td></tr>`).join('')}</tbody></table></div><p class="card-note">采集失败不等于历史值无效；图表保留最后有效值，缺采不补零。评测画像按周更新。</p>`;
+      panel.innerHTML=`<div class="card-head"><h2 class="card-title">数据源运行状态</h2><span class="card-note">${esc(s.label)} · UTC+8</span></div><div class="table-wrap"><table><thead><tr><th>来源</th><th>最近尝试</th><th>有效数据截至</th><th>最近成功 / 期望数</th><th>状态</th></tr></thead><tbody>${health.map(([k,v])=>`<tr><td>${sourceName(k)}</td><td>${esc(sourceTime(v.last_attempt_at))}</td><td>${esc(v.data_through||'暂无')}</td><td>${v.expected!=null?`${v.succeeded} / ${v.expected}`:v.succeeded!=null?`${v.succeeded} 条评测`:'—'}</td><td><span class="health-status ${v.status==='healthy'?'healthy':'attention'}">${statusName(v.status)}</span></td></tr>`).join('')}</tbody></table></div><p class="card-note">采集失败不等于历史值无效；图表保留最后有效值，缺采不补零。评测画像按周更新。</p>`;
     }
   }
   const productionRender=renderAll;

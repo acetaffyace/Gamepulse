@@ -13,7 +13,7 @@ Thumbs.db
 data/raw/backfill/
 data/raw/20*/
 
-# 时间序列与快照是项目的真实产出，必须入库（作品集需要真实采集天数）。
+# 时间序列与快照是项目的真实产出，必须入库，打开页面即可查看真实采集数据。
 # 不要在这里忽略 data/series/ 或 data/snapshot_*.json。
 
 # 计划任务日志：机器本地产物，不入版本库
@@ -25,3 +25,9 @@ node_modules/
 *.lock
 *.bak
 data/index.previous.json
+
+# 本地工作笔记与历史审查记录，不入库
+notes/
+
+# 采集流水日志：每小时追加，机器本地产物
+data/collect-log.tsv

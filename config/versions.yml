@@ -1,0 +1,128 @@
+# 版本表：版本对比窗口的唯一依据。
+#
+# 每个已开放版本一行，写明开放时间与来源。构建快照时，Steam 官方公告中
+# 识别出的版本更新会与本表核对：公告里出现而本表没有的版本、同一大版本内
+# 跳号（如 3.2 → 3.4）都会写进数据质量提示，而不是悄悄把两个版本并成一个窗口。
+#
+# 字段
+#   steam_start_at / steam_start_date  Steam 端开放时间（UTC+8）。有精确时刻用 _at。
+#   cn_start_at / cn_start_date        国服开放时间，与 Steam 不同日时填写。
+#   source                             steam_announcement = Steam 官方社区公告发布日；
+#                                      official_site = 游戏官网 / 官方渠道的更新公告。
+#   source_url                         可点开核对的来源链接。
+#   status                             released = 已开放；scheduled = 已公布但尚未在 Steam 开放，
+#                                      不会成为版本分界线。
+#   note                               核对过程中需要说明的事项。
+
+wuthering_waves:
+  '2.4':
+    steam_start_date: '2025-06-12'
+    status: released
+    source: steam_announcement
+    source_url: 'https://store.steampowered.com/news/app/3513350/view/1802261838724137'
+  '2.5':
+    steam_start_date: '2025-07-24'
+    status: released
+    source: steam_announcement
+    source_url: 'https://store.steampowered.com/news/app/3513350/view/1806064758586643'
+  '2.6':
+    steam_start_date: '2025-08-28'
+    status: released
+    source: steam_announcement
+    source_url: 'https://store.steampowered.com/news/app/3513350/view/1809235871563521'
+  '2.7':
+    steam_start_date: '2025-10-09'
+    status: released
+    source: steam_announcement
+    source_url: 'https://store.steampowered.com/news/app/3513350/view/1813041031184228'
+    note: '10-09 与 10-10 各有一条同名公告，取较早的一条'
+  '2.8':
+    steam_start_date: '2025-11-20'
+    status: released
+    source: steam_announcement
+    source_url: 'https://store.steampowered.com/news/app/3513350/view/1816849002008951'
+  '3.0':
+    steam_start_date: '2025-12-25'
+    status: released
+    source: steam_announcement
+    source_url: 'https://store.steampowered.com/news/app/3513350/view/1819386365107164'
+    note: '2.8 之后直接进入 3.0 大版本，没有 2.9'
+  '3.1':
+    steam_start_date: '2026-02-05'
+    status: released
+    source: steam_announcement
+    source_url: 'https://store.steampowered.com/news/app/3513350/view/1823825466494991'
+  '3.2':
+    steam_start_date: '2026-03-19'
+    status: released
+    source: steam_announcement
+    source_url: 'https://store.steampowered.com/news/app/3513350/view/1827626365751305'
+  '3.3':
+    steam_start_date: '2026-04-30'
+    status: released
+    source: steam_announcement
+    source_url: 'https://store.steampowered.com/news/app/3513350/view/1831432155566176'
+    note: '二周年版本。公告标题为「2nd Anniv. V3.3 … Now Live!」，旧的标题规则没有识别为版本更新'
+  '3.4':
+    steam_start_date: '2026-06-08'
+    status: released
+    source: steam_announcement
+    source_url: 'https://store.steampowered.com/news/app/3513350/view/1834602721196870'
+  '3.5':
+    steam_start_date: '2026-07-10'
+    cn_start_date: '2026-07-10'
+    status: released
+    source: steam_announcement
+    source_url: 'https://store.steampowered.com/news/app/3513350/view/1836506165584478'
+  '3.6':
+    steam_start_date: '2026-08-20'
+    cn_start_date: '2026-08-20'
+    status: released
+    source: steam_announcement
+    source_url: 'https://store.steampowered.com/news/app/3513350/view/1841579228663631'
+
+zenless_zone_zero:
+  '3.0':
+    steam_start_at: '2026-06-17T06:00:00+08:00'
+    cn_start_at: '2026-06-17T06:00:00+08:00'
+    status: released
+    source: steam_announcement
+    source_url: 'https://store.steampowered.com/news/app/4162040/view/1835871199299000'
+  '3.1':
+    steam_start_at: '2026-07-29T06:00:00+08:00'
+    cn_start_at: '2026-07-29T06:00:00+08:00'
+    status: released
+    source: steam_announcement
+    source_url: 'https://store.steampowered.com/news/app/4162040/view/1839041357038306'
+    note: 'Steam 公告发布于 07-28（UTC+8），版本在 07-29 06:00 维护后开放'
+  '3.2':
+    steam_start_at: '2026-09-09T06:00:00+08:00'
+    cn_start_at: '2026-09-09T06:00:00+08:00'
+    status: released
+    source: official_site
+    source_url: 'https://zenless.hoyoverse.com/en-us/news/166000'
+    cn_source_url: 'https://zenless.hoyoverse.com/en-us/news/165978'
+
+neverness_to_everness:
+  '1.2':
+    steam_start_date: '2026-07-08'
+    cn_start_at: '2026-07-02T06:00:00+08:00'
+    status: released
+    source: steam_announcement
+    source_url: 'https://store.steampowered.com/news/app/4508340/view/1836506165577421'
+    cn_source_url: 'https://yh.wanmei.com/news/gamebroad/20260701/262943.html'
+    note: '国服先于 Steam 开放；版本窗口按 Steam 开放日计算'
+  '1.3':
+    steam_start_at: '2026-08-19T06:00:00+08:00'
+    cn_start_at: '2026-08-13T06:00:00+08:00'
+    status: released
+    source: official_site
+    source_url: 'https://nte.perfectworld.com/de/article/news/gamenews/20260817/263609.html'
+    cn_source_url: 'https://yh.wanmei.com/news/gamebroad/20260812/263538.html'
+  '1.4':
+    cn_start_date: '2026-09-24'
+    status: scheduled
+    source: official_site
+    source_url: 'https://steamcommunity.com/app/4508340/allnews/?l=schinese'
+    cn_source_url: 'https://yh.wanmei.com/m/news/gamebroad/20260916/264202.html'
+    note: '国服 09-24 开放；截至 2026-09-29 未见 Steam 端开放公告'

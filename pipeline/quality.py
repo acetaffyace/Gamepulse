@@ -60,6 +60,39 @@ def source_health(records_by_source: dict[str, list[dict]], profile: dict | None
     return result
 
 
+def _version_key(version: str) -> tuple[int, int] | None:
+    try:
+        major, minor = version.split(".")[:2]
+        return int(major), int(minor)
+    except (AttributeError, ValueError):
+        return None
+
+
+def version_table_issues(events: list[dict], table: dict) -> list[dict]:
+    """核对版本分界线与 config/versions.yml。
+
+    两类问题会让版本窗口悄悄出错：官方公告里有、版本表里没有的版本
+    （窗口来源未经核对）；同一大版本内编号跳跃（上一个窗口很可能并入了
+    漏掉的版本，鸣潮 3.3 曾因此被算进 3.2 的 81 天窗口）。
+    """
+    issues = []
+    bounds = sorted((e for e in events if e.get("is_version_boundary")),
+                    key=lambda e: e["date_local"])
+    unlisted = [e["version_id"] for e in bounds if e.get("version_id") not in table]
+    if unlisted:
+        issues.append({"level": "warn", "code": "version_not_in_table",
+                       "message": f"版本 {'、'.join(unlisted)} 来自公告识别，尚未登记到版本表",
+                       "versions": unlisted})
+    for prev, cur in zip(bounds, bounds[1:]):
+        a, b = _version_key(prev.get("version_id")), _version_key(cur.get("version_id"))
+        if a and b and a[0] == b[0] and b[1] - a[1] > 1:
+            issues.append({"level": "warn", "code": "version_gap",
+                           "message": f"{prev['version_id']} 之后直接是 {cur['version_id']}，"
+                                      f"{prev['version_id']} 的窗口可能包含未登记的版本",
+                           "versions": [prev["version_id"], cur["version_id"]]})
+    return issues
+
+
 def _parse(d: str):
     return datetime.strptime(d, "%Y-%m-%d").date()
 

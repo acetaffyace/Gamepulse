@@ -2,7 +2,7 @@
 (() => {
   'use strict';
   const $=id=>document.getElementById(id);
-  const e=videoEscape;
+  const e=escapeHtml;
   const requestedComparison=location.search.includes('page=versions') && !location.hash;
   let presentation=new URLSearchParams(location.search).get('videoDisplay')==='timeline'?'timeline':'rank';
   let compareMetric='new_reviews';
@@ -31,7 +31,7 @@
     try {
       subjects=paintSubjects([a,b].map(k=>subjectFromKey(catalog,k)).filter(Boolean));
       await refresh();renderPanel();
-    }catch(error){toast('对比数据加载失败：'+error.message);}finally{changing=false;}
+    }catch(error){toast('对比数据加载失败：'+error.message+'，请重试');}finally{changing=false;}
   }
   $('compareA').onchange=()=>setPair($('compareA').value,$('compareB').value);
   $('compareB').onchange=()=>setPair($('compareA').value,$('compareB').value);
@@ -54,12 +54,17 @@
     ctx.fillText(subjects.slice(0,2).map((s,i)=>`${i?'B':'A'}：${s.label}`).join('     /     '),30,82);
     ctx.font='17px sans-serif';ctx.fillStyle='#737f94';
     ctx.fillText(`窗口：${$('compareWindow').textContent} · 快照：${subjects[0]?.snap.snapshot_date||'—'} · UTC+8`,30,120);
-    ctx.fillText('A 紫色 / B 绿色 · '+$('compareChartNote').textContent,30,152);
+    ctx.fillText($('compareChartNote').textContent,30,152);
+    // 图例色块与页面上的版本颜色一致
+    subjects.slice(0,2).forEach((s,i)=>{ctx.fillStyle=s.color;ctx.fillRect(30+i*360,166,14,8);ctx.fillStyle='#303a50';ctx.font='15px sans-serif';ctx.fillText(`${i?'B':'A'} · ${s.label}`,52+i*360,175);});
     ctx.drawImage(picture,0,180);
     const link=document.createElement('a');link.href=canvas.toDataURL('image/png');link.download=`gamepulse_compare_${compareMetric}.png`;link.click();
   };
-  function signed(n,digits=1){return (n>0?'+':'')+n.toFixed(digits);}
+  // 用真正的减号，并始终带方向：「B 较 A −31.1%」而不是孤零零的「-31.1%」
+  function signed(n,digits=1){return (n>0?'+':n<0?'−':'±')+Math.abs(n).toFixed(digits);}
   function format(n,digits=0){return n==null?'—':n.toLocaleString('zh-CN',{maximumFractionDigits:digits,minimumFractionDigits:digits});}
+  // A / B 字标用对象自己的固定颜色，与图例、chip 和所有图表一致
+  function letterStyle(s){return s?`background:${e(s.color)}1f;color:${e(s.color)};box-shadow:inset 0 0 0 1px ${e(s.color)}55`:'';}
   function renderComparison(){
     if(!config||!subjects.every(s=>s.snap))return;
     const options=catalog.map(g=>`<optgroup label="${e(g.short_name)}"><option value="${e(g.game_id)}">${e(g.short_name)} · 整段</option>${g.versions.slice().reverse().map(v=>`<option value="${e(g.game_id+'@'+v.key)}">${e(g.short_name)} ${e(v.version_id)} · ${v.date_local}</option>`).join('')}</optgroup>`).join('');
@@ -68,21 +73,24 @@
     $('compareA').value=subjects[0]?.key||'';$('compareB').value=subjects[1]?.key||'';
     const pair=subjects.slice(0,2);
     const ctx=buildCtx();
-    $('compareWindow').textContent=align==='day0'?`D0—D${Math.max(0,ctx.axis.keys.length-1)} · 共同时间窗口`:'日历日期 · 按实际日期对齐';
+    $('compareWindow').textContent=align==='day0'?`D0–D${Math.max(0,ctx.axis.keys.length-1)} · 共同时间窗口`:'日历日期 · 按实际日期对齐';
     $('compareAlign').hidden=align==='day0';
     if(pair.length!==2){$('compareMetrics').innerHTML='<div class="compare-empty">选择两个版本，查看相同阶段的变化。</div>';compareChart?.clear();$('compareChartNote').textContent='等待选择两个对象';$('compareLegend').textContent='';$('compareEvidence').textContent='';return;}
     const stats=pair.map(windowStats);
     const sameBasis=stats[0].dailyAvgBasis===stats[1].dailyAvgBasis;
+    const versions=pair.every(s=>s.kind==='version');
+    const span=align==='day0'?$('compareWindow').textContent.split(' · ')[0]:'所选窗口';
     const rows=[
-      {title:'窗口评测量',unit:'条',values:stats.map(w=>w.dailyAvgBasis==='surviving_review_backfill'?w.historicalReviews:w.reviews),digits:0,valid:sameBasis,note:sameBasis?(stats[0].dailyAvgBasis==='surviving_review_backfill'?'历史回填存活评测':'Steam 评测净变化'):'统计口径不同，暂不计算差值'},
-      {title:'窗口日均评测',unit:'条 / 日',values:stats.map(w=>w.dailyAvg),digits:1,valid:sameBasis,note:'窗口评测量 ÷ 有效覆盖天数'},
-      {title:pair.every(s=>s.kind==='version')?'版本回填好评率':'累计好评率',unit:'%',values:stats.map(w=>w.rate),digits:2,valid:pair[0].kind===pair[1].kind,percent:true,note:pair.every(s=>s.kind==='version')?'窗口内回填好评数 ÷ 回填评测数':'混合对象口径不同，差值仅同类展示'},
-      {title:'窗口末同时在线',unit:'人',values:stats.map(w=>w.onlinePoints?w.online:null),digits:0,valid:false,note:`日点：A ${stats[0].onlineDate||'暂无'} / B ${stats[1].onlineDate||'暂无'} · 非 DAU`},
+      {title:'窗口评测数',unit:'条',values:stats.map(w=>w.dailyAvgBasis==='surviving_review_backfill'?w.historicalReviews:w.reviews),digits:0,valid:sameBasis,tip:BACKFILL_TIP,note:sameBasis?(stats[0].dailyAvgBasis==='surviving_review_backfill'?`${span} · 按发布日回填，已删除的评测不计入`:'Steam 总评测数净变化'):'统计口径不同，暂不计算差值'},
+      {title:'窗口日均评测数',unit:'条 / 日',values:stats.map(w=>w.dailyAvg),digits:1,valid:sameBasis,note:'窗口评测数 ÷ 有效覆盖天数'},
+      {title:versions?VERSION_RATE_LABEL:'累计好评率',unit:'%',values:stats.map(w=>w.rate),digits:2,valid:pair[0].kind===pair[1].kind,percent:true,note:versions?`${span}内新增评测的好评占比（按发布日回填）；不是游戏整体累计好评率`:'混合对象口径不同，差值仅同类展示'},
+      {title:'窗口末同时在线',unit:'人',values:stats.map(w=>w.onlinePoints?w.online:null),digits:0,valid:false,note:`日点：A ${stats[0].onlineDate||'暂无'} / B ${stats[1].onlineDate||'暂无'} · 采样时刻不同，不计算差值 · 非 DAU`},
     ];
     $('compareMetrics').innerHTML=rows.map(row=>{
       const [a,b]=row.values;
-      const difference=row.valid&&a!=null&&b!=null?(row.percent?signed(b-a,2)+' pp':a!==0?signed((b-a)/Math.abs(a)*100)+'%':'基准为 0'):null;
-      return `<article class="compare-metric"><div class="compare-metric-head"><h3>${row.title}</h3>${difference?`<span class="compare-change">${difference}</span>`:''}</div><div class="compare-value"><span class="compare-letter">A</span><strong>${format(a,row.digits)}</strong><small>${row.unit}</small></div><div class="compare-value"><span class="compare-letter b">B</span><strong>${format(b,row.digits)}</strong><small>${row.unit}</small></div><p>${row.note}</p></article>`;
+      const difference=row.valid&&a!=null&&b!=null?(row.percent?signed(b-a,2)+' 个百分点':a!==0?signed((b-a)/Math.abs(a)*100)+'%':'A 为 0，无法计算'):null;
+      const value=(v,letter,i)=>`<div class="compare-value"><span class="compare-letter" style="${letterStyle(pair[i])}">${letter}</span>${v!=null?`<strong>${format(v,row.digits)}</strong><small>${row.unit}</small>`:'<span class="compare-na">窗口内暂无数据</span>'}</div>`;
+      return `<article class="compare-metric"><div class="compare-metric-head"><h3${row.tip?` title="${e(row.tip)}"`:''}>${row.title}</h3>${difference?`<span class="compare-change" title="B 相对 A 的变化">B 较 A ${difference}</span>`:''}</div>${value(a,'A',0)}${value(b,'B',1)}<p>${e(row.note)}</p></article>`;
     }).join('');
     $('compareEvidence').textContent=`${pair.map((s,i)=>`${s.label}：${stats[i].window.start}—${stats[i].window.end} · ${stats[i].historicalDays||stats[i].days} 天评测覆盖`).join(' ｜ ')}${subjects.length>2?' · 本区展示前两个对象，其余对象见完整时间轴':''}`;
     if(pageIsComparison())renderComparisonChart();
@@ -94,14 +102,14 @@
     const lane={...config.lanes.find(l=>l.id===compareMetric)};
     let series=ADAPTERS.series(lane,ctx).series;
     if(compareMetric==='review_rate'&&pair.every(s=>s.kind==='version'))series=series.filter(s=>s.dashed);
-    const colors=['#8262cc','#42a58d'];
-    const label=compareMetric==='new_reviews'?'每日评测变化':compareMetric==='online'?'Steam 同时在线':'版本窗口滚动累计好评率';
-    $('compareChartNote').textContent=compareMetric==='review_rate'?(pair.every(s=>s.kind==='version')?'各版本从更新日重新累计 · 缺采保留为空':'游戏全局累计好评率 · 历史回填接续观测'):compareMetric==='new_reviews'?'每日存活评测回填 / Steam 净变化 · 颜色代表对比对象':'Steam / SteamDB 日点 · 同一阶段不代表同一采样时刻';
-    $('compareLegend').innerHTML=pair.map((s,i)=>`<span><i style="background:${colors[i]}"></i>${i?'B':'A'} · ${e(s.label)}</span>`).join('');
-    compareChart.setOption({animation:false,textStyle:{fontFamily:FONT},title:{text:label,left:8,top:0,textStyle:{fontSize:11,fontWeight:400,color:'#717b8e'}},tooltip:{trigger:'axis',confine:true},grid:{left:12,right:22,top:36,bottom:20,containLabel:true},
-      xAxis:{type:'category',data:ctx.axis.keys,boundaryGap:compareMetric==='new_reviews',axisLine:{show:false},axisTick:{show:false},axisLabel:{fontSize:11,color:'#858da0',formatter:k=>align==='day0'?'D'+k:k.slice(5),hideOverlap:true}},
-      yAxis:{type:'value',scale:compareMetric==='review_rate',splitLine:{lineStyle:{color:'#eceef5',type:'dashed'}},axisLabel:{fontSize:11,color:'#858da0',formatter:v=>compareMetric==='review_rate'?v+'%':v>=10000?(v/10000).toFixed(1)+'万':v}},
-      series:series.map(s=>({name:s.subject.label,type:compareMetric==='new_reviews'?'bar':'line',data:s.values,barMaxWidth:18,barGap:'30%',showSymbol:true,symbolSize:5,connectNulls:false,itemStyle:{color:colors[pair.findIndex(p=>p.key===s.subject.key)],borderRadius:[3,3,0,0]},lineStyle:{width:2.5}}))},true);compareChart.resize();
+    const colors=pair.map(s=>s.color);
+    const label=compareMetric==='new_reviews'?'每日评测数':compareMetric==='online'?'Steam 同时在线':`${VERSION_RATE_LABEL}（自更新日累计）`;
+    $('compareChartNote').textContent=compareMetric==='review_rate'?(pair.every(s=>s.kind==='version')?'各版本从更新日重新累计，终点即上方卡片的版本窗口好评率 · 缺采保留为空':'游戏全局累计好评率 · 历史回填接续观测'):compareMetric==='new_reviews'?'评测数按发布日回填（已删除的评测不计入）/ Steam 净变化 · 颜色代表对比对象':'Steam / SteamDB 日点 · 同一阶段不代表同一采样时刻';
+    $('compareLegend').innerHTML=pair.map((s,i)=>`<span><i style="background:${e(colors[i])}"></i>${i?'B':'A'} · ${e(s.label)}</span>`).join('');
+    compareChart.setOption({animation:false,textStyle:{fontFamily:FONT},aria:{enabled:true,label:{description:`${label}：${pair.map((s,i)=>(i?'B ':'A ')+s.label).join('，')}，横轴为${align==='day0'?'各自更新后第 N 天':'日历日期'}`}},title:{text:label,left:8,top:0,textStyle:{fontSize:11,fontWeight:400,color:'#5f6779'}},tooltip:{trigger:'axis',confine:true},grid:{left:12,right:22,top:36,bottom:20,containLabel:true},
+      xAxis:{type:'category',data:ctx.axis.keys,boundaryGap:compareMetric==='new_reviews',axisLine:{show:false},axisTick:{show:false},axisLabel:{fontSize:11,color:'#5f6779',formatter:k=>align==='day0'?'D'+k:k.slice(5),hideOverlap:true}},
+      yAxis:{type:'value',scale:compareMetric==='review_rate',splitLine:{lineStyle:{color:'#eceef5',type:'dashed'}},axisLabel:{fontSize:11,color:'#5f6779',formatter:v=>compareMetric==='review_rate'?v+'%':v>=10000?(v/10000).toFixed(1)+'万':v}},
+      series:series.map(s=>({name:s.name||s.subject.label,type:compareMetric==='new_reviews'?'bar':'line',data:s.values,barMaxWidth:18,barGap:'30%',showSymbol:true,symbolSize:5,connectNulls:false,itemStyle:{color:colors[pair.findIndex(p=>p.key===s.subject.key)],borderRadius:[3,3,0,0]},lineStyle:{width:2.5}}))},true);compareChart.resize();
   }
   function enhanceVideos(){
     document.querySelectorAll('.video-dashboard').forEach(section=>{
@@ -121,18 +129,21 @@
       const status=section.querySelector('.video-focus .video-status-inline');if(status)status.textContent='按当前累计值排列 · 点击横条联动同内容';
       section.querySelectorAll('.video-facet').forEach(card=>{
         const el=card.querySelector('.video-chart');const chart=echarts.getInstanceByDom(el);if(!chart)return;
-        const old=chart.getOption();
+        const old=chart.getOption();if(!old.series.length)return;
         const data=old.series.flatMap(s=>s.data.map(d=>({...d,barValue:d.point.value,color:s.itemStyle.color,opacity:s.itemStyle.opacity}))).sort((a,b)=>b.barValue-a.barValue);
         const percent=VideoModel.METRICS[view.metric].unit==='%';const indexed=view.metric==='view'&&view.scale==='index';
         const number=v=>indexed?v.toFixed(2)+'×':percent?v.toFixed(2)+'%':v>=10000?(v/10000).toFixed(1)+'万':format(v);
+        // 轴刻度用更紧凑的写法（「300万」而不是「300.0万」），窄卡片只留 2～3 个刻度，避免挤成一串数字
+        const tick=v=>indexed?Number(v.toFixed(1))+'×':percent?Number(v.toFixed(1))+'%':v>=10000?Number((v/10000).toFixed(v>=1e5?0:1))+'万':format(v);
+        const narrowCard=el.clientWidth<420;
         const label=d=>(subjects.length>1?d.record.subjectLabel+' · ':'')+d.record.name+(view.layout==='overlay'?' · '+VIDEO_SOURCE_LABELS[d.record.source]:'');
         const rows=data.map(d=>label(d));
         const longest=Math.max(1,...rows.map(s=>s.length));const labelWidth=view.layout==='overlay'?Math.min(230,longest*11):Math.min(140,longest*11);
         el.style.height=Math.max(190,data.length*40+35)+'px';
         chart.setOption({animation:false,textStyle:{fontFamily:FONT},aria:{enabled:true,description:'当前累计表现横向排行；点击条形联动内容，采样日期和视频年龄见提示框。'},
-          grid:{left:labelWidth+12,right:75,top:6,bottom:25},
-          xAxis:{type:'value',min:0,max:view.sharedY||view.layout==='overlay'?old.yAxis[0].max:undefined,axisLine:{show:false},axisTick:{show:false},axisLabel:{fontSize:10,color:'#8e96a7',formatter:number},splitLine:{show:true,lineStyle:{color:'#f1f2f7',type:'dashed'}}},
-          yAxis:{type:'category',inverse:true,data:rows,axisLine:{show:false},axisTick:{show:false},axisLabel:{fontSize:11,color:'#5e687a',width:labelWidth,overflow:'truncate',margin:12}},
+          grid:{left:(narrowCard?Math.min(labelWidth,96):labelWidth)+12,right:narrowCard?56:75,top:6,bottom:25},
+          xAxis:{type:'value',min:0,max:view.sharedY||view.layout==='overlay'?old.yAxis[0].max:undefined,splitNumber:narrowCard?2:4,axisLine:{show:false},axisTick:{show:false},axisLabel:{fontSize:10,color:'#5f6779',formatter:tick,hideOverlap:true},splitLine:{show:true,lineStyle:{color:'#f1f2f7',type:'dashed'}}},
+          yAxis:{type:'category',inverse:true,data:rows,axisLine:{show:false},axisTick:{show:false},axisLabel:{fontSize:11,color:'#5e687a',width:narrowCard?Math.min(labelWidth,96):labelWidth,overflow:'truncate',margin:12}},
           tooltip:{...old.tooltip[0],trigger:'item'},
           series:[{name:VideoModel.METRICS[view.metric].label,type:'bar',barMaxWidth:14,showBackground:true,backgroundStyle:{color:'#f6f4fb',borderRadius:4},data:data.map(d=>({...d,value:d.barValue,itemStyle:{color:d.color,opacity:d.opacity,borderRadius:[0,4,4,0]}})),label:{show:true,position:'right',distance:8,color:'#596476',fontSize:11,formatter:p=>number(p.value)}}]},true);
         chart.resize();

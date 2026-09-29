@@ -141,3 +141,4 @@
 {"date_local": "2026-09-29", "hour_local": 12, "sampled_at": "2026-09-29T04:05:05+00:00", "game_id": "wuthering_waves", "steam_app_id": 3513350, "players": 7862, "status": "observed", "note": ""}
 {"sampled_at": "2026-09-29T05:05:04+00:00", "date_local": "2026-09-29", "hour_local": 13, "game_id": "wuthering_waves", "steam_app_id": 3513350, "players": 7267, "status": "observed", "note": ""}
 {"sampled_at": "2026-09-29T06:05:08+00:00", "date_local": "2026-09-29", "hour_local": 14, "game_id": "wuthering_waves", "steam_app_id": 3513350, "players": 6978, "status": "observed", "note": ""}
+{"sampled_at": "2026-09-29T07:05:08+00:00", "date_local": "2026-09-29", "hour_local": 15, "game_id": "wuthering_waves", "steam_app_id": 3513350, "players": 6874, "status": "observed", "note": ""}

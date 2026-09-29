@@ -3,7 +3,7 @@
 设计约束（来自需求文档）：
 - 字段不可用时写 null 并标记 unavailable，不用 0 填充；
 - 保留 raw response，便于回溯口径；
-- 同一天重复运行覆盖当天记录，保证幂等。
+- 同一采样周期重复运行不产生重复点；失败重跑不覆盖已有的有效观测。
 """
 
 from __future__ import annotations
@@ -56,6 +56,29 @@ def _force_utf8_stdout() -> None:
 
 
 _force_utf8_stdout()
+
+
+def load_local_env(path: Path = ROOT / ".env") -> None:
+    """读取仓库根目录的 .env（已被 .gitignore 忽略），只补充未设置的变量。
+
+    计划任务不继承终端里临时设置的 HTTPS_PROXY：此前每日任务访问
+    googleapis.com 一律 ConnectTimeout，只有手动在带代理的终端里运行才成功。
+    把代理与 API Key 放进 .env，交互运行和计划任务就使用同一份网络配置。
+    """
+    if not path.exists():
+        return
+    for line in path.read_text(encoding="utf-8-sig").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip().removeprefix("export ").strip()
+        value = value.strip().strip('"').strip("'")
+        if key and value and not os.environ.get(key):
+            os.environ[key] = value
+
+
+load_local_env()
 
 
 def today_local() -> str:
@@ -306,14 +329,23 @@ def _host_of(url: str) -> str:
     return (urlparse(url).hostname or "").lower()
 
 
+def proxy_configured() -> bool:
+    return any(_env_proxies().values())
+
+
+def proxy_missing_for(url: str) -> bool:
+    """该域名在境内必须走代理，但当前进程没有代理配置。"""
+    host = _host_of(url)
+    return (any(host == h or host.endswith("." + h) for h in PROXY_HOSTS)
+            and not proxy_configured())
+
+
 def proxies_for(url: str) -> dict:
     """URL → 该用的 proxies 字典。直连返回显式的 None，而不是空字典 ——
     空字典在 trust_env=True 时仍会被环境代理填充。"""
     host = _host_of(url)
     if any(host == h or host.endswith("." + h) for h in DIRECT_HOSTS):
         return {"http": None, "https": None}
-    if any(host == h or host.endswith("." + h) for h in PROXY_HOSTS):
-        return _env_proxies()
     return _env_proxies()
 
 
