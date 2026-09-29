@@ -34,18 +34,21 @@ class PublishPages(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def publish(self, build_id, db_name):
+    def publish(self, build_id, db_name, keep=()):
+        # 与真实导出一致：发布包里保留上一份数据库，供切换那一刻正在打开页面的人读完
         for old in (self.dist / "data").glob("*.gz"):
-            old.unlink()
+            if old.name not in keep:
+                old.unlink()
         (self.dist / "data" / db_name).write_bytes(b"db")
         (self.dist / "data" / "manifest.json").write_text(json.dumps(
             {"build_id": build_id, "database": {"file": db_name, "gzip_bytes": 2}}), encoding="utf-8")
         return publish_pages.commit_dist(self.dist, "gh-pages", repo=self.repo)
 
     def test_branch_holds_only_the_latest_bundle_without_history(self):
-        second = self.publish("b2", "gamepulse.bbb.sqlite.gz")
+        second = self.publish("b2", "gamepulse.bbb.sqlite.gz", keep=("gamepulse.aaa.sqlite.gz",))
         files = git(self.repo, "ls-tree", "-r", "--name-only", "gh-pages").splitlines()
-        self.assertEqual(sorted(files), [".nojekyll", "data/gamepulse.bbb.sqlite.gz", "data/manifest.json", "index.html"])
+        self.assertEqual(sorted(files), [".nojekyll", "data/gamepulse.aaa.sqlite.gz", "data/gamepulse.bbb.sqlite.gz",
+                                         "data/manifest.json", "index.html"])
         self.assertEqual(git(self.repo, "rev-list", "--count", "gh-pages"), "1")
         self.assertEqual(git(self.repo, "rev-parse", "gh-pages"), second["commit"])
 

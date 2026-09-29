@@ -5,7 +5,7 @@ import { el, tableCard } from '../lib/ui.js';
 import { dimText, header } from './shared.js';
 
 const STATUS_LABEL = { healthy: '正常', stale: '已过期', failed: '最近一次失败', partial: '部分成功', missing: '没有数据',
-                       disabled: '未配置', success: '成功', skipped: '跳过' };
+                       disabled: '未配置', success: '成功', skipped: '没有要采的' };
 const LEVEL_LABEL = { error: '错误', warn: '注意', info: '说明' };
 const SOURCE_LABEL = { steam: 'Steam 官方汇总', steam_build: 'Steam 构建号', bilibili: 'B 站视频', youtube: 'YouTube 视频',
                        steamdb: 'SteamDB 导入', reviews_full: '评测全量回填', reviews_incremental: '评测增量回填',

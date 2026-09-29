@@ -199,6 +199,16 @@ class SourceStatus(ViewTestCase):
         age = (TODAY - date(2026, 1, 10)).days
         self.assertEqual(self.status("bilibili"), ("2026-01-10", age, None, "stale"))
 
+    def test_intentionally_unconfigured_source_is_not_a_problem(self):
+        conn = db.connect(":memory:")
+        db.upsert(conn, "game", [{"game_id": "g", "display_name": "g", "steam_app_id": 1}])
+        db.record_attempt(conn, "youtube", "g", days_ago(0), "disabled", expected=0, succeeded=0, detail="not_configured")
+        db.record_attempt(conn, "bilibili", "g", days_ago(0), "skipped", expected=0, succeeded=0)
+        got = {r[0]: r[1] for r in conn.execute(
+            "SELECT source, status FROM v_source_status WHERE source IN ('youtube', 'bilibili')")}
+        conn.close()
+        self.assertEqual(got, {"youtube": "disabled", "bilibili": "skipped"})
+
     def test_steamdb_is_stale_after_eight_days(self):
         self.assertEqual(self.status("steamdb"), (days_ago(8), 8, None, "stale"))
 

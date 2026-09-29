@@ -139,7 +139,7 @@ table.data td.num, table.data th.num { text-align: right; }
 .status.healthy::before { background: var(--status-good); }
 .status.stale::before, .status.partial::before { background: var(--status-warning); }
 .status.failed::before, .status.missing::before { background: var(--status-critical); }
-.status.disabled::before { background: var(--axis); }
+.status.disabled::before, .status.skipped::before { background: var(--axis); }
 
 .explore { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; align-items: start; }
 .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }

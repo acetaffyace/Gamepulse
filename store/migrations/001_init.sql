@@ -232,7 +232,7 @@ CREATE TABLE fact_source (
 
 INSERT INTO fact_source VALUES
   ('review',       'reconstructed', 'Steam 评测回填',   '按创建日统计仍存续的评测；删评和改评在每周全量时更新'),
-  ('online_daily', 'third_party',   'SteamDB 日汇总',   '手动导出的 SteamDB Charts CSV'),
+  ('online_daily', 'third_party',   'SteamDB 日汇总',   '手动导出的 SteamDB Charts CSV；日均按 UTC 自然日（北京时间 08:00 起）统计'),
   ('steam_daily',  'observed',      'Steam 官方汇总',   '每日采集时刻的存量；current_players 是瞬时值'),
   ('video_obs',    'observed',      'B 站 / YouTube',   '登记视频的累计计数，事后登记的视频缺少发布初期数据'),
   ('steam_news',   'observed',      'Steam 公告',       NULL),

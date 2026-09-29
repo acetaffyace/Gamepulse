@@ -177,6 +177,10 @@ class YouTube(CollectorTestCase):
         with patch.object(youtube, "youtube_api_key", lambda: None):
             self.assertFalse(youtube.run(self.conn, [self.game], "2026-09-29"))
         self.assertEqual(self.attempts("youtube"), [("disabled", 0, 0)])
+        # 审核 L1：数据来源页要显示"未配置"，而不是"过期"或"没有数据"
+        status = self.conn.execute("SELECT status FROM v_source_status WHERE game_id = ? AND source = 'youtube'",
+                                   (WW,)).fetchone()[0]
+        self.assertEqual(status, "disabled")
 
 
 def api_review(rid, ts, voted_up=True, playtime=60):
@@ -227,6 +231,23 @@ class Reviews(CollectorTestCase):
         run = self.conn.execute("SELECT mode, cutoff FROM review_run ORDER BY run_id DESC LIMIT 1").fetchone()
         self.assertEqual(run[0], "incremental")
 
+    def test_resumed_full_backfill_keeps_reviews_newer_than_the_walk(self):
+        """审核 M1：全量从旧进度续翻时看不到翻页开始之后的新评测，这些评测不能被当成已删除。"""
+        start = "2026-09-20T10:00:00+00:00"          # 翻页开始于北京时间 2026-09-20 18:00
+        start_ts = 1790503200
+        with self.full([api_review(i, 1780000000) for i in range(1, 101)]):
+            backfill.run(self.conn, [self.game], "2026-09-19", incremental=False)
+        # 翻页开始之后，增量回填存进来 10 条新评测
+        db.upsert(self.conn, "review", [backfill.review_row(api_review(1000 + i, start_ts + 3600 * (i + 1)), WW, "x")
+                                        for i in range(10)])
+        meta = {"pages": 2, "fetched": 100, "total_expected": 100, "stop_reason": "empty_page", "started_at": start}
+        rows = [api_review(i, 1780000000) for i in range(1, 101)]
+        with patch.object(backfill, "fetch_all_reviews", lambda *a, **k: (rows, meta)):
+            self.assertFalse(backfill.run(self.conn, [self.game], "2026-09-22", incremental=False))
+        self.assertEqual(self.conn.execute("SELECT COUNT(*) FROM review").fetchone()[0], 110)
+        covered = self.conn.execute("SELECT covered_through FROM review_run ORDER BY run_id DESC LIMIT 1").fetchone()[0]
+        self.assertEqual(covered, "2026-09-20")      # 覆盖到翻页开始那天，不是运行结束的那天
+
     def test_flattened_v2_rows_keep_their_playtime(self):
         flat = {"recommendationid": "9", "timestamp_created": 1780000000, "voted_up": True,
                 "playtime_at_review": 300, "playtime_forever": 400}
@@ -250,12 +271,25 @@ class SteamDB(CollectorTestCase):
         (inbox / "random.csv").write_text("a,b\n", encoding="utf-8")
         self.assertTrue(steamdb_import.import_inbox(self.conn, inbox))
         rows = [tuple(r) for r in self.conn.execute("SELECT date, avg_players, point_players FROM online_daily ORDER BY date")]
-        self.assertEqual(rows, [("2025-05-01", 1, 2), ("2026-09-20", 8000, 9000), ("2026-09-21", 7900, 8500)])
+        # 09-21 在导出时还没结束（最后一行是 14:00 的日内采样），它的日均不完整，不导入
+        self.assertEqual(rows, [("2025-05-01", 1, 2), ("2026-09-20", 8000, 9000)])
         self.assertEqual(len(list((inbox / "imported").iterdir())), 1)
         self.assertEqual(len(list((inbox / "rejected").iterdir())), 2)
         self.assertEqual(list(inbox.glob("*.csv")), [])
         statuses = sorted(r[0] for r in self.conn.execute("SELECT status FROM collection_attempt WHERE source = 'steamdb'"))
         self.assertEqual(statuses, ["failed", "failed", "success"])
+
+    def test_rejected_file_for_a_known_game_shows_on_that_game(self):
+        """审核 L2：认出了游戏的失败导入要记在这款游戏名下，数据来源页才看得到。"""
+        inbox = self.root / "inbox2"
+        inbox.mkdir()
+        (inbox / "steamdb_chart_3513350.csv").write_text("DateTime,Players\n2026-09-20 00:00:00,1\n", encoding="utf-8")
+        steamdb_import.import_inbox(self.conn, inbox)
+        row = self.conn.execute("SELECT game_id, status FROM collection_attempt WHERE source = 'steamdb'").fetchone()
+        self.assertEqual(tuple(row), (WW, "failed"))
+        status = self.conn.execute("SELECT last_attempt_status FROM v_source_status WHERE game_id = ? AND source = 'steamdb'",
+                                   (WW,)).fetchone()[0]
+        self.assertEqual(status, "failed")
 
     def test_file_without_summary_rows_is_rejected(self):
         path = self.root / "steamdb_chart_3513350.csv"

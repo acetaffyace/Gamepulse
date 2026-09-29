@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import argparse
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -40,7 +40,7 @@ def fetch_build(sess, appid: int) -> tuple[dict | None, str, dict]:
     updated = public.get("timeupdated")
     at = datetime.fromtimestamp(int(updated), BUSINESS_TZ) if updated else None
     return {"buildid": str(public["buildid"]),
-            "build_updated_at": at.isoformat(timespec="seconds") if at else None,
+            "build_updated_at": at.astimezone(timezone.utc).isoformat(timespec="seconds") if at else None,
             "build_updated_date": at.date().isoformat() if at else None}, "", payload
 
 

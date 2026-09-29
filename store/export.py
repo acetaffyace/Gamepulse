@@ -44,7 +44,13 @@ CREATE TABLE v_review_base (
 ) WITHOUT ROWID"""
 # 只在本机保留、不公开的表（review 原表在物化后删除，见上）
 PRIVATE_TABLES = ("online_hourly",)
-_SECRETS = re.compile(r"(https?://\S+|\b\d{1,3}(?:\.\d{1,3}){3}(?::\d+)?\b|key=\S+)", re.I)
+_SECRETS = re.compile(
+    r"([a-z][a-z0-9+.-]*://\S+"                                            # 任何带协议的地址（含 user:pw@）
+    r"|\[[0-9a-f:]+\](?::\d+)?"                                            # [::1]:7890
+    r"|\b\d{1,3}(?:\.\d{1,3}){3}(?::\d+)?\b"                                # 10.0.0.2:7890
+    r"|\b(?:localhost|[a-z0-9-]+(?:\.[a-z0-9-]+)+):\d{2,5}\b"               # proxy.lan:1080
+    r"|\b(?:host|port|proxy|key|api_?key|token|secret|password)\b['\"]?\s*[:=]\s*['\"]?[^\s,'\")]+"  # key=…、'key': '…'
+    r"|\bAIza[0-9A-Za-z_-]{20,})", re.I)
 
 
 def sanitize(detail: str | None) -> str | None:
@@ -119,7 +125,7 @@ def export(conn: sqlite3.Connection, out_dir: Path, catalog: dict, *, web_dir: P
              "generated_at": now.isoformat(timespec="seconds"),
              "schema_version": db.schema_version(conn)}
 
-    tmp = data_dir / ".public.sqlite"
+    tmp = data_dir / f".public-{uuid.uuid4().hex}.sqlite"
     public_database(conn, tmp, catalog, build)
     raw = tmp.read_bytes()
     tmp.unlink()
@@ -140,7 +146,7 @@ def export(conn: sqlite3.Connection, out_dir: Path, catalog: dict, *, web_dir: P
                 "games": games, "sources_at_build": sources}
 
     _copy_web(web_dir, out_dir)
-    tmp_manifest = data_dir / ".manifest.json"
+    tmp_manifest = data_dir / f".manifest-{uuid.uuid4().hex}.json"
     tmp_manifest.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
     tmp_manifest.replace(manifest_path)
 

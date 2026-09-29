@@ -39,6 +39,11 @@ def run(conn: sqlite3.Connection) -> list[str]:
                           "GROUP BY game_id, start_date HAVING COUNT(*) > 1"):
         errors.append(f"{r[0]}: {r[2]} released versions share start date {r[1]}")
 
+    # 标为已开放、开放日却在未来的版本会得到一个结束早于开始的窗口
+    for r in conn.execute("SELECT game_id, version_id, start_date FROM version "
+                          "WHERE status = 'released' AND start_date > date('now', '+8 hours')"):
+        errors.append(f"{r[0]} {r[1]}: marked released but starts in the future ({r[2]}); use status: scheduled")
+
     # 每条评测最多属于一个版本窗口
     for r in conn.execute("SELECT review_id, COUNT(*) FROM v_review GROUP BY review_id HAVING COUNT(*) > 1 LIMIT 5"):
         errors.append(f"review {r[0]} falls into {r[1]} version windows")

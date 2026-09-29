@@ -60,6 +60,12 @@ class ConfigSync(unittest.TestCase):
                          [("1.0", "2026-01-01", None, "released"), ("1.1", "2026-02-01", "2026-01-28", "released"),
                           ("1.2", None, "2026-03-01", "scheduled")])
 
+    def test_utc_start_time_is_converted_to_the_utc8_business_day(self):
+        """审核 L3：UTC 22:00 已经是北京时间第二天。"""
+        self.write(versions={"g1": {"1.0": {"steam_start_at": "2026-08-19T22:00:00Z", "status": "released"}}})
+        config_sync.sync(self.conn, self.dir)
+        self.assertEqual(self.rows("SELECT start_date, start_at FROM version"), [("2026-08-20", "2026-08-19T22:00:00+00:00")])
+
     def test_released_version_without_steam_date_is_rejected(self):
         self.write(versions={"g1": {"1.0": {"status": "released"}}})
         with self.assertRaisesRegex(ValueError, "no Steam start date"):

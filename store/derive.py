@@ -93,6 +93,13 @@ def quality_issues(conn: sqlite3.Connection) -> list[dict]:
             if ka and kb and ka[0] == kb[0] and kb[1] - ka[1] > 1:
                 add(game_id, "warn", "version_gap", f"版本号从 {a} 跳到 {b}，中间可能漏登记了版本", after=a, before=b)
 
+    # 不属于任何已登记版本的评测：通常是版本表缺了早期版本（例如上线到第一个登记版本之间）
+    for r in conn.execute("SELECT game_id, COUNT(*) AS n, MIN(created_date) AS a, MAX(created_date) AS b "
+                          "FROM v_review_base WHERE version_id IS NULL GROUP BY game_id"):
+        add(r["game_id"], "warn", "reviews_without_version",
+            f"{r['n']} 条评测（{r['a']} 至 {r['b']}）不属于任何已登记的版本，按版本统计时不计入；需要在版本表里补登记这段时间的版本",
+            count=r["n"], start=r["a"], end=r["b"])
+
     for r in conn.execute("SELECT game_id, MIN(date), MAX(date), COUNT(*) FROM steam_daily GROUP BY game_id"):
         first, last = date.fromisoformat(r[1]), date.fromisoformat(r[2])
         have = {x[0] for x in conn.execute("SELECT date FROM steam_daily WHERE game_id = ?", (r[0],))}

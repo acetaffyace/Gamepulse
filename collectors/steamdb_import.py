@@ -8,6 +8,10 @@ SteamDB 没有可用的自动接口（403 / API 410），只能在网页上手�
 
 日汇总行的 Players 是某一时点的值，不是峰值（有的日子低于日均），存为 point_players，不作为峰值展示。
 
+SteamDB 的时间是 UTC：日均按 UTC 自然日统计（北京时间当天 08:00 至次日 08:00），与其他数据的北京时间业务日
+相差 8 小时。一天的日均无法换算成另一个时区的日均，所以日期原样保存，并在口径说明里写明。
+导出文件的最后一天通常还没结束，那一天的"日均"只是部分时段的平均，不导入，等下一次导出。
+
     python collectors/steamdb_import.py              # 扫描收件箱
     python collectors/steamdb_import.py FILE.csv     # 导入指定文件（文件不移动）
 """
@@ -39,6 +43,7 @@ class ImportRejected(ValueError):
 def parse(path: Path, game_id: str) -> list[dict]:
     """每个日期保留最后一行日汇总。"""
     daily: dict[str, tuple[datetime, dict]] = {}
+    latest: datetime | None = None
     with path.open("r", encoding="utf-8-sig", newline="") as fh:
         reader = csv.DictReader(fh)
         missing = {"DateTime", "Players", "Average Players"} - set(reader.fieldnames or [])
@@ -46,6 +51,12 @@ def parse(path: Path, game_id: str) -> list[dict]:
             raise ImportRejected(f"缺少列 {sorted(missing)}")
         for line, row in enumerate(reader, start=2):
             stamp, average = (row.get("DateTime") or "").strip(), (row.get("Average Players") or "").strip()
+            if stamp:
+                try:
+                    at_any = datetime.strptime(stamp, DATE_FORMAT)
+                    latest = at_any if latest is None or at_any > latest else latest
+                except ValueError:
+                    pass
             if not stamp or not average:
                 continue   # 没有 Average Players 的是日内采样，不是日汇总
             try:
@@ -61,8 +72,11 @@ def parse(path: Path, game_id: str) -> list[dict]:
             if day not in daily or at > daily[day][0]:
                 daily[day] = (at, {"game_id": game_id, "date": day, "avg_players": avg, "point_players": point,
                                    "source_file": path.name})
+    # 文件里最后一个时刻所在的那一天还没结束（除非已经到了当天最后一小时），它的日均不完整
+    if latest is not None and latest.hour < 23:
+        daily.pop(latest.date().isoformat(), None)
     if not daily:
-        raise ImportRejected("没有日汇总行（Average Players 为空）")
+        raise ImportRejected("没有完整的日汇总行（Average Players 为空，或只有尚未结束的当天）")
     return [daily[d][1] for d in sorted(daily)]
 
 
@@ -102,13 +116,16 @@ def import_inbox(conn, inbox: Path = INBOX) -> bool:
     inbox.mkdir(parents=True, exist_ok=True)
     rejected = False
     for path in sorted(inbox.glob("*.csv")):
+        game_id = None
         try:
+            game_id = game_for(path)
             game_id, count = import_file(conn, path)
         except ImportRejected as exc:
             rejected = True
             dest = _move(path, "rejected")
             print(f"  [拒绝] {path.name}：{exc} → {dest.relative_to(inbox)}")
-            db.record_attempt(conn, "steamdb", None, today_local(), "failed", expected=1, succeeded=0,
+            # 认出了游戏就记在这款游戏名下，数据来源页的 SteamDB 一行会显示失败；认不出的记为全局记录
+            db.record_attempt(conn, "steamdb", game_id, today_local(), "failed", expected=1, succeeded=0,
                               detail=f"{path.name}: {exc}")
             continue
         dest = _move(path, "imported")

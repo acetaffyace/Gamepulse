@@ -20,7 +20,7 @@ from __future__ import annotations
 import argparse
 import sys
 import time
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -115,8 +115,9 @@ def fetch_all_reviews(appid: int, max_pages: int | None = None, sleep: float = 1
         if pages % 20 == 0:
             print(f"  已翻 {pages} 页，累计 {len(reviews):,} 条")
         time.sleep(sleep)
+    # started_at 是这次翻页真正开始的时刻（续翻时是最初那次的开始时刻），只有它之前创建的评测才一定翻到过
     return reviews, {"pages": pages, "fetched": len(reviews), "total_expected": total_expected,
-                     "stop_reason": stop_reason}
+                     "stop_reason": stop_reason, "started_at": saved.state["created_at"]}
 
 
 def fetch_recent_reviews(appid: int, cutoff: str, sleep: float = 1.0, max_pages: int = 300,
@@ -159,7 +160,7 @@ def fetch_recent_reviews(appid: int, cutoff: str, sleep: float = 1.0, max_pages:
         saved.commit(fresh, cursor, seen_cursors, pages, expected)
         time.sleep(sleep)
     return reviews, {"pages": pages, "fetched": len(reviews), "total_expected": expected,
-                     "stop_reason": stop_reason, "cutoff": cutoff}
+                     "stop_reason": stop_reason, "cutoff": cutoff, "started_at": saved.state["created_at"]}
 
 
 def complete_full(meta: dict, previous_total: int) -> str:
@@ -175,11 +176,23 @@ def complete_full(meta: dict, previous_total: int) -> str:
     return ""
 
 
+def _started(meta: dict) -> tuple[int, str]:
+    """(开始时刻的 Unix 秒, 开始时刻所在的业务日)。缺失时按现在处理。"""
+    started = datetime.fromisoformat(meta.get("started_at") or now_iso())
+    return int(started.timestamp()), business_date(started.isoformat())
+
+
 def run_full(conn, game: dict, max_pages: int | None, sleep: float) -> tuple[int, int, str]:
+    """全量回填：替换该游戏在"这次翻页开始之前"创建的评测。
+
+    翻页可能从 48 小时内的旧进度续上，开始之后才出现的评测它看不到；这些评测（通常是增量回填存进来的）
+    必须保留，否则会被当成已删除。覆盖范围也只到开始那一天，那一天本身不算完整日。
+    """
     gid = game["game_id"]
     checkpoint = RAW_DIR / "backfill" / "checkpoints" / gid / "full.json"
     raw, meta = fetch_all_reviews(game["steam_app_id"], max_pages, sleep, checkpoint)
-    previous = conn.execute("SELECT COUNT(*) FROM review WHERE game_id = ?", (gid,)).fetchone()[0]
+    start_ts, start_day = _started(meta)
+    previous = conn.execute("SELECT COUNT(*) FROM review WHERE game_id = ? AND created_at < ?", (gid, start_ts)).fetchone()[0]
     problem = complete_full(meta, previous)
     print(f"  {game['display_name']}: 翻页 {meta['pages']} 页，取到 {meta['fetched']:,} 条"
           f"（接口声明 {meta['total_expected']}），停止原因 {meta['stop_reason']}")
@@ -189,9 +202,10 @@ def run_full(conn, game: dict, max_pages: int | None, sleep: float) -> tuple[int
     seen_at = now_iso()
     rows = [r for r in (review_row(x, gid, seen_at) for x in raw) if r]
     with db.transaction(conn):
-        db.replace_where(conn, "review", {"game_id": gid}, rows)
+        conn.execute("DELETE FROM review WHERE game_id = ? AND created_at < ?", (gid, start_ts))
+        db.upsert(conn, "review", rows)
         db.insert(conn, "review_run", [{"game_id": gid, "mode": "full", "finished_at": seen_at,
-                                        "covered_through": today_local(), "cutoff": None, "pages": meta["pages"],
+                                        "covered_through": start_day, "cutoff": None, "pages": meta["pages"],
                                         "fetched": meta["fetched"], "total_expected": meta["total_expected"],
                                         "stop_reason": meta["stop_reason"]}])
     ReviewCheckpoint.finish(checkpoint)
@@ -231,7 +245,7 @@ def run_incremental(conn, game: dict, sleep: float) -> tuple[int, int, str] | No
     with db.transaction(conn):
         db.upsert(conn, "review", rows)
         db.insert(conn, "review_run", [{"game_id": gid, "mode": "incremental", "finished_at": seen_at,
-                                        "covered_through": today_local(), "cutoff": cutoff, "pages": meta["pages"],
+                                        "covered_through": _started(meta)[1], "cutoff": cutoff, "pages": meta["pages"],
                                         "fetched": meta["fetched"], "total_expected": expected,
                                         "stop_reason": meta["stop_reason"]}])
     ReviewCheckpoint.finish(checkpoint)

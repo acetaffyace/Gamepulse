@@ -12,8 +12,9 @@ from __future__ import annotations
 
 import re
 import sqlite3
+import uuid
 from contextlib import contextmanager
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Iterable, Iterator, Mapping, Sequence
 
@@ -23,6 +24,7 @@ BACKUP_DIR = ROOT / "data" / "backups"
 MIGRATIONS_DIR = Path(__file__).resolve().parent / "migrations"
 VIEWS_SQL = Path(__file__).resolve().parent / "views.sql"
 BUSY_TIMEOUT_MS = 30_000
+BUSINESS_TZ = timezone(timedelta(hours=8))
 
 _MIGRATION_NAME = re.compile(r"^(\d{3})_[a-z0-9_]+\.sql$")
 
@@ -254,9 +256,9 @@ def backup(conn: sqlite3.Connection, dest_dir: Path = BACKUP_DIR, *, keep: int =
            today: date | None = None) -> Path:
     """每天一份完整副本，只保留最近 keep 份。同一天重复运行会覆盖当天的副本。"""
     dest_dir.mkdir(parents=True, exist_ok=True)
-    day = (today or datetime.now(timezone.utc).date()).isoformat()
+    day = (today or datetime.now(BUSINESS_TZ).date()).isoformat()   # 按北京时间的业务日命名
     target = dest_dir / f"gamepulse-{day}.sqlite"
-    tmp = target.with_suffix(".sqlite.tmp")
+    tmp = dest_dir / f".gamepulse-{day}-{uuid.uuid4().hex}.tmp"
     tmp.unlink(missing_ok=True)
     with sqlite3.connect(tmp) as dest:
         conn.backup(dest)

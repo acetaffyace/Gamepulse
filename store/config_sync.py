@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import copy
 import sqlite3
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import yaml
@@ -49,6 +50,27 @@ def _flag(value) -> int | None:
     return None if value is None else int(bool(value))
 
 
+BUSINESS_TZ = timezone(timedelta(hours=8))
+
+
+def _instant(value) -> datetime | None:
+    """配置里的时刻：带时区的按原时区，不带时区的按北京时间。YAML 可能已经解析成 datetime。"""
+    if value in (None, ""):
+        return None
+    at = value if isinstance(value, datetime) else datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    return at if at.tzinfo else at.replace(tzinfo=BUSINESS_TZ)
+
+
+def _business_date(value) -> str | None:
+    at = _instant(value)
+    return at.astimezone(BUSINESS_TZ).date().isoformat() if at else None
+
+
+def _utc(value) -> str | None:
+    at = _instant(value)
+    return at.astimezone(timezone.utc).isoformat(timespec="seconds") if at else None
+
+
 def _date(value) -> str | None:
     return None if value in (None, "") else str(value)[:10]
 
@@ -76,15 +98,15 @@ def version_rows(config: dict, known_games: set[str]) -> list[dict]:
             raise ValueError(f"versions.yml: unknown game {game_id}")
         for version_id, v in (versions or {}).items():
             start_at = v.get("steam_start_at")
-            start_date = v.get("steam_start_date") or (str(start_at)[:10] if start_at else None)
+            start_date = _date(v.get("steam_start_date")) or _business_date(start_at)
             status = v.get("status", "released")
             if not start_date and status == "released":
                 raise ValueError(f"versions.yml: released version {game_id} {version_id} has no Steam start date")
             rows.append({
                 "game_id": game_id, "version_id": str(version_id),
                 "start_date": str(start_date) if start_date else None,
-                "start_at": str(start_at) if start_at else None,
-                "cn_start_date": _date(v.get("cn_start_date") or v.get("cn_start_at")),
+                "start_at": _utc(start_at),
+                "cn_start_date": _date(v.get("cn_start_date")) or _business_date(v.get("cn_start_at")),
                 "status": status, "source": v.get("source"), "source_url": v.get("source_url"),
                 "cn_source_url": v.get("cn_source_url"), "note": v.get("note"),
             })

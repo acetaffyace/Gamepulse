@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import argparse
+import sqlite3
 import sys
 from pathlib import Path
 
@@ -20,6 +21,15 @@ DIST_DIR = db.ROOT / "dist"
 
 def build(db_path: Path = db.DB_PATH, out_dir: Path = DIST_DIR, *, config_dir: Path = config_sync.CONFIG_DIR,
           backup: bool = True, web_dir: Path = export.WEB_DIR) -> dict:
+    # 每日任务和评测任务可能同时启动（开机晚了会补跑），两次构建交错会让 manifest 指向已被清理的文件，
+    # 所以整个构建串行执行
+    from collectors.common import file_lock
+    out_dir.mkdir(parents=True, exist_ok=True)
+    with file_lock(out_dir / ".build", timeout=600):
+        return _build(db_path, out_dir, config_dir=config_dir, backup=backup, web_dir=web_dir)
+
+
+def _build(db_path: Path, out_dir: Path, *, config_dir: Path, backup: bool, web_dir: Path) -> dict:
     conn = db.connect(db_path)
     try:
         dims = config_sync.sync(conn, config_dir)
@@ -41,6 +51,9 @@ def main_quiet(db_path: Path = db.DB_PATH, out_dir: Path = DIST_DIR) -> int:
     except (catalog.CatalogError, checks.CheckFailed, ValueError) as exc:
         print(exc)
         return 1
+    except (sqlite3.Error, OSError, TimeoutError) as exc:
+        print(f"构建失败：{type(exc).__name__}: {exc}（已有的发布包保持不变）")
+        return 1
     m = result["manifest"]
     print(f"已发布 {m['build_id']}：{m['database']['file']}（{m['database']['gzip_bytes'] / 1e6:.2f} MB）→ {out_dir}")
     return 0
@@ -60,6 +73,9 @@ def main() -> int:
         result = build(args.db, args.out, config_dir=args.config_dir, backup=not args.no_backup)
     except (catalog.CatalogError, checks.CheckFailed, ValueError) as exc:
         print(exc)
+        return 1
+    except (sqlite3.Error, OSError, TimeoutError) as exc:
+        print(f"构建失败：{type(exc).__name__}: {exc}（已有的发布包保持不变）")
         return 1
     m = result["manifest"]
     print(f"已发布 {m['build_id']}：{m['database']['file']}（{m['database']['gzip_bytes'] / 1e6:.2f} MB）→ {args.out}")

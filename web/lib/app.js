@@ -54,7 +54,7 @@ function statusLine(manifest) {
     box.append(text);
     return;
   }
-  const problems = store.rows("SELECT COUNT(*) AS n FROM v_source_status WHERE status NOT IN ('healthy', 'disabled')")[0].n;
+  const problems = store.rows("SELECT COUNT(*) AS n FROM v_source_status WHERE status NOT IN ('healthy', 'disabled', 'skipped')")[0].n;
   box.append(el('span', { class: problems ? 'dot warn' : 'dot', 'aria-hidden': 'true' }), text);
   if (problems) box.append(el('a', { href: '?page=sources', style: { marginLeft: '8px' } }, `${problems} 项来源需要注意`));
 }

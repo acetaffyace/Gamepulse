@@ -212,7 +212,8 @@ def _load_registry(filename: str, game_id: str | None,
                    active_only: bool) -> list[dict]:
     videos = load_yaml(filename).get("videos", []) or []
     if active_only:
-        videos = [v for v in videos if v.get("active")]
+        # 没写 active 视为启用，与 store/config_sync.py 一致
+        videos = [v for v in videos if v.get("active", True)]
     if game_id:
         videos = [v for v in videos if v.get("game_id") == game_id]
     return videos
@@ -475,7 +476,7 @@ def polite_sleep(seconds: float = 1.2) -> None:
 def active_games(game_id: str | None = None) -> list[dict]:
     if game_id:
         return [get_game(game_id)]
-    return [g for g in load_games() if g.get("active")]
+    return [g for g in load_games() if g.get("active", True)]
 
 
 def run_per_game(conn, source: str, games: list[dict], date_local: str, collect_one) -> bool:

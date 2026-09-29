@@ -203,7 +203,10 @@ SELECT t.game_id, t.source, t.label, t.data_through, t.stale_days,
        CAST(julianday(date('now', '+8 hours')) - julianday(t.data_through) AS INTEGER) AS age_days,
        l.status AS last_attempt_status, l.attempted_at AS last_attempt_at,
        l.expected, l.succeeded, l.detail, s.last_success_at,
-       CASE WHEN t.data_through IS NULL THEN 'missing'
+       -- 有意未配置（例如没有 YouTube Key）、或者这款游戏没有要采的内容，都不算异常
+       CASE WHEN l.status = 'disabled' THEN 'disabled'
+            WHEN l.status = 'skipped' AND t.data_through IS NULL THEN 'skipped'
+            WHEN t.data_through IS NULL THEN 'missing'
             WHEN l.status IN ('failed', 'partial') THEN l.status
             WHEN julianday(date('now', '+8 hours')) - julianday(t.data_through) >= t.stale_days THEN 'stale'
             ELSE 'healthy' END AS status

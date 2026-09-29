@@ -93,6 +93,30 @@ class BuildPipeline(unittest.TestCase):
         self.assertIn("missing_days", codes)          # 合成数据里 steam_daily 漏了两天
         self.assertIn("version_not_in_table", codes)  # 公告提到 1.4，版本表没有
 
+    def test_reviews_outside_every_version_are_reported(self):
+        conn = db.connect(self.db_path)
+        try:
+            db.upsert(conn, "review", [{"review_id": 999999, "game_id": "alpha", "created_at": 0,
+                                        "created_date": "2026-05-20", "voted_up": 1, "language": "english",
+                                        "playtime_at_review": 10, "playtime_forever": 10, "steam_purchase": 1,
+                                        "received_for_free": 0, "last_seen_at": "x"}])
+            issues = [i for i in derive.quality_issues(conn) if i["code"] == "reviews_without_version"]
+            conn.execute("DELETE FROM review WHERE review_id = 999999")
+        finally:
+            conn.close()
+        self.assertEqual([(i["game_id"], json.loads(i["detail"])["count"]) for i in issues], [("alpha", 1)])
+
+    def test_concurrent_builds_leave_a_consistent_bundle(self):
+        """审核 M2：几次构建同时运行，manifest 不能指向被清理掉的数据库文件。"""
+        from concurrent.futures import ThreadPoolExecutor
+        out = self.root / "dist-concurrent"      # 单独的输出目录，不影响本类其他测试依赖的发布包
+        with ThreadPoolExecutor(3) as pool:
+            list(pool.map(lambda _: build.build(self.db_path, out, config_dir=self.root / "config", backup=False),
+                          range(3)))
+        manifest = json.loads((out / "data" / "manifest.json").read_text(encoding="utf-8"))
+        self.assertTrue((out / "data" / manifest["database"]["file"]).exists())
+        self.assertEqual([p.name for p in (out / "data").glob(".*")], [])   # 没有留下临时文件
+
     def test_rebuilding_keeps_the_previous_database_file(self):
         first = self.manifest["database"]["file"]
         conn = db.connect(self.db_path)
@@ -120,6 +144,14 @@ class Checks(unittest.TestCase):
             checks.require(conn)
         conn.close()
 
+    def test_released_version_in_the_future_is_blocking(self):
+        """审核 L5：标为已开放、开放日在未来的版本会得到结束早于开始的窗口。"""
+        conn = db.connect(":memory:")
+        db.upsert(conn, "game", [{"game_id": "g", "display_name": "g", "steam_app_id": 1, "steam_release": "2026-01-01"}])
+        db.upsert(conn, "version", [{"game_id": "g", "version_id": "9.9", "start_date": "2099-01-01", "status": "released"}])
+        self.assertTrue(any("starts in the future" in e for e in checks.run(conn)))
+        conn.close()
+
     def test_clean_database_passes(self):
         conn = db.connect(":memory:")
         self.assertEqual(checks.run(conn), [])
@@ -128,10 +160,21 @@ class Checks(unittest.TestCase):
 
 class Sanitize(unittest.TestCase):
     def test_urls_ips_and_keys_are_removed(self):
-        text = "HTTPSConnectionPool(host=x): https://a.b/c?key=SECRET via http://10.0.0.2:7890 key=abc"
-        clean = export.sanitize(text)
-        for secret in ("SECRET", "10.0.0.2", "a.b/c", "abc"):
-            self.assertNotIn(secret, clean)
+        cases = {
+            "HTTPSConnectionPool(host=x): https://a.b/c?key=SECRET via http://10.0.0.2:7890 key=abc":
+                ("SECRET", "10.0.0.2", "a.b/c", "abc"),
+            "ProxyError socks5://user:pw@proxy.lan:1080": ("user:pw", "proxy.lan"),
+            "host='myproxy.corp', port=8080": ("myproxy.corp", "8080"),
+            "connect to localhost:7890 failed": ("7890",),
+            "{'key': 'AIzaSyAbcdefghijklmnopqrstuv'}": ("AIza",),
+            "api_key: abc123": ("abc123",),
+            "[::1]:7890 refused": ("::1",),
+        }
+        for text, secrets in cases.items():
+            clean = export.sanitize(text)
+            for secret in secrets:
+                self.assertNotIn(secret, clean, text)
+        self.assertEqual(export.sanitize("request_error:ConnectTimeout:retried2"), "request_error:ConnectTimeout:retried2")
 
 
 if __name__ == "__main__":
