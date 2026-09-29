@@ -12,6 +12,7 @@ DROP VIEW IF EXISTS v_steam_daily;
 DROP VIEW IF EXISTS v_online;
 DROP VIEW IF EXISTS v_review_daily;
 DROP VIEW IF EXISTS v_review;
+DROP VIEW IF EXISTS v_review_base;
 DROP VIEW IF EXISTS v_version_window;
 
 -- 版本窗口：本次 Steam 开放日 → 下个已开放版本前一天；最新版本开放到今天
@@ -33,30 +34,34 @@ SELECT game_id, version_id, seq, prev_version, next_version, start_date,
             - julianday(start_date) AS INTEGER) + 1 AS days
 FROM released;
 
--- 一条评测一行，附所属版本、更新后第几天、上线后第几天、自然周、时长段
-CREATE VIEW v_review AS
-SELECT r.review_id, r.game_id, r.created_at, r.created_date, r.voted_up, r.language,
-       r.playtime_at_review, r.playtime_forever, r.steam_purchase, r.received_for_free, r.last_seen_at,
-       w.version_id,
-       CAST(julianday(r.created_date) - julianday(w.start_date) AS INTEGER) AS day_index,
-       CAST(julianday(r.created_date) - julianday(g.steam_release) AS INTEGER) AS game_day_index,
-       date(r.created_date, '-' || ((CAST(strftime('%w', r.created_date) AS INTEGER) + 6) % 7) || ' days') AS week_start,
-       CAST((julianday(r.created_date) - julianday(w.start_date)) / 7 AS INTEGER) AS version_week,
-       CASE WHEN r.playtime_at_review IS NULL THEN NULL
-            WHEN r.playtime_at_review < 120  THEN '0-2h'
-            WHEN r.playtime_at_review < 1200 THEN '2-20h'
-            WHEN r.playtime_at_review < 6000 THEN '20-100h'
-            ELSE '100h+' END AS playtime_band,
-       r.playtime_at_review / 60.0 AS playtime_hours,
+-- 评测 × 版本：评测落在哪个版本窗口、更新后第几天。这是评测类查询里唯一耗时的部分（区间连接），
+-- 发布时存成按"游戏 + 日期"聚簇的表（见 store/export.py），上层的 v_review 只做简单换算。
+CREATE VIEW v_review_base AS
+SELECT r.review_id, r.game_id, r.created_date, r.voted_up, r.language, r.playtime_at_review,
        -- 评测后又玩了多久：距最后一次见到这条评测不满 14 天的，结果还不稳定，不参与计算
-       CAST(julianday(date(r.last_seen_at, '+8 hours')) - julianday(r.created_date) AS INTEGER) AS observation_days,
        CASE WHEN r.playtime_forever IS NULL OR r.playtime_at_review IS NULL
               OR julianday(date(r.last_seen_at, '+8 hours')) - julianday(r.created_date) < 14 THEN NULL
-            ELSE MAX(r.playtime_forever - r.playtime_at_review, 0) END AS post_review_minutes
+            ELSE MAX(r.playtime_forever - r.playtime_at_review, 0) END AS post_review_minutes,
+       w.version_id,
+       CAST(julianday(r.created_date) - julianday(w.start_date) AS INTEGER) AS day_index,
+       CAST(julianday(r.created_date) - julianday(g.steam_release) AS INTEGER) AS game_day_index
 FROM review r
 JOIN game g USING (game_id)
 LEFT JOIN v_version_window w
   ON w.game_id = r.game_id AND r.created_date BETWEEN w.start_date AND w.end_date;
+
+-- 一条评测一行，附所属版本、更新后第几天、上线后第几天、自然周、时长段
+CREATE VIEW v_review AS
+SELECT b.*,
+       date(b.created_date, '-' || ((CAST(strftime('%w', b.created_date) AS INTEGER) + 6) % 7) || ' days') AS week_start,
+       b.day_index / 7 AS version_week,
+       CASE WHEN b.playtime_at_review IS NULL THEN NULL
+            WHEN b.playtime_at_review < 120  THEN '0-2h'
+            WHEN b.playtime_at_review < 1200 THEN '2-20h'
+            WHEN b.playtime_at_review < 6000 THEN '20-100h'
+            ELSE '100h+' END AS playtime_band,
+       b.playtime_at_review / 60.0 AS playtime_hours
+FROM v_review_base b;
 
 -- 每游戏每天的评测数。覆盖范围内没有评测的日子记 0（这是真实的 0，不是缺失）；
 -- 最后一次回填当天只采到运行时刻为止，标 complete_day = 0

@@ -1,0 +1,384 @@
+# 指标目录：看板与自助查询共用的唯一指标定义。
+#
+# 一个指标 = 从哪个事实视图取数（fact）+ 怎么聚合（agg，SQL 表达式）+ 单位。
+# 固定看板和自助查询都用"指标 + 维度 + 筛选"生成同一种 SQL：
+#     SELECT <维度>, <agg> FROM <view> WHERE <筛选> GROUP BY <维度>
+# 所以同一个数字在哪里看都一样。
+#
+# 规则（查询生成器强制执行，构建时逐条校验）：
+#   must_group_by          必须按这些维度拆开，否则结果没有意义
+#                          （例：同一支 PV 在 4 个语区各发一次，播放量不能跨语区相加）
+#   must_group_by_one_of   至少按其中一个维度拆开（例：累计播放是时点值，不能跨日期相加）
+#   kind: share            占比：分组内的值 ÷ 同一行其他维度下的合计 × 100
+#
+# 比率一律"分子合计 ÷ 分母合计"，不对每天的比率求平均。
+# quantile(x, p) 是项目注册的分位数函数（线性插值，p = 0.5 为标准中位数）。
+#
+# 评测表里的 steam_purchase / received_for_free 没有做成指标：三款游戏都是免费游戏，
+# 8 万条评测全部是"Steam 购买、非免费获得"，做成指标只会显示一个没有信息量的 0%。
+
+facts:
+  review:
+    view: v_review
+    label: 评测明细
+    grain: 一条 Steam 评测
+    source_table: review
+    date_dimension: created_date
+    dimensions: [game_id, version_id, day_index, game_day_index, created_date, week_start, version_week,
+                 language, playtime_band, voted_up]
+    note: 按创建日统计仍存续的评测，删除的评测不计入；删评和改评在每周全量回填时更新。
+
+  review_daily:
+    view: v_review_daily
+    label: 每日评测
+    grain: 一款游戏的一天
+    source_table: review
+    date_dimension: date
+    dimensions: [game_id, date, version_id, day_index, game_day_index, week_start, complete_day]
+    note: 覆盖范围内没有评测的日子记 0。最后一次回填当天只统计到运行时刻（complete_day = 0）。
+
+  online:
+    view: v_online
+    label: 在线人数
+    grain: 一款游戏的一天
+    source_table: online_daily
+    date_dimension: date
+    dimensions: [game_id, date, version_id, day_index, game_day_index]
+    note: SteamDB 全天平均同时在线，需手动导出导入。只代表 Steam 平台，不是 DAU。
+
+  steam_daily:
+    view: v_steam_daily
+    label: Steam 官方汇总
+    grain: 一款游戏的一次每日采集
+    source_table: steam_daily
+    date_dimension: date
+    dimensions: [game_id, date]
+    note: Steam 商店接口给出的存量，含已删除评测的影响；与评测明细的口径不同。
+
+  video_obs:
+    view: v_video_obs
+    label: 视频每日观测
+    grain: 一支视频的一次每日观测
+    source_table: video_obs
+    date_dimension: date
+    dimensions: [game_id, platform, locale, content_type, pair_id, video_id, title, character_name,
+                 version_id, version_basis, curated, date, days_since_pub]
+    default_filters: {curated: 1}
+    note: 只含登记的官方视频；多数视频是发布后才登记的，缺少发布初期数据。
+
+  video_latest:
+    view: v_video_latest
+    label: 视频最新值
+    grain: 一支视频的最近一次观测
+    source_table: video_obs
+    date_dimension: date
+    dimensions: [game_id, platform, locale, content_type, pair_id, video_id, title, character_name,
+                 version_id, version_basis, curated, date, pub_date, days_since_pub, first_obs_age]
+    default_filters: {curated: 1}
+    note: 每支视频最近一次采到的累计值；不同视频的采集日期可能不同。
+
+dimensions:
+  game_id:        {label: 游戏, type: category}
+  version_id:     {label: 版本, type: category, sort: version}
+  day_index:      {label: 更新后第几天, type: integer, format: 'D{}'}
+  game_day_index: {label: 上线后第几天, type: integer, format: 'D{}'}
+  version_week:   {label: 更新后第几周, type: integer, format: 'W{}'}
+  created_date:   {label: 评测日期, type: date}
+  date:           {label: 日期, type: date}
+  week_start:     {label: 自然周（周一）, type: date}
+  pub_date:       {label: 发布日期, type: date}
+  days_since_pub: {label: 发布后第几天, type: integer, format: 'D{}'}
+  first_obs_age:  {label: 首次采到时已发布天数, type: integer}
+  complete_day:   {label: 是否完整日, type: boolean}
+  curated:        {label: 精选视频, type: boolean}
+  voted_up:
+    label: 评价
+    type: category
+    values: {1: 好评, 0: 差评}
+  playtime_band:
+    label: 写评测时的游戏时长
+    type: category
+    order: ['0-2h', '2-20h', '20-100h', '100h+']
+    values: {'0-2h': 2 小时以内, '2-20h': 2–20 小时, '20-100h': 20–100 小时, '100h+': 100 小时以上}
+  language:
+    label: 评测语种
+    type: category
+    note: 写评测时选择的语言，不等于玩家所在地区。
+    values:
+      english: 英语
+      schinese: 简体中文
+      tchinese: 繁体中文
+      japanese: 日语
+      koreana: 韩语
+      russian: 俄语
+      spanish: 西班牙语（西班牙）
+      latam: 西班牙语（拉美）
+      brazilian: 葡萄牙语（巴西）
+      portuguese: 葡萄牙语（葡萄牙）
+      german: 德语
+      french: 法语
+      italian: 意大利语
+      polish: 波兰语
+      turkish: 土耳其语
+      ukrainian: 乌克兰语
+      thai: 泰语
+      vietnamese: 越南语
+      indonesian: 印尼语
+      czech: 捷克语
+      hungarian: 匈牙利语
+      dutch: 荷兰语
+      swedish: 瑞典语
+      danish: 丹麦语
+      finnish: 芬兰语
+      norwegian: 挪威语
+      romanian: 罗马尼亚语
+      greek: 希腊语
+      bulgarian: 保加利亚语
+      arabic: 阿拉伯语
+  platform:
+    label: 平台
+    type: category
+    values: {bilibili: B 站, youtube: YouTube}
+  locale:
+    label: 频道语区
+    type: category
+    note: 官方频道面向的语区，不是观众所在地区。
+    order: [zh-cn, global, ja, ko, zh-tw]
+    values: {zh-cn: B 站（中文）, global: YouTube 全球（英语）, ja: YouTube 日语, ko: YouTube 韩语, zh-tw: YouTube 繁中}
+  content_type:
+    label: 内容类型
+    type: category
+    values:
+      version_trailer: 版本 PV
+      character_trailer: 角色 PV
+      character_demo: 角色演示
+      character_ep: 角色 EP
+      season_teaser: 先导 PV
+      other: 其他
+  version_basis:
+    label: 版本归属依据
+    type: category
+    values: {confirmed: 人工确认, pub_date: 按发布日}
+  pair_id:        {label: 同内容组, type: category}
+  video_id:       {label: 视频, type: category}
+  title:          {label: 标题, type: category}
+  character_name: {label: 角色, type: category}
+
+metrics:
+  # ── 评测明细 ──
+  review_count:
+    fact: review
+    label: 评测数
+    agg: COUNT(*)
+    unit: 条
+    format: integer
+  positive_count:
+    fact: review
+    label: 好评数
+    agg: SUM(voted_up = 1)
+    unit: 条
+    format: integer
+  negative_count:
+    fact: review
+    label: 差评数
+    agg: SUM(voted_up = 0)
+    unit: 条
+    format: integer
+  positive_rate:
+    fact: review
+    label: 好评率
+    agg: 100.0 * SUM(voted_up = 1) / NULLIF(SUM(voted_up IS NOT NULL), 0)
+    unit: '%'
+    format: percent
+    note: 所选范围内好评数 ÷ 评价已知的评测数；不是 Steam 商店显示的累计好评率。
+  review_share:
+    fact: review
+    label: 评测占比
+    agg: COUNT(*)
+    kind: share
+    unit: '%'
+    format: percent
+    note: 每一行占同一分组合计的比例，例如某语种占当天评测的比例。
+  playtime_median_h:
+    fact: review
+    label: 写评测时游戏时长（中位数）
+    agg: quantile(playtime_at_review, 0.5) / 60.0
+    unit: 小时
+    format: decimal1
+    note: 从全部评测明细计算的标准中位数。
+  playtime_p25_h:
+    fact: review
+    label: 写评测时游戏时长（25 分位）
+    agg: quantile(playtime_at_review, 0.25) / 60.0
+    unit: 小时
+    format: decimal1
+  playtime_p75_h:
+    fact: review
+    label: 写评测时游戏时长（75 分位）
+    agg: quantile(playtime_at_review, 0.75) / 60.0
+    unit: 小时
+    format: decimal1
+  short_play_share:
+    fact: review
+    label: 2 小时以内评测占比
+    agg: 100.0 * SUM(playtime_at_review < 120) / NULLIF(COUNT(playtime_at_review), 0)
+    unit: '%'
+    format: percent
+  heavy_play_share:
+    fact: review
+    label: 100 小时以上评测占比
+    agg: 100.0 * SUM(playtime_at_review >= 6000) / NULLIF(COUNT(playtime_at_review), 0)
+    unit: '%'
+    format: percent
+  post_review_median_h:
+    fact: review
+    label: 评测后又玩的时长（中位数）
+    agg: quantile(post_review_minutes, 0.5) / 60.0
+    unit: 小时
+    format: decimal1
+    note: 只统计距最后一次回填已满 14 天的评测；是留存的参考，不是留存率。
+  still_playing_share:
+    fact: review
+    label: 评测后仍在玩的占比
+    agg: 100.0 * SUM(post_review_minutes >= 60) / NULLIF(COUNT(post_review_minutes), 0)
+    unit: '%'
+    format: percent
+    note: 评测后又玩了 60 分钟以上的比例；只统计距最后一次回填已满 14 天的评测。
+
+  # ── 每日评测 ──
+  daily_reviews:
+    fact: review_daily
+    label: 评测数（按日）
+    agg: SUM(reviews)
+    unit: 条
+    format: integer
+    note: 与"评测数"同源；按日统计时没有评测的日子显示为 0。
+  daily_positive_rate:
+    fact: review_daily
+    label: 好评率（按日）
+    agg: 100.0 * SUM(positive) / NULLIF(SUM(positive) + SUM(negative), 0)
+    unit: '%'
+    format: percent
+  reviews_per_day:
+    fact: review_daily
+    label: 日均评测数
+    agg: 1.0 * SUM(reviews) / NULLIF(COUNT(*), 0)
+    unit: 条/日
+    format: decimal1
+    note: 所选范围内的评测总数 ÷ 天数（包括没有评测的日子）。
+  review_days:
+    fact: review_daily
+    label: 覆盖天数
+    agg: COUNT(*)
+    unit: 天
+    format: integer
+
+  # ── 在线 ──
+  avg_players:
+    fact: online
+    label: 日均同时在线
+    agg: AVG(avg_players)
+    unit: 人
+    format: integer
+    note: SteamDB 全天平均同时在线；跨多天时为每日均值的平均。
+  online_days:
+    fact: online
+    label: 在线数据天数
+    agg: COUNT(avg_players)
+    unit: 天
+    format: integer
+
+  # ── Steam 官方汇总 ──
+  steam_positive_rate:
+    fact: steam_daily
+    label: Steam 全局累计好评率
+    agg: MAX(cumulative_positive_rate)
+    must_group_by: [game_id]
+    must_group_by_one_of: [[date]]
+    unit: '%'
+    format: percent
+    note: Steam 商店口径的累计好评率，是存量，只能逐日查看。
+  steam_total_reviews:
+    fact: steam_daily
+    label: Steam 总评测数
+    agg: MAX(total_reviews)
+    must_group_by: [game_id]
+    must_group_by_one_of: [[date]]
+    unit: 条
+    format: integer
+  steam_net_change:
+    fact: steam_daily
+    label: 总评测数净变化
+    agg: SUM(net_change)
+    unit: 条
+    format: integer
+    note: 相邻两次采集之间 Steam 总评测数的差；中间漏采时一个值跨多天，删评会让它变小。
+
+  # ── 视频每日观测 ──
+  video_views:
+    fact: video_obs
+    label: 累计播放
+    agg: SUM(views)
+    must_group_by: [locale]
+    must_group_by_one_of: [[date], [days_since_pub]]
+    unit: 次
+    format: integer
+    note: 累计值，只能在同一天或同一发布天数下相加；不同语区不能相加。
+  video_views_gain:
+    fact: video_obs
+    label: 播放增量
+    agg: SUM(views_delta)
+    must_group_by: [locale]
+    unit: 次
+    format: integer
+    note: 相邻两次观测的差；中间漏采时一个值跨多天（见"跨天观测数"）。
+  video_multi_day_spans:
+    fact: video_obs
+    label: 跨天观测数
+    agg: SUM(span_days > 1)
+    unit: 个
+    format: integer
+  video_engagement:
+    fact: video_obs
+    label: 互动率
+    agg: >-
+      100.0 * SUM(CASE WHEN platform = 'bilibili' THEN likes + coins + favorites ELSE likes + comments END)
+      / NULLIF(SUM(CASE WHEN (CASE WHEN platform = 'bilibili' THEN likes + coins + favorites
+                                   ELSE likes + comments END) IS NOT NULL THEN views END), 0)
+    must_group_by: [locale]
+    must_group_by_one_of: [[date], [days_since_pub]]
+    unit: '%'
+    format: percent
+    note: B 站为（点赞+投币+收藏）÷ 播放，YouTube 为（点赞+评论）÷ 播放；两平台公式不同，不能直接比较。
+  video_count:
+    fact: video_obs
+    label: 视频数
+    agg: COUNT(DISTINCT platform || ':' || video_id)
+    unit: 支
+    format: integer
+
+  # ── 视频最新值 ──
+  latest_views:
+    fact: video_latest
+    label: 最新累计播放
+    agg: SUM(views)
+    must_group_by: [locale]
+    unit: 次
+    format: integer
+    note: 每支视频最近一次采到的累计播放；不同视频的采集日期、发布天数可能不同。
+  latest_engagement:
+    fact: video_latest
+    label: 最新互动率
+    agg: >-
+      100.0 * SUM(CASE WHEN platform = 'bilibili' THEN likes + coins + favorites ELSE likes + comments END)
+      / NULLIF(SUM(CASE WHEN (CASE WHEN platform = 'bilibili' THEN likes + coins + favorites
+                                   ELSE likes + comments END) IS NOT NULL THEN views END), 0)
+    must_group_by: [locale]
+    unit: '%'
+    format: percent
+  latest_video_count:
+    fact: video_latest
+    label: 视频数（最新）
+    agg: COUNT(*)
+    unit: 支
+    format: integer

@@ -40,3 +40,6 @@ spike/node_modules/
 data/gamepulse.sqlite
 data/gamepulse.sqlite-*
 data/backups/
+
+# v3 发布包（由 python -m store.build 生成）
+dist/

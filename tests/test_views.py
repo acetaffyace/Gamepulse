@@ -120,9 +120,10 @@ class Reviews(ViewTestCase):
 
     def test_post_review_playtime_needs_fourteen_days_of_observation(self):
         # 评测 2 只观察了 7 天 → 不计算；评测 3 观察 22 天，评测后又玩 100 分钟
-        self.assertEqual(self.rows("SELECT review_id, observation_days, post_review_minutes FROM v_review "
+        # 评测 1 观察 31 天、评测后没再玩 → 0（真实的 0）；评测 2 只观察了 7 天 → NULL
+        self.assertEqual(self.rows("SELECT review_id, post_review_minutes FROM v_review "
                                    "WHERE review_id IN (1, 2, 3) ORDER BY review_id"),
-                         [(1, 31, 0), (2, 7, None), (3, 22, 100)])
+                         [(1, 0), (2, None), (3, 100)])
 
 
 class ReviewDaily(ViewTestCase):
