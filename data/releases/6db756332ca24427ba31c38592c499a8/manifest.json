@@ -9,7 +9,7 @@
       "color": "#2a78d6",
       "valid_days": 14,
       "review_start": "2025-04-29",
-      "review_days": 518,
+      "review_days": 519,
       "snapshot_date": "2026-09-29",
       "versions": [
         {
@@ -145,7 +145,7 @@
           "evidence": "manual"
         }
       ],
-      "file": "releases/7f42df6d97af4e1ead8d82eb47d5affb/snapshot_wuthering_waves.json"
+      "file": "releases/6db756332ca24427ba31c38592c499a8/snapshot_wuthering_waves.json"
     },
     {
       "game_id": "zenless_zone_zero",
@@ -155,7 +155,7 @@
       "color": "#eb6834",
       "valid_days": 14,
       "review_start": "2026-06-17",
-      "review_days": 104,
+      "review_days": 105,
       "snapshot_date": "2026-09-29",
       "versions": [
         {
@@ -192,7 +192,7 @@
           "evidence": "manual"
         }
       ],
-      "file": "releases/7f42df6d97af4e1ead8d82eb47d5affb/snapshot_zenless_zone_zero.json"
+      "file": "releases/6db756332ca24427ba31c38592c499a8/snapshot_zenless_zone_zero.json"
     },
     {
       "game_id": "neverness_to_everness",
@@ -202,7 +202,7 @@
       "color": "#1baf7a",
       "valid_days": 14,
       "review_start": "2026-07-08",
-      "review_days": 83,
+      "review_days": 84,
       "snapshot_date": "2026-09-29",
       "versions": [
         {
@@ -228,11 +228,11 @@
           "evidence": "manual"
         }
       ],
-      "file": "releases/7f42df6d97af4e1ead8d82eb47d5affb/snapshot_neverness_to_everness.json"
+      "file": "releases/6db756332ca24427ba31c38592c499a8/snapshot_neverness_to_everness.json"
     }
   ],
-  "build_id": "7f42df6d97af4e1ead8d82eb47d5affb",
+  "build_id": "6db756332ca24427ba31c38592c499a8",
   "generated_at": "2026-09-29",
-  "published_at": "2026-09-29T08:11:18+00:00",
-  "config_file": "releases/7f42df6d97af4e1ead8d82eb47d5affb/dashboard_config.json"
+  "published_at": "2026-09-29T09:00:44+00:00",
+  "config_file": "releases/6db756332ca24427ba31c38592c499a8/dashboard_config.json"
 }

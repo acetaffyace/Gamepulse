@@ -13773,14 +13773,14 @@
     },
     {
       "date_local": "2026-09-28",
-      "backfill_new_reviews": 33,
-      "backfill_daily_review_rate": 87.88,
+      "backfill_new_reviews": 46,
+      "backfill_daily_review_rate": 91.3,
       "backfill_cumulative_review_rate": 87.57,
       "steam_net_change": null,
       "steam_net_span_days": null,
       "steam_cumulative_review_rate": null,
       "steam_total_reviews": null,
-      "chart_review_count": 33,
+      "chart_review_count": 46,
       "chart_review_count_basis": "surviving_review_backfill",
       "chart_review_count_span_days": null,
       "display_cumulative_review_rate": 87.57,
@@ -13788,18 +13788,18 @@
     },
     {
       "date_local": "2026-09-29",
-      "backfill_new_reviews": null,
-      "backfill_daily_review_rate": null,
-      "backfill_cumulative_review_rate": null,
-      "steam_net_change": 36,
-      "steam_net_span_days": 1,
-      "steam_cumulative_review_rate": 87.57,
-      "steam_total_reviews": 56381,
-      "chart_review_count": 36,
-      "chart_review_count_basis": "steam_net_change",
-      "chart_review_count_span_days": 1,
+      "backfill_new_reviews": 30,
+      "backfill_daily_review_rate": 76.67,
+      "backfill_cumulative_review_rate": 87.57,
+      "steam_net_change": null,
+      "steam_net_span_days": null,
+      "steam_cumulative_review_rate": null,
+      "steam_total_reviews": null,
+      "chart_review_count": 30,
+      "chart_review_count_basis": "surviving_review_backfill",
+      "chart_review_count_span_days": null,
       "display_cumulative_review_rate": 87.57,
-      "display_cumulative_review_rate_basis": "steam_global"
+      "display_cumulative_review_rate_basis": "surviving_review_backfill"
     }
   ],
   "review_history": [
@@ -23111,27 +23111,45 @@
     },
     {
       "date_local": "2026-09-28",
-      "new_reviews": 33,
-      "new_positive": 29,
+      "new_reviews": 46,
+      "new_positive": 42,
       "new_negative": 4,
-      "cumulative_reviews": 56372,
-      "cumulative_positive": 49366,
+      "cumulative_reviews": 56385,
+      "cumulative_positive": 49379,
       "cumulative_review_rate": 87.57,
-      "daily_review_rate": 87.88,
+      "daily_review_rate": 91.3,
       "top_languages": {
-        "english": 21,
+        "english": 26,
+        "koreana": 5,
+        "tchinese": 3,
+        "vietnamese": 2,
+        "french": 2
+      },
+      "status": "reconstructed"
+    },
+    {
+      "date_local": "2026-09-29",
+      "new_reviews": 30,
+      "new_positive": 23,
+      "new_negative": 7,
+      "cumulative_reviews": 56415,
+      "cumulative_positive": 49402,
+      "cumulative_review_rate": 87.57,
+      "daily_review_rate": 76.67,
+      "top_languages": {
+        "english": 22,
+        "spanish": 3,
+        "thai": 2,
         "tchinese": 2,
-        "french": 2,
-        "spanish": 2,
-        "russian": 1
+        "koreana": 1
       },
       "status": "reconstructed"
     }
   ],
   "review_history_coverage": {
     "start": "2025-04-29",
-    "end": "2026-09-28",
-    "days": 518,
+    "end": "2026-09-29",
+    "days": 519,
     "method": "appreviews_backfill"
   },
   "review_profile": {
@@ -50794,7 +50812,7 @@
       {
         "version_id": "3.6",
         "date_local": "2026-08-20",
-        "end_local": "2026-09-28",
+        "end_local": "2026-09-29",
         "series": [
           {
             "date_local": "2026-08-20",
@@ -51071,9 +51089,16 @@
           },
           {
             "date_local": "2026-09-28",
-            "value": 81.76,
-            "total_positive": 1860,
-            "total_reviews": 2275,
+            "value": 81.86,
+            "total_positive": 1873,
+            "total_reviews": 2288,
+            "status": "reconstructed"
+          },
+          {
+            "date_local": "2026-09-29",
+            "value": 81.79,
+            "total_positive": 1896,
+            "total_reviews": 2318,
             "status": "reconstructed"
           }
         ],
@@ -79246,7 +79271,7 @@
       {
         "level": "info",
         "code": "reconstructed_review_history",
-        "message": "评测历史由 appreviews 回填重建，覆盖 2025-04-29 → 2026-09-28（518 天）。仅含今天仍存在的评测，越早的日期越可能低估。"
+        "message": "评测历史由 appreviews 回填重建，覆盖 2025-04-29 → 2026-09-29（519 天）。仅含今天仍存在的评测，越早的日期越可能低估。"
       }
     ]
   },
@@ -79300,5 +79325,5 @@
       "note": "评测时游戏时长、评测后游玩时长、语种、购买渠道；仅含今天仍存在的评测，且评测者不是玩家的随机样本"
     }
   ],
-  "build_id": "3a2c3de04d034487bb9c83f59669612a"
+  "build_id": "6db756332ca24427ba31c38592c499a8"
 }
