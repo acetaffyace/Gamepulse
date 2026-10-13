@@ -21,13 +21,15 @@ class ConfigIntegrity(unittest.TestCase):
     def test_pairs_are_unique_registered_and_in_scope(self):
         rows = self.pairs["videos"]
         self.assertEqual(len(rows), len({r["pair_id"] for r in rows}))
-        self.assertEqual(len(rows), len({r["bvid"] for r in rows}))
-        self.assertTrue({r["bvid"] for r in rows} <= {v["bvid"] for v in self.bilibili["videos"]})
+        bvids = [r["bvid"] for r in rows if r.get("bvid")]
+        self.assertEqual(len(bvids), len(set(bvids)))
+        self.assertTrue(set(bvids) <= {v["bvid"] for v in self.bilibili["videos"]})
         scope = self.pairs["scope"]
-        self.assertTrue({r["content_type"] for r in rows} <= set(scope["content_types"]))
         for r in rows:
-            self.assertLessEqual(str(scope["start_date"]), str(r["pubdate"]))
-            self.assertLessEqual(str(r["pubdate"]), str(scope["end_date"]))
+            game_scope = {**scope, **scope.get("by_game", {}).get(r["game_id"], {})}
+            self.assertIn(r["content_type"], game_scope["content_types"])
+            self.assertLessEqual(str(game_scope["start_date"]), str(r["pubdate"]))
+            self.assertLessEqual(str(r["pubdate"]), str(game_scope["end_date"]))
 
     def test_youtube_members_are_unique_registered_and_in_the_declared_locale(self):
         registry = {v["video_id"]: v for v in self.youtube["videos"]}

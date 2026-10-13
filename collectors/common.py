@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import json
+import calendar
 import os
 import sys
 import time
@@ -77,6 +78,13 @@ load_local_env()
 
 def today_local() -> str:
     return datetime.now(BUSINESS_TZ).date().isoformat()
+
+
+def three_months_before(value: str) -> str:
+    day = datetime.fromisoformat(value).date()
+    year, month = divmod(day.year * 12 + day.month - 1 - 3, 12)
+    month += 1
+    return day.replace(year=year, month=month, day=min(day.day, calendar.monthrange(year, month)[1])).isoformat()
 
 
 def business_date(value) -> str | None:
@@ -334,7 +342,7 @@ def youtube_api_key() -> str | None:
 # 而不是各采集器里，是为了让「哪个站走哪条路」只有一处定义、无法写漏。
 PROXY_HOSTS = ("steampowered.com", "steamcommunity.com",
                "googleapis.com", "youtube.com", "ytimg.com")
-DIRECT_HOSTS = ("bilibili.com", "bilivideo.com", "hdslb.com")
+DIRECT_HOSTS = ("bilibili.com", "bilivideo.com", "hdslb.com", "yjwujian.cn")
 
 
 def _env_proxies() -> dict:

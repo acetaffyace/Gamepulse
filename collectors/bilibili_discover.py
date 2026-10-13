@@ -34,7 +34,7 @@ RELATED_URL = "https://api.bilibili.com/x/web-interface/archive/related"
 HEADERS = {"Referer": "https://www.bilibili.com/"}
 
 
-def discover(game_id: str, since: str, rounds: int = 2) -> dict[str, dict]:
+def discover(game_id: str, since: str, rounds: int = 2, *, max_requests: int | None = None) -> dict:
     mid = official_mid(game_id)
     if mid is None:
         raise SystemExit(f"bilibili_videos.yml 未配置 {game_id} 的 official_accounts.mid")
@@ -54,6 +54,8 @@ def discover(game_id: str, since: str, rounds: int = 2) -> dict[str, dict]:
         for bvid in seeds:
             if bvid in visited:
                 continue
+            if max_requests is not None and len(visited) >= max_requests:
+                return {"items": found, "failures": failures, "scope": "related_candidates_only", "limit_reached": True}
             visited.add(bvid)
             payload, status = get_json(sess, RELATED_URL, {"bvid": bvid},
                                        headers=HEADERS)

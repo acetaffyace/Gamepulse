@@ -12,6 +12,8 @@ import { before, describe, test } from 'node:test';
 import { QueryError, buildQuery, checkReadOnlySql, limitSql } from '../../web/lib/query.js';
 import { quantile, registerQuantile } from '../../web/lib/quantile.js';
 import { compareVersions, formatDelta, formatValue } from '../../web/lib/format.js';
+import { Store } from '../../web/lib/data.js';
+import { cadenceMetrics, periodMetrics, updateImpact } from '../../web/lib/version-analysis.js';
 
 const ROOT = new URL('../..', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
 let db;
@@ -59,6 +61,69 @@ describe('quantile', () => {
       if (c.expected === null) assert.equal(got, null, c.note);
       else assert.ok(Math.abs(got - c.expected) < 1e-9, `${c.note}: ${got}`);
     }
+  });
+});
+
+describe('version update windows', () => {
+  test('sample counts use their actual eligibility and keep absent mature rates null', () => {
+    const records = rows("SELECT voted_up, playtime_at_review, post_review_minutes FROM v_review WHERE game_id='alpha' AND version_id='1.2'");
+    const [computed] = run({ metrics: ['playtime_sample_count', 'rated_count', 'post_review_sample_count'],
+      filters: [{ dim: 'game_id', op: 'eq', value: 'alpha' }, { dim: 'version_id', op: 'eq', value: '1.2' }] });
+    assert.equal(computed.playtime_sample_count, records.filter(r => r.playtime_at_review !== null).length);
+    assert.equal(computed.rated_count, records.filter(r => r.voted_up !== null).length);
+    assert.equal(computed.post_review_sample_count, records.filter(r => r.post_review_minutes !== null).length);
+    const [recent] = run({ metrics: ['post_review_sample_count', 'still_playing_share'],
+      filters: [{ dim: 'game_id', op: 'eq', value: 'alpha' }, { dim: 'created_date', op: 'eq', value: '2026-09-19' }] });
+    assert.equal(recent.post_review_sample_count, 0);
+    assert.equal(recent.still_playing_share, null);
+  });
+  test('cadence metrics agree with hand-calculated dates and use the shared catalog', () => {
+    const store = new Store(db, {});
+    const all = cadenceMetrics(store, 'alpha', store.versions('alpha'));
+    assert.equal(all.version_count, 3);
+    assert.equal(all.version_interval_count, 2);
+    assert.equal(all.avg_version_interval, 30.5); // 6/1→7/1 = 30，7/1→8/1 = 31
+    const latest = cadenceMetrics(store, 'alpha', store.versions('alpha').slice(-1));
+    assert.equal(latest.avg_version_interval, 31, '筛选最后一版仍引用完整历史中的前版');
+    assert.equal(cadenceMetrics(store, 'beta', store.versions('beta')).avg_version_interval, 35);
+  });
+  test('before and after values agree with independent review records', () => {
+    const store = new Store(db, {});
+    const v = store.versions('alpha').find(v => v.version_id === '1.1');
+    const impact = updateImpact(store, v);
+    assert.equal(impact.complete, true);
+    assert.equal(impact.from, '2026-06-24');
+    assert.equal(impact.afterEnd, '2026-07-07');
+    for (const [period, from, to] of [[impact.before, '2026-06-24', '2026-06-30'], [impact.after, '2026-07-01', '2026-07-07']]) {
+      const records = rows('SELECT voted_up, playtime_at_review FROM v_review WHERE game_id = ? AND created_date BETWEEN ? AND ?', ['alpha', from, to]);
+      const known = records.filter(r => r.voted_up !== null);
+      const rate = 100 * known.filter(r => r.voted_up === 1).length / known.length;
+      const times = records.map(r => r.playtime_at_review).filter(v => v !== null).sort((a, b) => a - b);
+      const mid = Math.floor(times.length / 2);
+      const median = (times.length % 2 ? times[mid] : (times[mid - 1] + times[mid]) / 2) / 60;
+      assert.equal(period.daily_reviews, records.length);
+      assert.ok(Math.abs(period.daily_positive_rate - rate) < 1e-9);
+      assert.ok(Math.abs(period.playtime_median_h - median) < 1e-9);
+      assert.equal(period.review_days, 7);
+    }
+  });
+  test('release without a before-window and closely spaced updates are not comparable', () => {
+    const store = new Store(db, {});
+    assert.equal(updateImpact(store, store.versions('alpha')[0]).complete, false);
+    const original = store.versions.bind(store);
+    store.versions = game => [...original(game), { game_id: game, version_id: 'extra', start_date: '2026-07-04' }];
+    const impact = updateImpact(store, original('alpha').find(v => v.version_id === '1.1'));
+    assert.equal(impact.complete, false);
+    assert.equal(impact.otherUpdates[0].version_id, 'extra');
+  });
+  test('playtime excludes the incomplete backfill date just like daily review metrics', () => {
+    const store = new Store(db, {});
+    const complete = periodMetrics(store, 'alpha', '2026-09-15', '2026-09-19');
+    const withIncomplete = periodMetrics(store, 'alpha', '2026-09-15', '2026-09-20');
+    assert.equal(withIncomplete.review_days, complete.review_days);
+    assert.equal(withIncomplete.playtime_median_h, complete.playtime_median_h);
+    store.reviewAnchor = () => null;
+    assert.equal(periodMetrics(store, 'alpha', '2026-09-15', '2026-09-20').playtime_median_h, null);
   });
 });
 

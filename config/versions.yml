@@ -81,6 +81,14 @@ wuthering_waves:
     source: steam_announcement
     source_url: 'https://store.steampowered.com/news/app/3513350/view/1841579228663631'
 
+  '3.7':
+    steam_start_date: '2026-09-30'
+    cn_start_date: '2026-09-30'
+    status: released
+    source: steam_announcement
+    source_url: 'https://store.steampowered.com/news/app/3513350/view/1844751498235329'
+    note: 'Steam 官方更新公告确认 09-30 开放。'
+
 zenless_zone_zero:
   '3.0':
     steam_start_at: '2026-06-17T06:00:00+08:00'
@@ -103,6 +111,12 @@ zenless_zone_zero:
     source_url: 'https://zenless.hoyoverse.com/en-us/news/166000'
     cn_source_url: 'https://zenless.hoyoverse.com/en-us/news/165978'
 
+  '3.3':
+    status: scheduled
+    source: official_site
+    source_url: 'https://zenless.hoyoverse.com/m/zh-cn/news/166552'
+    note: '3.3 前瞻于 2026-10-09 19:30 UTC+8 开播；Steam 开放日期尚未据此确认，不成为比较边界。'
+
 neverness_to_everness:
   '1.2':
     steam_start_date: '2026-07-08'
@@ -120,9 +134,67 @@ neverness_to_everness:
     source_url: 'https://nte.perfectworld.com/de/article/news/gamenews/20260817/263609.html'
     cn_source_url: 'https://yh.wanmei.com/news/gamebroad/20260812/263538.html'
   '1.4':
+    steam_start_at: '2026-09-30T11:00:00+08:00'
     cn_start_date: '2026-09-24'
-    status: scheduled
+    status: released
     source: official_site
-    source_url: 'https://steamcommunity.com/app/4508340/allnews/?l=schinese'
+    source_url: 'https://nte.perfectworld.com/de/article/news/gamenews/20260929/264408.html'
     cn_source_url: 'https://yh.wanmei.com/m/news/gamebroad/20260916/264202.html'
-    note: '国服 09-24 开放；截至 2026-09-29 未见 Steam 端开放公告'
+    note: '国服 09-24；全球公告明确 Steam 端 09-30 06:00–11:00 UTC+8 维护后开放，版本窗口按海外日期。'
+
+# 永劫无间：没有统一 x.y 版本号，按有公告证据的更新日期登记。
+naraka_bladepoint:
+  '2026-07-02':
+    steam_start_date: '2026-07-02'
+    steam_start_at: '2026-07-02T12:00:00+08:00'
+    cn_start_date: '2026-07-02'
+    status: released
+    source: official_patch_notes
+    source_url: https://www.narakathegame.com/news/update/20260622/33459_1304994.html
+    note: 补丁日期标识；按公告维护结束时刻登记，业务日 UTC+8。
+  '2026-07-16':
+    steam_start_date: '2026-07-16'
+    steam_start_at: '2026-07-16T12:00:00+08:00'
+    cn_start_date: '2026-07-16'
+    status: released
+    source: official_patch_notes
+    source_url: https://www.narakathegame.com/news/update/20260706/33459_1306664.html
+    note: 补丁日期标识；按公告维护结束时刻登记，业务日 UTC+8。
+  '2026-07-30':
+    steam_start_date: '2026-07-30'
+    steam_start_at: '2026-07-30T12:00:00+08:00'
+    cn_start_date: '2026-07-30'
+    status: released
+    source: official_patch_notes
+    source_url: https://www.narakathegame.com/news/update/20260717/33459_1308163.html
+    note: 补丁日期标识；按公告维护结束时刻登记，业务日 UTC+8。
+  '2026-08-13':
+    steam_start_date: '2026-08-13'
+    steam_start_at: '2026-08-13T12:00:00+08:00'
+    cn_start_date: '2026-08-13'
+    status: released
+    source: official_patch_notes
+    source_url: https://www.narakathegame.com/news/update/20260803/33459_1309834.html
+    note: 补丁日期标识；按公告维护结束时刻登记，业务日 UTC+8。
+  '2026-09-03':
+    steam_start_date: '2026-09-03'
+    steam_start_at: '2026-09-03T12:00:00+08:00'
+    cn_start_date: '2026-09-03'
+    status: released
+    source: official_patch_notes
+    source_url: https://www.narakathegame.com/news/update/20260817/33459_1311353.html
+    note: 补丁日期标识；按公告维护结束时刻登记，业务日 UTC+8。
+  '2026-09-17':
+    steam_start_date: '2026-09-17'
+    steam_start_at: '2026-09-17T12:00:00+08:00'
+    cn_start_date: '2026-09-17'
+    status: released
+    source: official_patch_notes
+    source_url: https://www.narakathegame.com/news/update/20260907/33459_1313230.html
+    note: 补丁日期标识；按公告维护结束时刻登记，业务日 UTC+8。
+  '2026-10-09':
+    status: scheduled
+    cn_start_date: '2026-10-09'
+    source: official_campaign_announcement
+    source_url: https://www.bilibili.com/video/BV1BPaN6oEyN
+    note: 吞天赛季预告归属；Steam 具体开放时刻待更新公告确认，不进入已开放窗口。

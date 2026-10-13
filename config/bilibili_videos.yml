@@ -13,10 +13,11 @@
 # 角色宣传视频可以早于版本正式更新时间发布；按发布时间机械归类会错。
 # 本文件保留官方 B 站视频身份与标题，video_pairs.yml 负责人工确认的版本映射。
 #
-# 收录范围：2026-06-17 至 2026-09-17。当前统计仅使用四类核心视频，
+# 原三款游戏的收录范围：2026-06-17 至 2026-10-08。当前统计使用四类核心视频，
 #   具体清单与 YouTube 四语区配对见 config/video_pairs.yml。
 #
-# 核验日期: 2026-09-17
+# 首次核验日期: 2026-09-17；增量核验日期见各条目的 verified_at。
+# B 站计数按 BV 原生合集获取，含多语言分 P 的 BV 不拆成多条、不声称能取各 P 独立播放。
 
 official_accounts:
   wuthering_waves:
@@ -31,8 +32,26 @@ official_accounts:
   neverness_to_everness:
     mid: 3546636978489848
     name: 异环
+  naraka_bladepoint:
+    mid: 349984754
+    name: 永劫无间官方
 
 videos:
+
+  # 永劫端游官网首页推荐的历史视频样本：2026-10-08 经 view 接口核验 owner.mid。
+  # 这些不是近期全量投稿，也不加入原有三款游戏的精选配对。
+  - { bvid: BV14E421N75T, game_id: naraka_bladepoint,
+      title: '地宫十面埋伏，麒麟但破长生 | 全新地图【龙隐洞天】CG与实机演示',
+      pubdate: '2024-06-26', content_type: map_trailer,
+      is_official_account: true, verified_at: '2026-10-08', active: true }
+  - { bvid: BV1Tn4y1X7jn, game_id: naraka_bladepoint,
+      title: '永劫多元宇宙开启！巫师3、古墓丽影等诸多传奇加盟！',
+      pubdate: '2024-06-26', content_type: collaboration_trailer,
+      is_official_account: true, verified_at: '2026-10-08', active: true }
+  - { bvid: BV12T421a7Xs, game_id: naraka_bladepoint,
+      title: '闪转腾挪间，近身一招制敌｜全新武器「拳刃」实机演示',
+      pubdate: '2024-06-27', content_type: weapon_demo,
+      is_official_account: true, verified_at: '2026-10-08', active: true }
 
   # ==================== 鸣潮 ====================
   - { bvid: BV1tDbG6ZEDp, game_id: wuthering_waves, character_id: jingran,
@@ -235,3 +254,463 @@ videos:
       character_name: 卡厄斯, version_id: null, version_confirmed: false,
       content_type: character_demo, title: 《异环》角色实机战斗丨卡厄斯,
       pubdate: '2026-06-14', is_official_account: true, verified_at: '2026-09-14', active: true }
+
+  # 永劫无间：共用登记、配对、频道语区和版本窗口，不进入独立页面。
+  - bvid: BV15EN76QEGb
+    game_id: naraka_bladepoint
+    title: 挥剑斩蛇立四方！ | 无间镖客新地图《大风歌·上篇》实机演示
+    pubdate: '2026-07-10'
+    content_type: character_demo
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV18NNt63Eoi
+    game_id: naraka_bladepoint
+    title: 全新外观爆料 | 胡桃、玉玲珑睡衣限时上架商城直售，雷霆双刀登场
+    pubdate: '2026-07-14'
+    content_type: cosmetic_showcase
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1YRKJ6fEHP
+    game_id: naraka_bladepoint
+    title: 「账号登录中……」 「游戏ID『君莫笑』」
+    pubdate: '2026-07-17'
+    content_type: season_teaser
+    character_id: ye_xiu
+    character_name: 叶修
+    version_id: '2026-07-30'
+    version_confirmed: true
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1d9KH6TEGg
+    game_id: naraka_bladepoint
+    title: 伞、盾、斧……  「未出手的技能，才是最可怕的技能」——你们，还没见到它的全部。
+    pubdate: '2026-07-20'
+    content_type: season_teaser
+    character_id: ye_xiu
+    character_name: 叶修
+    version_id: '2026-07-30'
+    version_confirmed: true
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1nsg46TEbh
+    game_id: naraka_bladepoint
+    title: 「是谁在比赛台上！」 完全形态解封，千机伞，迎来了它真正的主人。
+    pubdate: '2026-07-23'
+    content_type: other
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV16Zge6oEHb
+    game_id: naraka_bladepoint
+    title: 十年荣耀初心不改，千般打法运筹帷幄 | 永劫无间新英雄【叶修】、新武器【千机伞】实机演示
+    pubdate: '2026-07-24'
+    content_type: character_demo
+    character_id: ye_xiu
+    character_name: 叶修
+    version_id: '2026-07-30'
+    version_confirmed: true
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1hsgD6sE96
+    game_id: naraka_bladepoint
+    title: 永劫，再打十年也不会腻 | 新英雄【全职高手 · 叶修】CG
+    pubdate: '2026-07-24'
+    content_type: character_trailer
+    character_id: ye_xiu
+    character_name: 叶修
+    version_id: '2026-07-30'
+    version_confirmed: true
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1T93c6LEeV
+    game_id: naraka_bladepoint
+    title: 全新外观爆料 | 蓝梦首款技能、奥义特效、“碎碎冰”双节棍登场，睡衣季莹莹限时上架商城直售
+    pubdate: '2026-07-27'
+    content_type: cosmetic_showcase
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1Dn3n6zEsR
+    game_id: naraka_bladepoint
+    title: 贝阙鲛人随身侧，夜影浮香蝶不归 | 横刀神品谪星与殷紫萍极品谪星将随千机神杯附赠
+    pubdate: '2026-07-29'
+    content_type: cosmetic_showcase
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1L93C6LEMh
+    game_id: naraka_bladepoint
+    title: 满级君莫笑，一伞破万法 | 叶修五形态神品时装携赛博千机伞登场，观山海系列全新外观同步上线！
+    pubdate: '2026-07-29'
+    content_type: cosmetic_showcase
+    character_id: ye_xiu
+    character_name: 叶修
+    version_id: '2026-07-30'
+    version_confirmed: true
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1Fa3x6qEG7
+    game_id: naraka_bladepoint
+    title: 上号，叶修教你打永劫！《全职高手》联动正式开启，新英雄叶修登录即领
+    pubdate: '2026-07-30'
+    content_type: tutorial
+    character_id: ye_xiu
+    character_name: 叶修
+    version_id: '2026-07-30'
+    version_confirmed: true
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1xYuh6WExP
+    game_id: naraka_bladepoint
+    title: 天下绝学尽归你手！ | 征神之路全新玩法【无相天灾】8月13日正式上线
+    pubdate: '2026-08-07'
+    content_type: event_promo
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1s1u26hEMX
+    game_id: naraka_bladepoint
+    title: 永劫无间x汉堡王联动时装预览！最低29.9起带回家
+    pubdate: '2026-08-10'
+    content_type: collaboration_trailer
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1EPg56AE1a
+    game_id: naraka_bladepoint
+    title: 呔 俺老孙来也！ | 胡为【齐天撼世】技能奥义特效即将上线，再演大闹天宫！
+    pubdate: '2026-08-12'
+    content_type: cosmetic_showcase
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV14igE6oEWU
+    game_id: naraka_bladepoint
+    title: 别忘了怀揣梦！张起灵奥义英雄曲《十年人间》现已返场揽月阁，登录游戏即刻怀揣！
+    pubdate: '2026-08-13'
+    content_type: theme_song
+    character_id: zhang_qiling
+    character_name: 张起灵
+    version_id: null
+    version_confirmed: false
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1qW8G6gEi1
+    game_id: naraka_bladepoint
+    title: 哇喔~金色传说！ | 永劫无间 x 炉石传说一期联动8月20日正式开启！
+    pubdate: '2026-08-18'
+    content_type: collaboration_trailer
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV18B8d6SEVA
+    game_id: naraka_bladepoint
+    title: 天罗地网已布，无极帝国的江山图，该换个人绣了~ | 永劫无间新英雄·南宫锦CG与实机演示
+    pubdate: '2026-08-26'
+    content_type: character_trailer
+    character_id: anassa_nangong
+    character_name: 南宫锦
+    version_id: '2026-09-03'
+    version_confirmed: true
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV16mtN6XEfD
+    game_id: naraka_bladepoint
+    title: 重铸系统大升级、新机制【星爆】、新英雄万钧上线，征神季「红砂」9月3日正式开启！
+    pubdate: '2026-08-28'
+    content_type: other
+    character_id: inor_wan
+    character_name: 万钧
+    version_id: '2026-09-03'
+    version_confirmed: true
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV159aN6WEMz
+    game_id: naraka_bladepoint
+    title: 永劫夺金，杰哥发薪！保底2000金块人人送！崔三娘英雄曲《着魔》免费领！
+    pubdate: '2026-09-24'
+    content_type: event_promo
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1BPaN6oEyN
+    game_id: naraka_bladepoint
+    title: 吞天赛季前瞻 | 永劫夺金周开启，人手2000金，《着魔》金曲直接领！《秦时明月》联动、太刀新机制、新英雄云庆即将上线
+    pubdate: '2026-09-24'
+    content_type: version_trailer
+    character_id: null
+    character_name: null
+    version_id: '2026-10-09'
+    version_confirmed: true
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1EBhb6ZEve
+    game_id: naraka_bladepoint
+    title: 《着魔》（永劫无间群星版）现已上架，让我们与杰哥一起蘸豆！
+    pubdate: '2026-09-24'
+    content_type: theme_song
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1JCaN6cE1i
+    game_id: naraka_bladepoint
+    title: 能力越大，胃口越大！新英雄【厌虚子·云庆】，将于吞天赛季中期上线！
+    pubdate: '2026-09-24'
+    content_type: character_trailer
+    character_id: kael
+    character_name: 云庆
+    version_id: '2026-10-09'
+    version_confirmed: true
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1jUaN6oEfv
+    game_id: naraka_bladepoint
+    title: 《振乾坤》 | 张杰 x《永劫无间》夺金战歌
+    pubdate: '2026-09-24'
+    content_type: theme_song
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1txaN6kEb1
+    game_id: naraka_bladepoint
+    title: 过秦关，谁敢闯！永劫无间×《秦时明月》×《天行九歌》联动定档，10月9日正式开启！
+    pubdate: '2026-09-24'
+    content_type: collaboration_trailer
+    character_id: null
+    character_name: null
+    version_id: '2026-10-09'
+    version_confirmed: true
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1zshR6YEyC
+    game_id: naraka_bladepoint
+    title: 《着魔》群星版录音室花絮（未修音版）
+    pubdate: '2026-09-26'
+    content_type: theme_song
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1CdH66kErm
+    game_id: naraka_bladepoint
+    title: 吞天赛季通行证爆料 | 沈妙、南宫锦、武田、哈迪10月9日加入狩猎小队！
+    pubdate: '2026-10-04'
+    content_type: cosmetic_showcase
+    character_id: anassa_nangong
+    character_name: 南宫锦
+    version_id: '2026-10-09'
+    version_confirmed: true
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1MYHp6vEks
+    game_id: naraka_bladepoint
+    title: 鸾光随弦而起，长发曳落星河！席拉全新神品发型【华鸾流辉】10月9日正式上线！
+    pubdate: '2026-10-05'
+    content_type: cosmetic_showcase
+    character_id: cyra
+    character_name: 席拉
+    version_id: '2026-10-09'
+    version_confirmed: true
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1tqH16cENd
+    game_id: naraka_bladepoint
+    title: 双剑出鞘 百步纵横 | 盖聂、卫庄携神兵渊虹、鲨齿登陆聚窟洲，刘炼水墨飞剑特效即将上线
+    pubdate: '2026-10-07'
+    content_type: cosmetic_showcase
+    character_id: null
+    character_name: null
+    version_id: '2026-10-09'
+    version_confirmed: true
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+
+  # 2026-10-08：补齐三款游戏最新核心视频与四语区对应片。
+  - bvid: BV1mKe86JES7
+    game_id: wuthering_waves
+    title: 《鸣潮》3.7版本PV | 镜锁妄世，心照红尘
+    pubdate: '2026-09-19'
+    content_type: version_trailer
+    character_id: null
+    character_name: null
+    version_id: '3.7'
+    version_confirmed: true
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1u9ew6yEEP
+    game_id: wuthering_waves
+    title: 《鸣潮》先约电台EP3.7——心《心月辞》
+    pubdate: '2026-09-17'
+    content_type: character_ep
+    character_id: hsin
+    character_name: 心
+    version_id: '3.7'
+    version_confirmed: true
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1GahD6GEjC
+    game_id: wuthering_waves
+    title: 《鸣潮》共鸣者战斗演示 | 心
+    pubdate: '2026-09-26'
+    content_type: character_demo
+    character_id: hsin
+    character_name: 心
+    version_id: '3.7'
+    version_confirmed: true
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1s8aq6FEfJ
+    game_id: wuthering_waves
+    title: 《鸣潮》共鸣者「心」PV | 梦阑珊
+    pubdate: '2026-09-28'
+    content_type: character_trailer
+    character_id: hsin
+    character_name: 心
+    version_id: '3.7'
+    version_confirmed: true
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1RMaA6jEXs
+    game_id: zenless_zone_zero
+    title: 《绝区零》洛克茜角色展示 | 神秘负棺人
+    pubdate: '2026-09-25'
+    content_type: character_demo
+    character_id: roxy
+    character_name: 洛克茜
+    version_id: '3.2'
+    version_confirmed: true
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1Qka76JEWQ
+    game_id: zenless_zone_zero
+    title: 《绝区零》洛克茜角色PV | 发条骑士
+    pubdate: '2026-09-29'
+    content_type: character_trailer
+    character_id: roxy
+    character_name: 洛克茜
+    version_id: '3.2'
+    version_confirmed: true
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1jWej6hEnK
+    game_id: neverness_to_everness
+    title: 《异环》角色实机战斗丨黑羽
+    pubdate: '2026-09-19'
+    content_type: character_demo
+    character_id: blackbird
+    character_name: 黑羽
+    version_id: '1.4'
+    version_confirmed: true
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1iWej6hEe6
+    game_id: neverness_to_everness
+    title: 《异环》黑羽角色PV丨「魔女」的工作
+    pubdate: '2026-09-21'
+    content_type: character_trailer
+    character_id: blackbird
+    character_name: 黑羽
+    version_id: '1.4'
+    version_confirmed: true
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV1jWej6hEVt
+    game_id: neverness_to_everness
+    title: 《异环》黑羽角色短片丨救世主的祭宴
+    pubdate: '2026-09-23'
+    content_type: character_trailer
+    character_id: blackbird
+    character_name: 黑羽
+    version_id: '1.4'
+    version_confirmed: true
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true
+  - bvid: BV19tej6oE3H
+    game_id: neverness_to_everness
+    title: 《异环》黑羽EP丨Timetrial
+    pubdate: '2026-09-24'
+    content_type: character_ep
+    character_id: blackbird
+    character_name: 黑羽
+    version_id: '1.4'
+    version_confirmed: true
+    is_official_account: true
+    verified_at: '2026-10-08'
+    active: true

@@ -1,6 +1,7 @@
 """SteamDB 在线人数导入：把 SteamDB Charts 导出的 CSV 放进 data/inbox/steamdb/ 即可。
 
-SteamDB 没有可用的自动接口（403 / API 410），只能在网页上手动导出。每次采集开始时自动扫描收件箱：
+SteamDB 的直接历史接口不可用（403 / API 410）；使用网页导出，Windows 已登录 Edge 可用
+tools.steamdb_edge_export 自动点击导出。每次采集开始时扫描收件箱：
   - 按文件名里的 App ID（steamdb_chart_3513350.csv，浏览器重复下载的 "(1)" 后缀也可以）匹配游戏；
   - 只取每天的日汇总行（Average Players 有值的那一行），按日期合并：导出只覆盖部分日期时，
     其余历史保持不变（v2 曾因一份只有几行的导出替换掉 500 多天历史）；

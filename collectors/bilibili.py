@@ -54,7 +54,7 @@ def targets(game_id: str, curated_only: bool) -> list[str]:
 
 
 def collect_one(conn, game: dict, date_local: str, curated_only: bool = True) -> tuple[int, int, str]:
-    bvids = targets(game["game_id"], curated_only)
+    bvids = targets(game["game_id"], curated_only and game.get("bilibili_curated_only", True))
     if not bvids:
         return 0, 0, "no_registered_videos"
     sess = session()

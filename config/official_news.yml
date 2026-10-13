@@ -1,0 +1,15 @@
+# 永劫无间端游国服；m.yjwujian.cn 是手游，不混入端游。
+# 按页面展示的发布日期记录，网址路径日期可能是建稿日。
+# 每天只读取有限列表页和最多 6 篇尚无摘录的近期文章，历史记录保留在 SQLite。
+games:
+  naraka_bladepoint:
+    list_urls:
+      - https://www.yjwujian.cn/
+      - https://www.yjwujian.cn/news/
+      - https://www.yjwujian.cn/news/index_2.html
+      - https://www.yjwujian.cn/news/match/
+    detail_limit: 6
+    allowed_host: www.yjwujian.cn
+    archive_roots:
+      - https://www.yjwujian.cn/news/
+      - https://www.yjwujian.cn/news/match/

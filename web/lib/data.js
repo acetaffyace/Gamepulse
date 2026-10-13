@@ -30,10 +30,14 @@ async function download(url, expectedBytes, onProgress) {
   return new Uint8Array(raw);
 }
 
-export async function openStore(manifest, onProgress) {
-  if (typeof initSqlJs !== 'function') throw new LoadError('查询引擎（sql.js）没有加载成功');
+export async function openStore(manifest, onProgress, { engineReady = Promise.resolve() } = {}) {
+  const initialize = async () => {
+    await engineReady;
+    if (typeof initSqlJs !== 'function') throw new LoadError('查询引擎（sql.js）没有加载成功');
+    return initSqlJs({ locateFile: file => `vendor/${file}` });
+  };
   const [SQL, bytes] = await Promise.all([
-    initSqlJs({ locateFile: file => `vendor/${file}` }),
+    initialize(),
     download(`data/${manifest.database.file}`, manifest.database.gzip_bytes, onProgress),
   ]);
   const db = new SQL.Database(bytes);
@@ -43,6 +47,7 @@ export async function openStore(manifest, onProgress) {
   const store = new Store(db, manifest);
   const build = JSON.parse(store.scalar("SELECT value FROM app_config WHERE key = 'build'"));
   if (build.build_id !== manifest.build_id) {
+    db.close();
     throw new LoadError('数据库与数据目录不是同一次发布，请刷新页面');
   }
   return store;

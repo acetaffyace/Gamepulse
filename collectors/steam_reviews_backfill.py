@@ -158,6 +158,8 @@ def fetch_recent_reviews(appid: int, cutoff: str, sleep: float = 1.0, max_pages:
         seen_cursors.add(next_cursor)
         cursor = next_cursor
         saved.commit(fresh, cursor, seen_cursors, pages, expected)
+        if pages % 20 == 0:
+            print(f"  已翻 {pages} 页，窗口内 {len(reviews):,} 条", flush=True)
         time.sleep(sleep)
     return reviews, {"pages": pages, "fetched": len(reviews), "total_expected": expected,
                      "stop_reason": stop_reason, "cutoff": cutoff, "started_at": saved.state["created_at"]}
@@ -254,12 +256,14 @@ def run_incremental(conn, game: dict, sleep: float) -> tuple[int, int, str] | No
 
 
 def run(conn, games: list[dict], date_local: str, *, incremental: bool, max_pages: int | None = None,
-        sleep: float = 1.0) -> bool:
+        sleep: float = 1.0, since: str | None = None) -> bool:
     def one(c, game, _day):
         if not game.get("steam_app_id"):
             return 0, 0, "no_steam_app_id"
         # 同一游戏的回填不能并发：翻页进度文件是按游戏存的
         with file_lock(RAW_DIR / "backfill" / f"{game['game_id']}.operation", timeout=1):
+            if since:
+                return run_window(c, game, since, sleep, max_pages or 1000)
             if incremental:
                 result = run_incremental(c, game, sleep)
                 if result is not None:
@@ -267,13 +271,47 @@ def run(conn, games: list[dict], date_local: str, *, incremental: bool, max_page
                 print(f"  {game['display_name']}: 还没有全量基底，改做全量")
             return run_full(c, game, max_pages, sleep)
 
-    return run_per_game(conn, "reviews_incremental" if incremental else "reviews_full", games, date_local, one)
+    source = "reviews_window" if since else "reviews_incremental" if incremental else "reviews_full"
+    return run_per_game(conn, source, games, date_local, one)
+
+
+def run_window(conn, game: dict, cutoff: str, sleep: float, max_pages: int) -> tuple[int, int, str]:
+    """只回填指定日期之后的评测，独立记录覆盖区间；失败不写入。"""
+    date.fromisoformat(cutoff)
+    gid = game["game_id"]
+    checkpoint = RAW_DIR / "backfill" / "checkpoints" / gid / "window.json"
+    raw, meta = fetch_recent_reviews(game["steam_app_id"], cutoff, sleep, max_pages, checkpoint)
+    print(f"  {game['display_name']}: 窗口回填 {meta['pages']} 页，{meta['fetched']:,} 条，{meta['stop_reason']}")
+    if meta["stop_reason"] not in {"cutoff_reached", "empty_page"}:
+        return 1, 0, f"incomplete:{meta['stop_reason']}"
+    if meta["stop_reason"] == "empty_page" and meta.get("total_expected") and not raw:
+        return 1, 0, "unexpected_empty_page"
+    if any(review_row(r, gid, "x") is None for r in raw):
+        return 1, 0, "invalid_review_rows"
+    start_ts, start_day = _started(meta)
+    if cutoff > start_day:
+        return 1, 0, "cutoff_after_collection_start"
+    seen_at = now_iso()
+    rows = [review_row(r, gid, seen_at) for r in raw]
+    # 防止异常空响应/异常缩减把已知窗口删空。
+    previous = conn.execute("SELECT COUNT(*) FROM review WHERE game_id=? AND created_date>=? AND created_at<?",
+                            (gid, cutoff, start_ts)).fetchone()[0]
+    if previous and len(rows) < previous * .98:
+        return 1, 0, f"shrank:{len(rows)}<{previous}"
+    with db.transaction(conn):
+        conn.execute("DELETE FROM review WHERE game_id=? AND created_date>=? AND created_at<?", (gid, cutoff, start_ts))
+        db.upsert(conn, "review", rows)
+        db.insert(conn, "review_window_run", [{"game_id": gid, "cutoff": cutoff, "covered_through": start_day,
+            "finished_at": seen_at, "pages": meta["pages"], "fetched": len(rows), "stop_reason": meta["stop_reason"]}])
+    ReviewCheckpoint.finish(checkpoint)
+    return 1, 1, f"covered:{cutoff}:{start_day}"
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="回填 Steam 评测明细")
     parser.add_argument("--game", help="省略则回填全部 active 游戏")
     parser.add_argument("--incremental", action="store_true", help="只刷新近期评测；没有全量基底时改做全量")
+    parser.add_argument("--since", help="只回填此业务日之后的评测，记录窗口覆盖，不要求全历史基底")
     parser.add_argument("--max-pages", type=int, default=None)
     parser.add_argument("--sleep", type=float, default=1.0, help="翻页间隔秒数")
     args = parser.parse_args()
@@ -282,7 +320,7 @@ def main() -> int:
         config_sync.sync(conn)
         games = [get_game(args.game)] if args.game else active_games()
         return int(run(conn, games, today_local(), incremental=args.incremental,
-                       max_pages=args.max_pages, sleep=args.sleep))
+                       max_pages=args.max_pages, sleep=args.sleep, since=args.since))
     finally:
         conn.close()
 

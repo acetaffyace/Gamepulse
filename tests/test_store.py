@@ -46,7 +46,7 @@ class Migrations(StoreTestCase):
         self.conn.close()
         self.conn = db.connect(self.path)
         self.assertEqual(self.count("game"), 1)
-        self.assertEqual(self.count("fact_source"), 7)
+        self.assertEqual(self.count("fact_source"), 9)
 
     def test_database_newer_than_code_is_refused(self):
         self.conn.execute("PRAGMA user_version = 99")

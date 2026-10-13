@@ -7,12 +7,15 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import statistics
 import tempfile
 import unittest
 from pathlib import Path
 
-from store import db, migrate_v2
+import yaml
+
+from store import config_sync, db, migrate_v2
 
 V2 = Path(os.environ.get("GAMEPULSE_V2") or Path(__file__).resolve().parents[2] / "game-ops-radar")
 GAMES = ("wuthering_waves", "zenless_zone_zero", "neverness_to_everness")
@@ -29,8 +32,17 @@ class ParityWithV2(unittest.TestCase):
     def setUpClass(cls):
         cls.tmp = tempfile.TemporaryDirectory()
         cls.conn = db.connect(Path(cls.tmp.name) / "parity.sqlite")
-        cls.result = migrate_v2.migrate(V2, cls.conn)
         cls.index = json.loads((V2 / "data" / "index.json").read_text(encoding="utf-8"))
+        # 对照的是 v2 已发布快照。v3 新登记的真实版本（例如 NTE 1.4）不能
+        # 改写这个历史输入，否则测到的是两份版本目录的差异，而不是迁移口径。
+        config_dir = Path(cls.tmp.name) / "config"
+        shutil.copytree(config_sync.CONFIG_DIR, config_dir)
+        versions = {entry["game_id"]: {v["version_id"]: {
+            "steam_start_date": v["date_local"], "status": "released", "source": "v2_published_catalog",
+            "source_url": v.get("source_url"),
+        } for v in entry["versions"]} for entry in cls.index["games"]}
+        (config_dir / "versions.yml").write_text(yaml.safe_dump(versions, allow_unicode=True), encoding="utf-8")
+        cls.result = migrate_v2.migrate(V2, cls.conn, config_dir=config_dir)
         cls.snapshots = {}
         for entry in cls.index["games"]:
             release = V2 / "data" / "releases" / cls.index["build_id"] / f"snapshot_{entry['game_id']}.json"

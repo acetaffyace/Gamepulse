@@ -5,6 +5,8 @@
 -- 所以"最新版本开放到今天""数据是否过期"会随时间自然变化，不需要重新发布。
 
 DROP VIEW IF EXISTS v_source_status;
+DROP VIEW IF EXISTS v_official_news;
+DROP VIEW IF EXISTS v_steamcharts_monthly;
 DROP VIEW IF EXISTS v_video_latest;
 DROP VIEW IF EXISTS v_video_obs;
 DROP VIEW IF EXISTS v_video;
@@ -69,9 +71,16 @@ CREATE VIEW v_review_daily AS
 WITH RECURSIVE
   bounds AS (
     SELECT r.game_id, MIN(r.created_date) AS first_date,
-           MAX(MAX(r.created_date), COALESCE(
-             (SELECT MAX(covered_through) FROM review_run rr WHERE rr.game_id = r.game_id), '')) AS last_date
-    FROM review r GROUP BY r.game_id
+           CASE WHEN EXISTS (SELECT 1 FROM review_window_run wr WHERE wr.game_id = r.game_id)
+                THEN (SELECT MAX(covered_through) FROM review_run rr WHERE rr.game_id = r.game_id)
+                ELSE MAX(MAX(r.created_date), COALESCE(
+                  (SELECT MAX(covered_through) FROM review_run rr WHERE rr.game_id = r.game_id), '')) END AS last_date
+    FROM review r
+    WHERE NOT EXISTS (SELECT 1 FROM review_window_run wr WHERE wr.game_id = r.game_id)
+       OR EXISTS (SELECT 1 FROM review_run rr WHERE rr.game_id = r.game_id)
+    GROUP BY r.game_id
+    UNION
+    SELECT game_id, cutoff, covered_through FROM review_window_run
   ),
   calendar (game_id, date, last_date) AS (
     SELECT game_id, first_date, last_date FROM bounds
@@ -82,17 +91,21 @@ WITH RECURSIVE
     SELECT game_id, created_date AS date, COUNT(*) AS reviews,
            SUM(voted_up = 1) AS positive, SUM(voted_up = 0) AS negative
     FROM review GROUP BY game_id, created_date
+  ),
+  days AS (
+    SELECT game_id, date, MAX(date < last_date) AS complete_day
+    FROM calendar GROUP BY game_id, date
   )
 SELECT c.game_id, c.date,
        COALESCE(n.reviews, 0) AS reviews,
        COALESCE(n.positive, 0) AS positive,
        COALESCE(n.negative, 0) AS negative,
-       c.date < c.last_date AS complete_day,
+       c.complete_day,
        w.version_id,
        CAST(julianday(c.date) - julianday(w.start_date) AS INTEGER) AS day_index,
        CAST(julianday(c.date) - julianday(g.steam_release) AS INTEGER) AS game_day_index,
        date(c.date, '-' || ((CAST(strftime('%w', c.date) AS INTEGER) + 6) % 7) || ' days') AS week_start
-FROM calendar c
+FROM days c
 JOIN game g USING (game_id)
 LEFT JOIN counts n USING (game_id, date)
 LEFT JOIN v_version_window w
@@ -118,6 +131,13 @@ SELECT game_id, date, total_reviews, total_positive, review_score_desc,
 FROM steam_daily
 WHERE total_reviews IS NOT NULL
 WINDOW w AS (PARTITION BY game_id ORDER BY date);
+
+CREATE VIEW v_official_news AS
+SELECT game_id, date, category AS news_category, title, url, excerpt, date_basis, observed_at
+FROM official_news;
+
+CREATE VIEW v_steamcharts_monthly AS
+SELECT game_id, month_start, avg_players, peak_players, observed_at, source_url FROM steamcharts_monthly;
 
 -- 视频：已人工确认的版本优先；未确认的按发布日落在哪个版本窗口归属
 CREATE VIEW v_video AS
@@ -167,24 +187,39 @@ SELECT * FROM v_video_obs WHERE is_latest;
 CREATE VIEW v_source_status AS
 WITH sources (source, label, attempt_sources, stale_days) AS (
   VALUES ('steam',       'Steam 官方汇总', ',steam,',                               2),
-         ('reviews',     'Steam 评测明细', ',reviews_incremental,reviews_full,',    2),
+         ('reviews',     'Steam 评测明细', ',reviews_incremental,reviews_full,reviews_window,', 2),
          ('steamdb',     'SteamDB 在线',   ',steamdb,',                             8),
          ('steam_build', 'Steam 构建号',   ',steam_build,',                         2),
          ('bilibili',    'B 站视频',       ',bilibili,',                            2),
-         ('youtube',     'YouTube 视频',   ',youtube,',                             2)
+         ('youtube',     'YouTube 视频',   ',youtube,',                             2),
+         ('official_news', '国服官网公告观测', ',official_news,',                    2),
+         ('steamcharts', 'SteamCharts 月均在线观测', ',steamcharts,',                8)
 ),
 through AS (
   SELECT g.game_id, s.source, s.label, s.attempt_sources, s.stale_days,
          CASE s.source
            WHEN 'steam'       THEN (SELECT MAX(date) FROM steam_daily x WHERE x.game_id = g.game_id)
-           WHEN 'reviews'     THEN (SELECT MAX(covered_through) FROM review_run x WHERE x.game_id = g.game_id)
+           WHEN 'reviews'     THEN (SELECT MAX(day) FROM (
+             SELECT covered_through AS day FROM review_run x WHERE x.game_id = g.game_id
+             UNION ALL SELECT covered_through FROM review_window_run x WHERE x.game_id = g.game_id))
            WHEN 'steamdb'     THEN (SELECT MAX(date) FROM online_daily x WHERE x.game_id = g.game_id)
            WHEN 'steam_build' THEN (SELECT MAX(date) FROM steam_build x WHERE x.game_id = g.game_id)
+           -- 公告的有效观测日与发布日期不同；没有新文章也可以是成功观测。
+           WHEN 'official_news' THEN (SELECT MAX(date) FROM collection_attempt x WHERE x.game_id = g.game_id
+                                     AND x.source = 'official_news' AND x.succeeded > 0)
+           WHEN 'steamcharts' THEN (SELECT MAX(date) FROM collection_attempt x WHERE x.game_id = g.game_id
+                                   AND x.source = 'steamcharts' AND x.succeeded > 0)
            ELSE (SELECT MAX(o.date) FROM video_obs o JOIN video v USING (platform, video_id)
                  WHERE v.game_id = g.game_id AND o.platform = s.source)
          END AS data_through
   FROM game g CROSS JOIN sources s
   WHERE g.active = 1
+    AND (s.source <> 'official_news' OR EXISTS (
+      SELECT 1 FROM collection_attempt a WHERE a.game_id = g.game_id AND a.source = 'official_news' AND a.expected > 0
+    ))
+    AND (s.source <> 'steamcharts' OR EXISTS (
+      SELECT 1 FROM collection_attempt a WHERE a.game_id = g.game_id AND a.source = 'steamcharts' AND a.expected > 0
+    ))
 ),
 latest AS (
   SELECT a.game_id, t.source, a.status, a.attempted_at, a.expected, a.succeeded, a.detail,

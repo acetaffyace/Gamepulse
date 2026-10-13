@@ -50,6 +50,9 @@ export function dimLabel(catalog, store, dim, value) {
 }
 
 export function compareVersions(a, b) {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(a)) && /^\d{4}-\d{2}-\d{2}$/.test(String(b))) {
+    return String(a).localeCompare(String(b));
+  }
   const pa = String(a).split('.').map(Number);
   const pb = String(b).split('.').map(Number);
   for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
@@ -61,6 +64,11 @@ export function compareVersions(a, b) {
 
 export function shortDate(iso) {
   return iso ? iso.slice(5) : '';
+}
+
+export function dateAxisLabel(dates) {
+  const years = new Set(dates.filter(Boolean).map(d => String(d).slice(0, 4)));
+  return years.size > 1 ? iso => iso ? String(iso).slice(2) : '' : shortDate;
 }
 
 export function addDays(iso, n) {

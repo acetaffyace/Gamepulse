@@ -1,11 +1,18 @@
 # Curated official video pairs for the shared comparison window.
-# Only the four user-selected formats are included; localized YouTube uploads
+# The original three games retain the four user-selected formats; localized YouTube uploads
 # stay separate and map to the corresponding Bilibili post where available.
 scope:
   start_date: '2026-06-17'
-  end_date: '2026-09-17'
+  end_date: '2026-10-08'
   content_types: [version_trailer, character_trailer, character_demo, character_ep]
   excluded_titles: ['群星交错', '决战时刻｜翼刃出鞘']
+  by_game:
+    naraka_bladepoint:
+      start_date: '2026-07-08'
+      end_date: '2026-10-08'
+      content_types: [version_trailer, character_trailer, character_demo, character_ep,
+                      season_teaser, collaboration_trailer, cosmetic_showcase, event_promo,
+                      esports, tutorial, shorts, theme_song, other]
 
 # 版本开放日与来源见 config/versions.yml。
 
@@ -57,4 +64,1301 @@ videos:
   - {pair_id: nte_1_3_lingke_demo, game_id: neverness_to_everness, bvid: BV1UU4C6kEam, pubdate: '2026-08-30', content_type: character_demo, character_id: lingke, character_name: '灵可', version_id: '1.3', version_confirmed: true, youtube: {global: P1uz4ozEPXw, ja: 7vGC44C8vc4, ko: 0qNrlJxgoIg, zh-tw: hhM6ArRKN5g}}
   - {pair_id: nte_1_3_lingke_pv, game_id: neverness_to_everness, bvid: BV1jVtt6LEjP, pubdate: '2026-09-02', content_type: character_trailer, character_id: lingke, character_name: '灵可', version_id: '1.3', version_confirmed: true, youtube: {global: DrLalNRXZaM, ja: 3HiEI58Pfro, ko: vRA5-KTBh4Q, zh-tw: X4piyMEfwUQ}}
   - {pair_id: nte_1_3_lingke_ep, game_id: neverness_to_everness, bvid: BV18btt6NEJw, pubdate: '2026-09-03', content_type: character_ep, character_id: lingke, character_name: '灵可', version_id: '1.3', version_confirmed: true, youtube: {global: ySbEeNXQYC8, ja: 5XafJKkVrRk, ko: Qj-WzFGj8_E, zh-tw: B0aTQrX6cxk}}
-  - {pair_id: nte_1_4_version_pv, game_id: neverness_to_everness, bvid: BV1jWej6hET5, pubdate: '2026-09-17', content_type: version_trailer, character_id: null, character_name: null, version_id: '1.4', version_confirmed: true, youtube: {global: null, ja: null, ko: null, zh-tw: null}, missing_locale_reason: {global: 'No matching official version PV by 2026-09-17; the Global channel had a preview program, which is a different format.', ja: 'No matching official version PV by 2026-09-17.', ko: 'No matching official version PV by 2026-09-17.', zh-tw: 'No matching official version PV by 2026-09-17.'}}
+  - pair_id: nte_1_4_version_pv
+    game_id: neverness_to_everness
+    bvid: BV1jWej6hET5
+    pubdate: '2026-09-17'
+    content_type: version_trailer
+    character_id: null
+    character_name: null
+    version_id: '1.4'
+    version_confirmed: true
+    youtube:
+      global: 17vIldd8pdI
+      ja: 4vSdIWRounI
+      ko: lLmUGwqap6Y
+      zh-tw: GFLtp5jOQvQ
+    missing_locale_reason:
+      global: No matching official version PV by 2026-09-17; the Global channel had
+        a preview program, which is a different format.
+      ja: No matching official version PV by 2026-09-17.
+      ko: No matching official version PV by 2026-09-17.
+      zh-tw: No matching official version PV by 2026-09-17.
+
+  # 永劫无间：共用登记、配对、频道语区和版本窗口，不进入独立页面。
+  - pair_id: naraka_BV15EN76QEGb
+    game_id: naraka_bladepoint
+    bvid: BV15EN76QEGb
+    pubdate: '2026-07-10'
+    content_type: character_demo
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: null
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_BV18NNt63Eoi
+    game_id: naraka_bladepoint
+    bvid: BV18NNt63Eoi
+    pubdate: '2026-07-14'
+    content_type: cosmetic_showcase
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: null
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_BV1YRKJ6fEHP
+    game_id: naraka_bladepoint
+    bvid: BV1YRKJ6fEHP
+    pubdate: '2026-07-17'
+    content_type: season_teaser
+    character_id: ye_xiu
+    character_name: 叶修
+    version_id: '2026-07-30'
+    version_confirmed: true
+    youtube:
+      global: KLd_dFJt4uM
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_BV1d9KH6TEGg
+    game_id: naraka_bladepoint
+    bvid: BV1d9KH6TEGg
+    pubdate: '2026-07-20'
+    content_type: season_teaser
+    character_id: ye_xiu
+    character_name: 叶修
+    version_id: '2026-07-30'
+    version_confirmed: true
+    youtube:
+      global: null
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_BV1nsg46TEbh
+    game_id: naraka_bladepoint
+    bvid: BV1nsg46TEbh
+    pubdate: '2026-07-23'
+    content_type: other
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: null
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_BV16Zge6oEHb
+    game_id: naraka_bladepoint
+    bvid: BV16Zge6oEHb
+    pubdate: '2026-07-24'
+    content_type: character_demo
+    character_id: ye_xiu
+    character_name: 叶修
+    version_id: '2026-07-30'
+    version_confirmed: true
+    youtube:
+      global: vmRYOoyVhFk
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_BV1hsgD6sE96
+    game_id: naraka_bladepoint
+    bvid: BV1hsgD6sE96
+    pubdate: '2026-07-24'
+    content_type: character_trailer
+    character_id: ye_xiu
+    character_name: 叶修
+    version_id: '2026-07-30'
+    version_confirmed: true
+    youtube:
+      global: Wbx9B4yoEI4
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_BV1T93c6LEeV
+    game_id: naraka_bladepoint
+    bvid: BV1T93c6LEeV
+    pubdate: '2026-07-27'
+    content_type: cosmetic_showcase
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: RQPbhL0f0SE
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_BV1Dn3n6zEsR
+    game_id: naraka_bladepoint
+    bvid: BV1Dn3n6zEsR
+    pubdate: '2026-07-29'
+    content_type: cosmetic_showcase
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: Qxc-1Dymy6I
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_BV1L93C6LEMh
+    game_id: naraka_bladepoint
+    bvid: BV1L93C6LEMh
+    pubdate: '2026-07-29'
+    content_type: cosmetic_showcase
+    character_id: ye_xiu
+    character_name: 叶修
+    version_id: '2026-07-30'
+    version_confirmed: true
+    youtube:
+      global: IOml3qBjB5I
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_BV1Fa3x6qEG7
+    game_id: naraka_bladepoint
+    bvid: BV1Fa3x6qEG7
+    pubdate: '2026-07-30'
+    content_type: tutorial
+    character_id: ye_xiu
+    character_name: 叶修
+    version_id: '2026-07-30'
+    version_confirmed: true
+    youtube:
+      global: tjWzvMAMteQ
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_BV1xYuh6WExP
+    game_id: naraka_bladepoint
+    bvid: BV1xYuh6WExP
+    pubdate: '2026-08-07'
+    content_type: event_promo
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: RTsdyKRKbt4
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_BV1s1u26hEMX
+    game_id: naraka_bladepoint
+    bvid: BV1s1u26hEMX
+    pubdate: '2026-08-10'
+    content_type: collaboration_trailer
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: null
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_BV1EPg56AE1a
+    game_id: naraka_bladepoint
+    bvid: BV1EPg56AE1a
+    pubdate: '2026-08-12'
+    content_type: cosmetic_showcase
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: mJD4gmG3gUE
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_BV14igE6oEWU
+    game_id: naraka_bladepoint
+    bvid: BV14igE6oEWU
+    pubdate: '2026-08-13'
+    content_type: theme_song
+    character_id: zhang_qiling
+    character_name: 张起灵
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: null
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_BV1qW8G6gEi1
+    game_id: naraka_bladepoint
+    bvid: BV1qW8G6gEi1
+    pubdate: '2026-08-18'
+    content_type: collaboration_trailer
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: dNBtwX7raKw
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_BV18B8d6SEVA
+    game_id: naraka_bladepoint
+    bvid: BV18B8d6SEVA
+    pubdate: '2026-08-26'
+    content_type: character_trailer
+    character_id: anassa_nangong
+    character_name: 南宫锦
+    version_id: '2026-09-03'
+    version_confirmed: true
+    youtube:
+      global: Oz1_06SdApk
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_BV16mtN6XEfD
+    game_id: naraka_bladepoint
+    bvid: BV16mtN6XEfD
+    pubdate: '2026-08-28'
+    content_type: other
+    character_id: inor_wan
+    character_name: 万钧
+    version_id: '2026-09-03'
+    version_confirmed: true
+    youtube:
+      global: uSqymFTJgPk
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_BV159aN6WEMz
+    game_id: naraka_bladepoint
+    bvid: BV159aN6WEMz
+    pubdate: '2026-09-24'
+    content_type: event_promo
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: null
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_BV1BPaN6oEyN
+    game_id: naraka_bladepoint
+    bvid: BV1BPaN6oEyN
+    pubdate: '2026-09-24'
+    content_type: version_trailer
+    character_id: null
+    character_name: null
+    version_id: '2026-10-09'
+    version_confirmed: true
+    youtube:
+      global: null
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_BV1EBhb6ZEve
+    game_id: naraka_bladepoint
+    bvid: BV1EBhb6ZEve
+    pubdate: '2026-09-24'
+    content_type: theme_song
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: null
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_BV1JCaN6cE1i
+    game_id: naraka_bladepoint
+    bvid: BV1JCaN6cE1i
+    pubdate: '2026-09-24'
+    content_type: character_trailer
+    character_id: kael
+    character_name: 云庆
+    version_id: '2026-10-09'
+    version_confirmed: true
+    youtube:
+      global: UAhwybowB1c
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_BV1jUaN6oEfv
+    game_id: naraka_bladepoint
+    bvid: BV1jUaN6oEfv
+    pubdate: '2026-09-24'
+    content_type: theme_song
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: null
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_BV1txaN6kEb1
+    game_id: naraka_bladepoint
+    bvid: BV1txaN6kEb1
+    pubdate: '2026-09-24'
+    content_type: collaboration_trailer
+    character_id: null
+    character_name: null
+    version_id: '2026-10-09'
+    version_confirmed: true
+    youtube:
+      global: null
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_BV1zshR6YEyC
+    game_id: naraka_bladepoint
+    bvid: BV1zshR6YEyC
+    pubdate: '2026-09-26'
+    content_type: theme_song
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: null
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_BV1CdH66kErm
+    game_id: naraka_bladepoint
+    bvid: BV1CdH66kErm
+    pubdate: '2026-10-04'
+    content_type: cosmetic_showcase
+    character_id: anassa_nangong
+    character_name: 南宫锦
+    version_id: '2026-10-09'
+    version_confirmed: true
+    youtube:
+      global: SGIoiMCEfPs
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_BV1MYHp6vEks
+    game_id: naraka_bladepoint
+    bvid: BV1MYHp6vEks
+    pubdate: '2026-10-05'
+    content_type: cosmetic_showcase
+    character_id: cyra
+    character_name: 席拉
+    version_id: '2026-10-09'
+    version_confirmed: true
+    youtube:
+      global: ftIHxsaytnU
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_BV1tqH16cENd
+    game_id: naraka_bladepoint
+    bvid: BV1tqH16cENd
+    pubdate: '2026-10-07'
+    content_type: cosmetic_showcase
+    character_id: null
+    character_name: null
+    version_id: '2026-10-09'
+    version_confirmed: true
+    youtube:
+      global: B68CjBdIfVE
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_eX3yn3Cn5kQ
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-07-11'
+    content_type: shorts
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: eX3yn3Cn5kQ
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_ebiGISwGwyE
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-07-13'
+    content_type: shorts
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: ebiGISwGwyE
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_oH5AHD1jZiA
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-07-14'
+    content_type: cosmetic_showcase
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: oH5AHD1jZiA
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_WtCSUOEDdw4
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-07-16'
+    content_type: shorts
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: WtCSUOEDdw4
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_BvgXENCZZx4
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-07-19'
+    content_type: shorts
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: BvgXENCZZx4
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_4njz2XQu5Dk
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-07-20'
+    content_type: shorts
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: 4njz2XQu5Dk
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_KwPL4fDzEg8
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-07-21'
+    content_type: shorts
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: KwPL4fDzEg8
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_4N-TgyEuoKA
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-07-23'
+    content_type: season_teaser
+    character_id: ye_xiu
+    character_name: 叶修
+    version_id: '2026-07-30'
+    version_confirmed: true
+    youtube:
+      global: 4N-TgyEuoKA
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_JZgOdF99HDc
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-08-01'
+    content_type: cosmetic_showcase
+    character_id: ye_xiu
+    character_name: 叶修
+    version_id: '2026-07-30'
+    version_confirmed: true
+    youtube:
+      global: JZgOdF99HDc
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_lkrB3ChtIHY
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-08-05'
+    content_type: tutorial
+    character_id: ye_xiu
+    character_name: 叶修
+    version_id: '2026-07-30'
+    version_confirmed: true
+    youtube:
+      global: lkrB3ChtIHY
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_hHY4oDcOBgo
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-08-06'
+    content_type: tutorial
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: hHY4oDcOBgo
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_YHfC86uHi8g
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-08-10'
+    content_type: event_promo
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: YHfC86uHi8g
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_A8kesRJtBbc
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-08-12'
+    content_type: shorts
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: A8kesRJtBbc
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_RhaDQHGcs5o
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-08-13'
+    content_type: esports
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: RhaDQHGcs5o
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_fbSCTGGFJUw
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-08-13'
+    content_type: esports
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: fbSCTGGFJUw
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_E_XICewDU7g
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-08-14'
+    content_type: esports
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: E_XICewDU7g
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_rh5O6_LE2q8
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-08-15'
+    content_type: esports
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: rh5O6_LE2q8
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_OPBScwY0j-4
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-08-16'
+    content_type: esports
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: OPBScwY0j-4
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_Pm04m3uL3bQ
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-08-20'
+    content_type: esports
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: Pm04m3uL3bQ
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt__ydwWWJLOyc
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-08-21'
+    content_type: shorts
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: _ydwWWJLOyc
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_qhdwZgDLSIs
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-08-21'
+    content_type: esports
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: qhdwZgDLSIs
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_rnVgQzG9YBk
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-08-21'
+    content_type: shorts
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: rnVgQzG9YBk
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_aW97QgJXswM
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-08-22'
+    content_type: esports
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: aW97QgJXswM
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_fZwLzz_5fRc
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-08-23'
+    content_type: esports
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: fZwLzz_5fRc
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_-pbZY4aG83g
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-08-25'
+    content_type: shorts
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: -pbZY4aG83g
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_1_JcSRxwBrQ
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-08-27'
+    content_type: shorts
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: 1_JcSRxwBrQ
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_GuAyGytVJ90
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-08-27'
+    content_type: esports
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: GuAyGytVJ90
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_Dm6dutI-giU
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-08-28'
+    content_type: esports
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: Dm6dutI-giU
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_hgnJUmlW-DU
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-08-28'
+    content_type: character_demo
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: hgnJUmlW-DU
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_EXeWiu7SX68
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-08-29'
+    content_type: shorts
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: EXeWiu7SX68
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_fAaY5EoDjBU
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-08-29'
+    content_type: esports
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: fAaY5EoDjBU
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_k6zx0AyvpN8
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-08-30'
+    content_type: esports
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: k6zx0AyvpN8
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_NsR5yqEThMQ
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-08-31'
+    content_type: shorts
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: NsR5yqEThMQ
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_f2JnUfnAxqs
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-09-01'
+    content_type: cosmetic_showcase
+    character_id: anassa_nangong
+    character_name: 南宫锦
+    version_id: '2026-09-03'
+    version_confirmed: true
+    youtube:
+      global: f2JnUfnAxqs
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_0HtFcH0HQWw
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-09-04'
+    content_type: shorts
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: 0HtFcH0HQWw
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_5j_PbfRgbOY
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-09-07'
+    content_type: shorts
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: 5j_PbfRgbOY
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_5UNUY6RGr14
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-09-11'
+    content_type: tutorial
+    character_id: anassa_nangong
+    character_name: 南宫锦
+    version_id: '2026-09-03'
+    version_confirmed: true
+    youtube:
+      global: 5UNUY6RGr14
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_feDvcTmKoPo
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-09-14'
+    content_type: shorts
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: feDvcTmKoPo
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_Mcnm_niLOrk
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-09-16'
+    content_type: event_promo
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: Mcnm_niLOrk
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_CWaB-tnpK98
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-09-17'
+    content_type: shorts
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: CWaB-tnpK98
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_Wp6ktDpmp6Q
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-09-21'
+    content_type: shorts
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: Wp6ktDpmp6Q
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_zALAuPtAm28
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-09-23'
+    content_type: shorts
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: zALAuPtAm28
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_5avGshJgrI4
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-09-24'
+    content_type: version_trailer
+    character_id: null
+    character_name: null
+    version_id: '2026-10-09'
+    version_confirmed: true
+    youtube:
+      global: 5avGshJgrI4
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_Q2IWOw4mFHo
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-09-26'
+    content_type: theme_song
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: Q2IWOw4mFHo
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_2iZaeja9-BI
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-09-29'
+    content_type: shorts
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: 2iZaeja9-BI
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_gcVyiRBrvlc
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-09-30'
+    content_type: esports
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: gcVyiRBrvlc
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_4UFpny08Hws
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-10-01'
+    content_type: esports
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: 4UFpny08Hws
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_JeFKGpx0QKs
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-10-01'
+    content_type: esports
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: JeFKGpx0QKs
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_buQOotTYVxE
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-10-01'
+    content_type: shorts
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: buQOotTYVxE
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_WxH6TegUCSs
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-10-02'
+    content_type: esports
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: WxH6TegUCSs
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_0KC448MlNZI
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-10-03'
+    content_type: esports
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: 0KC448MlNZI
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_xbpEjiq4QL8
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-10-04'
+    content_type: esports
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: xbpEjiq4QL8
+      ja: null
+      ko: null
+      zh-tw: null
+  - pair_id: naraka_yt_VgbH4Q_EJOI
+    game_id: naraka_bladepoint
+    bvid: null
+    pubdate: '2026-10-08'
+    content_type: esports
+    character_id: null
+    character_name: null
+    version_id: null
+    version_confirmed: false
+    youtube:
+      global: VgbH4Q_EJOI
+      ja: null
+      ko: null
+      zh-tw: null
+
+  # 2026-10-08：补齐三款游戏最新核心视频与四语区对应片。
+  - pair_id: ww_3_7_version_pv
+    game_id: wuthering_waves
+    bvid: BV1mKe86JES7
+    pubdate: '2026-09-19'
+    content_type: version_trailer
+    character_id: null
+    character_name: null
+    version_id: '3.7'
+    version_confirmed: true
+    youtube:
+      global: xLWZ-bApa2c
+      ja: 23xXQdUL-1E
+      ko: _NzfG5BpcSk
+      zh-tw: XF1YNRcI7PU
+  - pair_id: ww_3_7_hsin_ep
+    game_id: wuthering_waves
+    bvid: BV1u9ew6yEEP
+    pubdate: '2026-09-17'
+    content_type: character_ep
+    character_id: hsin
+    character_name: 心
+    version_id: '3.7'
+    version_confirmed: true
+    youtube:
+      global: Yhf9ur3xPQA
+      ja: i2Tzhc9GqZk
+      ko: EgOuKcOwP_0
+      zh-tw: Uh4-0iPR1-I
+  - pair_id: ww_3_7_hsin_demo
+    game_id: wuthering_waves
+    bvid: BV1GahD6GEjC
+    pubdate: '2026-09-26'
+    content_type: character_demo
+    character_id: hsin
+    character_name: 心
+    version_id: '3.7'
+    version_confirmed: true
+    youtube:
+      global: CXiEM43zR6M
+      ja: bk0foX9_TAE
+      ko: jf3U_6DQ6MA
+      zh-tw: Zp7-Fe4CKGo
+  - pair_id: ww_3_7_hsin_pv
+    game_id: wuthering_waves
+    bvid: BV1s8aq6FEfJ
+    pubdate: '2026-09-28'
+    content_type: character_trailer
+    character_id: hsin
+    character_name: 心
+    version_id: '3.7'
+    version_confirmed: true
+    youtube:
+      global: a3zMk49qpwI
+      ja: L1nJ56KZjlM
+      ko: RG7XjBY86_E
+      zh-tw: B6SqAxISN9U
+  - pair_id: zzz_3_2_roxy_demo
+    game_id: zenless_zone_zero
+    bvid: BV1RMaA6jEXs
+    pubdate: '2026-09-25'
+    content_type: character_demo
+    character_id: roxy
+    character_name: 洛克茜
+    version_id: '3.2'
+    version_confirmed: true
+    youtube:
+      global: w088eYNQW4w
+      ja: n1CR-XqPYEU
+      ko: SZhPyIC89TA
+      zh-tw: h887r1JqPXE
+  - pair_id: zzz_3_2_roxy_pv
+    game_id: zenless_zone_zero
+    bvid: BV1Qka76JEWQ
+    pubdate: '2026-09-29'
+    content_type: character_trailer
+    character_id: roxy
+    character_name: 洛克茜
+    version_id: '3.2'
+    version_confirmed: true
+    youtube:
+      global: s-y-Vc1dVkU
+      ja: b9rqMnCNM10
+      ko: 3L4KJRxNln4
+      zh-tw: rt2ES5nB2zk
+  - pair_id: nte_1_4_blackbird_demo
+    game_id: neverness_to_everness
+    bvid: BV1jWej6hEnK
+    pubdate: '2026-09-19'
+    content_type: character_demo
+    character_id: blackbird
+    character_name: 黑羽
+    version_id: '1.4'
+    version_confirmed: true
+    youtube:
+      global: 3OKqIAxlFYk
+      ja: MzgFKinrCXs
+      ko: 0XMRCUtrN5k
+      zh-tw: VLpmYSb9dBk
+  - pair_id: nte_1_4_blackbird_pv
+    game_id: neverness_to_everness
+    bvid: BV1iWej6hEe6
+    pubdate: '2026-09-21'
+    content_type: character_trailer
+    character_id: blackbird
+    character_name: 黑羽
+    version_id: '1.4'
+    version_confirmed: true
+    youtube:
+      global: JSBcYS8c_yA
+      ja: 0Hti2IL8i84
+      ko: SwDeva636H8
+      zh-tw: l61kcgQPIMo
+  - pair_id: nte_1_4_blackbird_film
+    game_id: neverness_to_everness
+    bvid: BV1jWej6hEVt
+    pubdate: '2026-09-23'
+    content_type: character_trailer
+    character_id: blackbird
+    character_name: 黑羽
+    version_id: '1.4'
+    version_confirmed: true
+    youtube:
+      global: kmCcgeCLvfU
+      ja: WNzIGZNTEzg
+      ko: rn7p0yAm00I
+      zh-tw: 9ezhURKsUfY
+  - pair_id: nte_1_4_blackbird_ep
+    game_id: neverness_to_everness
+    bvid: BV19tej6oE3H
+    pubdate: '2026-09-24'
+    content_type: character_ep
+    character_id: blackbird
+    character_name: 黑羽
+    version_id: '1.4'
+    version_confirmed: true
+    youtube:
+      global: gZg_Xsrid20
+      ja: FLWhrAsoxIU
+      ko: AmYVv9CMm-w
+      zh-tw: yC4eMpze-5Y

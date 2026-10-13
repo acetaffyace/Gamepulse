@@ -44,10 +44,10 @@ def _build(db_path: Path, out_dir: Path, *, config_dir: Path, backup: bool, web_
             "backup": str(backup_path) if backup_path else None}
 
 
-def main_quiet(db_path: Path = db.DB_PATH, out_dir: Path = DIST_DIR) -> int:
+def main_quiet(db_path: Path = db.DB_PATH, out_dir: Path = DIST_DIR, *, backup: bool = True) -> int:
     """供 collect.py 调用：构建并打印一行结果，失败时返回 1 而不抛异常。"""
     try:
-        result = build(db_path, out_dir)
+        result = build(db_path, out_dir, backup=backup)
     except (catalog.CatalogError, checks.CheckFailed, ValueError) as exc:
         print(exc)
         return 1

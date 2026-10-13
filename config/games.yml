@@ -1,7 +1,7 @@
 # 跟踪的游戏。
 #
-# 三款均为二次元开放世界/都市题材手游的 Steam 版本，同期在线量级可比，
-# 适合做版本节奏与口碑对照。
+# 前三款为二次元游戏的 Steam 版本；永劫无间为竞技端游，共用游戏/版本/视频框架，
+# 不因为放在同一看板就认为题材、人群或在线量级可比。
 #
 # steam_status 记录实测的字段可用性（详见 README 数据源表）：
 #   partial = 在线/评测/公告可用，appdetails 商店详情不可用
@@ -18,6 +18,7 @@ games:
     region: CN
     currency: CNY
     active: true
+    steamcharts_monthly: true
 
   - game_id: zenless_zone_zero
     display_name: 绝区零
@@ -40,3 +41,15 @@ games:
     region: CN
     currency: CNY
     active: true
+
+  - game_id: naraka_bladepoint
+    display_name: 永劫无间
+    short_name: 永劫
+    steam_app_id: 1203220
+    steam_status: partial
+    steam_release: '2021-08-12'
+    developer: 24 Entertainment
+    region: CN
+    currency: CNY
+    active: true
+    steamcharts_monthly: true

@@ -18,6 +18,31 @@
 # 8 万条评测全部是"Steam 购买、非免费获得"，做成指标只会显示一个没有信息量的 0%。
 
 facts:
+  official_news:
+    view: v_official_news
+    label: 国服官网公告
+    grain: 一条已抓取的端游官网公告
+    source_table: official_news
+    date_dimension: date
+    dimensions: [game_id, date, news_category]
+    note: 按页面发布日期与标题关键词分类；不是全平台运营动作，也不表示活动效果。
+  steamcharts_monthly:
+    view: v_steamcharts_monthly
+    label: SteamCharts 自然月在线
+    grain: 一个已结束自然月
+    source_table: steamcharts_monthly
+    date_dimension: month_start
+    dimensions: [game_id, month_start]
+    note: 已结束自然月的来源汇总；不是所选逐日窗口平均，不能与 SteamDB 日均拼接。
+  version_window:
+    view: v_version_window
+    label: 版本节奏
+    grain: 一个已在 Steam 开放的版本
+    source_table: version
+    date_dimension: start_date
+    dimensions: [game_id, version_id, start_date]
+    note: 已开放版本的日期与相邻更新间隔；间隔引用完整版本历史中的上版，不受当前筛选范围改变。
+
   review:
     view: v_review
     label: 评测明细
@@ -79,6 +104,9 @@ facts:
     note: 每支视频最近一次采到的累计值；不同视频的采集日期可能不同。
 
 dimensions:
+  news_category: {label: 公告主题, type: category}
+  month_start: {label: 自然月起始日, type: date}
+  start_date:     {label: Steam 开放日, type: date}
   game_id:        {label: 游戏, type: category}
   version_id:     {label: 版本, type: category, sort: version}
   day_index:      {label: 更新后第几天, type: integer, format: 'D{}'}
@@ -155,6 +183,13 @@ dimensions:
       character_demo: 角色演示
       character_ep: 角色 EP
       season_teaser: 先导 PV
+      collaboration_trailer: 联动宣传
+      cosmetic_showcase: 外观展示
+      event_promo: 活动宣传
+      esports: 赛事内容
+      tutorial: 官方教学
+      shorts: 官方短视频
+      theme_song: 运营主题曲
       other: 其他
   version_basis:
     label: 版本归属依据
@@ -166,6 +201,50 @@ dimensions:
   character_name: {label: 角色, type: category}
 
 metrics:
+  official_news_count:
+    fact: official_news
+    label: 已抓取官网公告数
+    agg: COUNT(*)
+    unit: 条
+    format: integer
+  monthly_avg_players:
+    fact: steamcharts_monthly
+    label: 自然月平均同时在线
+    agg: MAX(avg_players)
+    unit: 人
+    format: decimal1
+    must_group_by: [game_id, month_start]
+  monthly_peak_players:
+    fact: steamcharts_monthly
+    label: 自然月峰值同时在线
+    agg: MAX(peak_players)
+    unit: 人
+    format: integer
+    must_group_by: [game_id, month_start]
+  version_count:
+    fact: version_window
+    label: 已开放版本数
+    agg: COUNT(*)
+    unit: 个
+    format: integer
+  version_interval_count:
+    fact: version_window
+    label: 已知更新间隔数
+    agg: SUM(prev_version IS NOT NULL)
+    unit: 个
+    format: integer
+  avg_version_interval:
+    fact: version_window
+    label: 更新间隔（均值）
+    agg: >-
+      AVG(julianday(start_date) -
+        (SELECT MAX(julianday(prior.start_date)) FROM v_version_window prior
+         WHERE prior.game_id = v_version_window.game_id AND prior.start_date < v_version_window.start_date))
+    must_group_by: [game_id]
+    unit: 天
+    format: decimal1
+    note: 所选已开放版本距各自上版的间隔均值；首个登记版本没有前驱，不进入分母。
+
   # ── 评测明细 ──
   review_count:
     fact: review
@@ -207,6 +286,27 @@ metrics:
     unit: 小时
     format: decimal1
     note: 从全部评测明细计算的标准中位数。
+  playtime_sample_count:
+    fact: review
+    label: 评测时长有效样本数
+    agg: COUNT(playtime_at_review)
+    unit: 条
+    format: integer
+    note: 评测时已玩时长非空的评测数，是时长分布与分位数的有效样本范围。
+  rated_count:
+    fact: review
+    label: 评价已知样本数
+    agg: COUNT(voted_up)
+    unit: 条
+    format: integer
+    note: 好评或差评已知的评测数，是好评率的分母。
+  post_review_sample_count:
+    fact: review
+    label: 后续游玩有效样本数
+    agg: COUNT(post_review_minutes)
+    unit: 条
+    format: integer
+    note: 距最后回填已满14天且后续游玩时长有效的评测数，是评测后仍在玩占比的分母。
   playtime_p25_h:
     fact: review
     label: 写评测时游戏时长（25 分位）
