@@ -1,0 +1,290 @@
+{
+  "build_id": "20261013083939-dd4fec",
+  "generated_at": "2026-10-13T08:39:39+00:00",
+  "schema_version": 4,
+  "database": {
+    "file": "gamepulse.64894ff28e39.sqlite.gz",
+    "bytes": 7643136,
+    "gzip_bytes": 1536811,
+    "sha256": "64894ff28e39ad9066a44cd2c1e6d330b45162b5ddc69edc2b598ce6562387f2"
+  },
+  "games": [
+    {
+      "game_id": "wuthering_waves",
+      "display_name": "鸣潮",
+      "short_name": "鸣潮",
+      "developer": "库洛游戏",
+      "color": "#2a78d6",
+      "steam_release": "2025-04-28"
+    },
+    {
+      "game_id": "zenless_zone_zero",
+      "display_name": "绝区零",
+      "short_name": "绝区零",
+      "developer": "米哈游",
+      "color": "#eb6834",
+      "steam_release": "2026-06-17"
+    },
+    {
+      "game_id": "neverness_to_everness",
+      "display_name": "异环",
+      "short_name": "异环",
+      "developer": "完美世界",
+      "color": "#1baf7a",
+      "steam_release": "2026-07-08"
+    },
+    {
+      "game_id": "naraka_bladepoint",
+      "display_name": "永劫无间",
+      "short_name": "永劫",
+      "developer": "24 Entertainment",
+      "color": "#eda100",
+      "steam_release": "2021-08-12"
+    }
+  ],
+  "sources_at_build": [
+    {
+      "game_id": "naraka_bladepoint",
+      "source": "bilibili",
+      "label": "B 站视频",
+      "data_through": "2026-10-12",
+      "status": "healthy",
+      "last_attempt_status": "success",
+      "last_attempt_at": "2026-10-12T12:54:24+00:00"
+    },
+    {
+      "game_id": "naraka_bladepoint",
+      "source": "official_news",
+      "label": "国服官网公告观测",
+      "data_through": "2026-10-12",
+      "status": "healthy",
+      "last_attempt_status": "success",
+      "last_attempt_at": "2026-10-12T12:55:44+00:00"
+    },
+    {
+      "game_id": "naraka_bladepoint",
+      "source": "reviews",
+      "label": "Steam 评测明细",
+      "data_through": "2026-10-12",
+      "status": "healthy",
+      "last_attempt_status": "success",
+      "last_attempt_at": "2026-10-12T12:52:51+00:00"
+    },
+    {
+      "game_id": "naraka_bladepoint",
+      "source": "steam",
+      "label": "Steam 官方汇总",
+      "data_through": "2026-10-12",
+      "status": "healthy",
+      "last_attempt_status": "success",
+      "last_attempt_at": "2026-10-12T12:52:20+00:00"
+    },
+    {
+      "game_id": "naraka_bladepoint",
+      "source": "steam_build",
+      "label": "Steam 构建号",
+      "data_through": null,
+      "status": "missing",
+      "last_attempt_status": "failed",
+      "last_attempt_at": "2026-10-12T12:52:37+00:00"
+    },
+    {
+      "game_id": "naraka_bladepoint",
+      "source": "steamcharts",
+      "label": "SteamCharts 月均在线观测",
+      "data_through": "2026-10-12",
+      "status": "healthy",
+      "last_attempt_status": "success",
+      "last_attempt_at": "2026-10-12T12:55:20+00:00"
+    },
+    {
+      "game_id": "naraka_bladepoint",
+      "source": "steamdb",
+      "label": "SteamDB 在线",
+      "data_through": "2026-10-11",
+      "status": "healthy",
+      "last_attempt_status": "success",
+      "last_attempt_at": "2026-10-12T13:00:32+00:00"
+    },
+    {
+      "game_id": "naraka_bladepoint",
+      "source": "youtube",
+      "label": "YouTube 视频",
+      "data_through": "2026-10-12",
+      "status": "healthy",
+      "last_attempt_status": "success",
+      "last_attempt_at": "2026-10-12T12:54:41+00:00"
+    },
+    {
+      "game_id": "neverness_to_everness",
+      "source": "bilibili",
+      "label": "B 站视频",
+      "data_through": "2026-10-12",
+      "status": "healthy",
+      "last_attempt_status": "success",
+      "last_attempt_at": "2026-10-12T12:53:47+00:00"
+    },
+    {
+      "game_id": "neverness_to_everness",
+      "source": "reviews",
+      "label": "Steam 评测明细",
+      "data_through": "2026-10-12",
+      "status": "healthy",
+      "last_attempt_status": "success",
+      "last_attempt_at": "2026-10-12T12:52:45+00:00"
+    },
+    {
+      "game_id": "neverness_to_everness",
+      "source": "steam",
+      "label": "Steam 官方汇总",
+      "data_through": "2026-10-12",
+      "status": "healthy",
+      "last_attempt_status": "success",
+      "last_attempt_at": "2026-10-12T12:52:11+00:00"
+    },
+    {
+      "game_id": "neverness_to_everness",
+      "source": "steam_build",
+      "label": "Steam 构建号",
+      "data_through": "2026-10-12",
+      "status": "healthy",
+      "last_attempt_status": "success",
+      "last_attempt_at": "2026-10-12T12:52:33+00:00"
+    },
+    {
+      "game_id": "neverness_to_everness",
+      "source": "steamdb",
+      "label": "SteamDB 在线",
+      "data_through": "2026-10-11",
+      "status": "healthy",
+      "last_attempt_status": "success",
+      "last_attempt_at": "2026-10-12T13:00:32+00:00"
+    },
+    {
+      "game_id": "neverness_to_everness",
+      "source": "youtube",
+      "label": "YouTube 视频",
+      "data_through": "2026-10-12",
+      "status": "healthy",
+      "last_attempt_status": "success",
+      "last_attempt_at": "2026-10-12T12:54:37+00:00"
+    },
+    {
+      "game_id": "wuthering_waves",
+      "source": "bilibili",
+      "label": "B 站视频",
+      "data_through": "2026-10-12",
+      "status": "healthy",
+      "last_attempt_status": "success",
+      "last_attempt_at": "2026-10-12T12:53:02+00:00"
+    },
+    {
+      "game_id": "wuthering_waves",
+      "source": "reviews",
+      "label": "Steam 评测明细",
+      "data_through": "2026-10-12",
+      "status": "healthy",
+      "last_attempt_status": "success",
+      "last_attempt_at": "2026-10-12T12:52:29+00:00"
+    },
+    {
+      "game_id": "wuthering_waves",
+      "source": "steam",
+      "label": "Steam 官方汇总",
+      "data_through": "2026-10-12",
+      "status": "healthy",
+      "last_attempt_status": "success",
+      "last_attempt_at": "2026-10-12T12:51:53+00:00"
+    },
+    {
+      "game_id": "wuthering_waves",
+      "source": "steam_build",
+      "label": "Steam 构建号",
+      "data_through": "2026-10-12",
+      "status": "healthy",
+      "last_attempt_status": "success",
+      "last_attempt_at": "2026-10-12T12:52:25+00:00"
+    },
+    {
+      "game_id": "wuthering_waves",
+      "source": "steamcharts",
+      "label": "SteamCharts 月均在线观测",
+      "data_through": "2026-10-12",
+      "status": "healthy",
+      "last_attempt_status": "success",
+      "last_attempt_at": "2026-10-12T12:55:12+00:00"
+    },
+    {
+      "game_id": "wuthering_waves",
+      "source": "steamdb",
+      "label": "SteamDB 在线",
+      "data_through": "2026-10-11",
+      "status": "healthy",
+      "last_attempt_status": "success",
+      "last_attempt_at": "2026-10-12T13:00:32+00:00"
+    },
+    {
+      "game_id": "wuthering_waves",
+      "source": "youtube",
+      "label": "YouTube 视频",
+      "data_through": "2026-10-12",
+      "status": "healthy",
+      "last_attempt_status": "success",
+      "last_attempt_at": "2026-10-12T12:54:29+00:00"
+    },
+    {
+      "game_id": "zenless_zone_zero",
+      "source": "bilibili",
+      "label": "B 站视频",
+      "data_through": "2026-10-12",
+      "status": "healthy",
+      "last_attempt_status": "success",
+      "last_attempt_at": "2026-10-12T12:53:19+00:00"
+    },
+    {
+      "game_id": "zenless_zone_zero",
+      "source": "reviews",
+      "label": "Steam 评测明细",
+      "data_through": "2026-10-12",
+      "status": "healthy",
+      "last_attempt_status": "success",
+      "last_attempt_at": "2026-10-12T12:52:38+00:00"
+    },
+    {
+      "game_id": "zenless_zone_zero",
+      "source": "steam",
+      "label": "Steam 官方汇总",
+      "data_through": "2026-10-12",
+      "status": "healthy",
+      "last_attempt_status": "success",
+      "last_attempt_at": "2026-10-12T12:52:02+00:00"
+    },
+    {
+      "game_id": "zenless_zone_zero",
+      "source": "steam_build",
+      "label": "Steam 构建号",
+      "data_through": "2026-10-12",
+      "status": "healthy",
+      "last_attempt_status": "success",
+      "last_attempt_at": "2026-10-12T12:52:29+00:00"
+    },
+    {
+      "game_id": "zenless_zone_zero",
+      "source": "steamdb",
+      "label": "SteamDB 在线",
+      "data_through": "2026-10-11",
+      "status": "healthy",
+      "last_attempt_status": "success",
+      "last_attempt_at": "2026-10-12T13:00:32+00:00"
+    },
+    {
+      "game_id": "zenless_zone_zero",
+      "source": "youtube",
+      "label": "YouTube 视频",
+      "data_through": "2026-10-12",
+      "status": "healthy",
+      "last_attempt_status": "success",
+      "last_attempt_at": "2026-10-12T12:54:32+00:00"
+    }
+  ]
+}
