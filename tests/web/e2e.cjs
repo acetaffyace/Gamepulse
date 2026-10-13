@@ -93,7 +93,10 @@ test('version comparison uses the same window for both versions and can swap', a
   await page.getByRole('button', { name: '交换 A 和 B' }).click();
   await page.waitForFunction(() => new URLSearchParams(location.search).get('a') === '1.2');
   // 网址先变、页面随后重绘：等指标卡真正换过来再读
-  await page.waitForFunction(first => document.querySelector('.tile .tile-value')?.textContent !== first, firstTile[0]);
+  await page.waitForFunction(first => {
+    const value = document.querySelector('#page[data-ready="true"] .tile .tile-value');
+    return value && value.textContent !== first;
+  }, firstTile[0]);
   const swapped = await page.locator('.tile').first().locator('.tile-value').allTextContents();
   assert.deepEqual(swapped.map(number), [counts[0].n]);
   await context.close();
